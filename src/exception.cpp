@@ -11,7 +11,7 @@ namespace yilib {
 
     const char* bad_exception::what() const noexcept { return "yilib::bad_exception"; }
 
-    static consteval _Atomic(terminate_handler) __curr_terminate_handler;
+    static constinit _Atomic(terminate_handler) __curr_terminate_handler;
 
     terminate_handler get_terminate() noexcept {
         return atomic_load(&__curr_terminate_handler);
@@ -37,6 +37,9 @@ namespace yilib {
     exception_ptr::exception_ptr(void* ptr) noexcept : ptr(ptr) {}
     exception_ptr::exception_ptr() noexcept : ptr(nullptr) {}
     exception_ptr::exception_ptr(nullptr_t) noexcept : exception_ptr() {}
+    exception_ptr::~exception_ptr() noexcept {
+        __cxxabiv1::__cxa_decrement_exception_refcount(ptr);
+    }
 
     exception_ptr::exception_ptr(const exception_ptr& other) noexcept : ptr(other.ptr) {
         __cxxabiv1::__cxa_increment_exception_refcount(other.ptr);
@@ -46,6 +49,7 @@ namespace yilib {
         __cxxabiv1::__cxa_decrement_exception_refcount(ptr);
         ptr = other.ptr;
         __cxxabiv1::__cxa_increment_exception_refcount(ptr);
+        return *this;
     }
 
     bool exception_ptr::operator==(const exception_ptr& other) const noexcept {

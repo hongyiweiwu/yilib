@@ -1,2 +1,4 @@
 **.gch
 .vscode
+obj
+.DS_Store

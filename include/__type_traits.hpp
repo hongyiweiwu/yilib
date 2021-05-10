@@ -110,21 +110,21 @@ namespace yilib {
         template<class T> struct is_array : bool_constant<
             disjunction<is_unbounded_array<T>, is_bounded_array<T>>::value> {};
 
-        template<class T> struct __is_pointer : false_type {};
-        template<class T> struct __is_pointer<T*> : true_type {};
-        template<class T> using is_pointer = __is_pointer<typename remove_cv<T>::type>;
+        template<class T> struct __is_pointer_impl : false_type {};
+        template<class T> struct __is_pointer_impl<T*> : true_type {};
+        template<class T> using is_pointer = __is_pointer_impl<typename remove_cv<T>::type>;
 
-        template<class T> struct __is_lvalue_reference : false_type {};
-        template<class T> struct __is_lvalue_reference<T&> : true_type {};
-        template<class T> using is_lvalue_reference = __is_lvalue_reference<typename remove_cv<T>::type>;
+        template<class T> struct __is_lvalue_reference_impl : false_type {};
+        template<class T> struct __is_lvalue_reference_impl<T&> : true_type {};
+        template<class T> using is_lvalue_reference = __is_lvalue_reference_impl<typename remove_cv<T>::type>;
 
-        template<class T> struct __is_rvalue_reference : false_type {};
-        template<class T> struct __is_rvalue_reference<T&&> : true_type {};
-        template<class T> using is_rvalue_reference = __is_rvalue_reference<typename remove_cv<T>::type>;
+        template<class T> struct __is_rvalue_reference_impl : false_type {};
+        template<class T> struct __is_rvalue_reference_impl<T&&> : true_type {};
+        template<class T> using is_rvalue_reference = __is_rvalue_reference_impl<typename remove_cv<T>::type>;
 
-        template<class T> struct __is_member_object_pointer : false_type {};
-        template<class T, class U> struct __is_member_object_pointer<T U::*> : true_type {};
-        template<class T> using is_member_object_pointer = __is_member_object_pointer<typename remove_cv<T>::type>;
+        template<class T> struct __is_member_object_pointer__impl : false_type {};
+        template<class T, class U> struct __is_member_object_pointer__impl<T U::*> : true_type {};
+        template<class T> using is_member_object_pointer = __is_member_object_pointer__impl<typename remove_cv<T>::type>;
 
 #if __has_intrinsics_for(is_enum)
         template<class T> struct is_enum : bool_constant<__is_enum(T)> {};
@@ -136,9 +136,9 @@ namespace yilib {
         template<class T> struct is_union : bool_constant<__is_union(T)> {};
 #endif
 
-        template<class T, bool IsUnion = is_union<T>::value, typename Dummy = int T::*> struct __is_class : false_type {};
-        template<class T> struct __is_class<T, false> : true_type {};
-        template<class T> using is_class = __is_class<typename remove_cv<T>::type>;
+        template<class T, bool IsUnion = is_union<T>::value, typename Dummy = int T::*> struct __is_class__impl : false_type {};
+        template<class T> struct __is_class__impl<T, false> : true_type {};
+        template<class T> using is_class = __is_class__impl<typename remove_cv<T>::type>;
 
         template<class T> using is_reference = disjunction<is_lvalue_reference<T>, is_rvalue_reference<T>>;
         
@@ -150,9 +150,9 @@ namespace yilib {
             negation<is_reference<T>>
         >;
 
-        template<class T> struct __is_member_function_pointer : false_type {};
-        template<class T, class U> struct __is_member_function_pointer<U T::*> : is_function<U> {};
-        template<class T> using is_member_function_pointer = __is_member_function_pointer<typename remove_cv<T>::type>;
+        template<class T> struct __is_member_function_pointer_impl : false_type {};
+        template<class T, class U> struct __is_member_function_pointer_impl<U T::*> : is_function<U> {};
+        template<class T> using is_member_function_pointer = __is_member_function_pointer_impl<typename remove_cv<T>::type>;
 
         template<class T> struct is_arithmetic : disjunction<is_integral<T>, is_floating_point<T>> {};
 
@@ -194,10 +194,10 @@ namespace yilib {
             : bool_constant<__is_empty(T)> {};
 #endif
 
-        template<class T, class U = void*> struct __is_polymorphic : false_type {};
-        template<class T> struct __is_polymorphic<T, decltype(dynamic_cast<void*>(static_cast<T*>(nullptr)))> : true_type {};
+        template<class T, class U = void*> struct __is_polymorphic_impl : false_type {};
+        template<class T> struct __is_polymorphic_impl<T, decltype(dynamic_cast<void*>(static_cast<T*>(nullptr)))> : true_type {};
 
-        template<class T> using is_polymorphic = __is_polymorphic<typename remove_cv<T>::type>;
+        template<class T> using is_polymorphic = __is_polymorphic_impl<typename remove_cv<T>::type>;
 
 #if __has_intrinsics_for(is_abstract)
         template<class T> struct is_abstract
@@ -237,10 +237,10 @@ namespace yilib {
         template<class T> struct __add_rvalue_reference<T, false> { using type = T; };
         template<class T> struct add_rvalue_reference : __add_rvalue_reference<T> {};
 
-        template<class T, class _Dummy, class ...Args> struct __is_constructible : false_type {};
-        template<class T, class ...Args> struct __is_constructible<T, decltype(::new T(declval<Args>()...)), Args...> : true_type {};
+        template<class T, class _Dummy, class ...Args> struct __is_constructible_impl : false_type {};
+        template<class T, class ...Args> struct __is_constructible_impl<T, decltype(::new T(declval<Args>()...)), Args...> : true_type {};
         template<class T, class ...Args> struct is_constructible
-            : __is_constructible<T, T*, Args...> {};
+            : __is_constructible_impl<T, T*, Args...> {};
 
         template<class T> struct is_default_constructible 
             : is_constructible<T> {};
@@ -260,9 +260,9 @@ namespace yilib {
 
         template<class ...> using void_t = void; 
 
-        template<class T, class U, class _Dummy> struct __is_assignable : false_type {};
-        template<class T, class U> struct __is_assignable<T, U, void_t<decltype(declval<T>() = declval<U>())>> : true_type {};
-        template<class T, class U> struct is_assignable : __is_assignable<T, U, void> {};
+        template<class T, class U, class _Dummy> struct __is_assignable_impl : false_type {};
+        template<class T, class U> struct __is_assignable_impl<T, U, void_t<decltype(declval<T>() = declval<U>())>> : true_type {};
+        template<class T, class U> struct is_assignable : __is_assignable_impl<T, U, void> {};
         
         template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_copy_assignable 
             : bool_constant<is_assignable<T, const T&>::value> {};
@@ -319,10 +319,10 @@ namespace yilib {
 #endif
 
 #if __has_intrinsics_for(is_trivally_constructible) && __has_intrinsics_for(is_trivially_copyable)
-        template<class T> struct __is_trivial
+        template<class T> struct __is_trivial_impl
             : bool_constant<is_scalar<T>::value || (is_trivially_copyable<T>::value && is_trivially_default_constructible<T>::value)> {};
         template<class T> struct is_trivial
-            : __is_trivial<typename remove_all_extents<typename remove_cv<T>::type>::type> {};
+            : __is_trivial_impl<typename remove_all_extents<typename remove_cv<T>::type>::type> {};
 #endif
 
 #if __has_intrinsics_for(is_trivially_constructible)
@@ -363,9 +363,9 @@ namespace yilib {
             : bool_constant<__is_trivially_destructible(T)> {};
 #endif
 
-        template<class T, class __Dummy, class ...Args> struct __is_nothrow_constructible : false_type {};
-        template<class T, class ...Args> struct __is_nothrow_constructible<T, decltype(noexcept(::new T(declval<Args>()...))), Args...> : true_type {};
-        template<class T, class ...Args> struct is_nothrow_constructible : __is_nothrow_constructible<T, bool, Args...> {};
+        template<class T, class __Dummy, class ...Args> struct __is_nothrow_constructible_impl : false_type {};
+        template<class T, class ...Args> struct __is_nothrow_constructible_impl<T, decltype(noexcept(::new T(declval<Args>()...))), Args...> : true_type {};
+        template<class T, class ...Args> struct is_nothrow_constructible : __is_nothrow_constructible_impl<T, bool, Args...> {};
 
         template<class T> struct is_nothrow_default_constructible 
             : is_nothrow_constructible<T> {};
@@ -380,9 +380,9 @@ namespace yilib {
         template<class T> struct __is_nothrow_move_constructible<T, false> : false_type {};
         template<class T> struct is_nothrow_move_constructible : __is_nothrow_move_constructible<T> {};
 
-        template<class T, class U, class _Dummy> struct __is_nothrow_assignable : false_type {};
-        template<class T, class U> struct __is_nothrow_assignable<T, U, decltype(noexcept(declval<T>() = declval<U>()))> : true_type {};
-        template<class T, class U> struct is_nothrow_assignable : __is_nothrow_assignable<T, U, bool> {};
+        template<class T, class U, class _Dummy> struct __is_nothrow_assignable_impl : false_type {};
+        template<class T, class U> struct __is_nothrow_assignable_impl<T, U, decltype(noexcept(declval<T>() = declval<U>()))> : true_type {};
+        template<class T, class U> struct is_nothrow_assignable : __is_nothrow_assignable_impl<T, U, bool> {};
         
         template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_nothrow_copy_assignable 
             : bool_constant<is_nothrow_assignable<T, const T&>::value> {};
@@ -555,9 +555,9 @@ namespace yilib {
         template<class From, class To> requires requires { declval<void (To)>()(declval<From>()); }
         auto __is_convertible_test() -> int;
 
-        template<class From, class To, class = int> struct __is_convertible : false_type {};
-        template<class From, class To> struct __is_convertible<From, To, decltype(__is_convertible_test<From, To>())> : true_type {};
-        template<class From, class To> struct is_convertible : __is_convertible<From, To> {};
+        template<class From, class To, class = int> struct __is_convertible_impl : false_type {};
+        template<class From, class To> struct __is_convertible_impl<From, To, decltype(__is_convertible_test<From, To>())> : true_type {};
+        template<class From, class To> struct is_convertible : __is_convertible_impl<From, To> {};
 
         template<class From, class To> auto __is_nothrow_convertible_test()
             -> typename enable_if<is_void<From>::value && is_void<To>::value, int>::type;
@@ -571,11 +571,11 @@ namespace yilib {
         template<class B> auto __is_base_of_test(B*) -> true_type;
         template<class B> auto __is_base_of_test(...) -> false_type;
 
-        template<class Base, class Derived, class = void> struct __is_base_of : true_type {};
-        template<class Base, class Derived> struct __is_base_of<Base, Derived, void_t<decltype(__is_base_of_test<Base>(declval<Derived*>()))>> : decltype(__is_base_of_test<Base>(declval<Derived*>())) {};
+        template<class Base, class Derived, class = void> struct __is_base_of_impl : true_type {};
+        template<class Base, class Derived> struct __is_base_of_impl<Base, Derived, void_t<decltype(__is_base_of_test<Base>(declval<Derived*>()))>> : decltype(__is_base_of_test<Base>(declval<Derived*>())) {};
 
         template<class Base, class Derived> struct is_base_of
-            : bool_constant<is_class<Base>::value && is_class<Derived>::value && __is_base_of<typename remove_cv<Base>::type, typename remove_cv<Derived>::type>::value> {};
+            : bool_constant<is_class<Base>::value && is_class<Derived>::value && __is_base_of_impl<typename remove_cv<Base>::type, typename remove_cv<Derived>::type>::value> {};
 
 #if __has_intrinsics_for(is_layout_compatible)
         template<class T, class U> struct is_layout_compatible

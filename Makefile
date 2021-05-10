@@ -1,9 +1,15 @@
-CPPCOMPILER=/usr/local/opt/llvm/bin/clang++
-INCLUDE=-Iinclude
-CPPFLAG=-std=c++20
-LIBDIR=/usr/local/opt/llvm/lib
+CPPCOMPILER := /usr/local/opt/llvm/bin/clang++
+CPPFLAG :=-std=c++20 -Iinclude
+LDFLAGS := -L/usr/local/opt/llvm/lib -lc++abi
 
-CPPAPI=c++abi
+SRC_FILES := $(wildcard src/*.cpp)
+OBJ_FILES := $(patsubst src/%.cpp, obj/%.o, $(SRC_FILES))
 
-all:
-	$(CPPCOMPILER) $(CPPFLAG) -o src/* $(INCLUDE) -L$(LIBDIR) -l$(CPPAPI)
+all: $(OBJ_FILES)
+	$(CPPCOMPILER) $(LDFLAGS) -o $@ $^
+
+obj/%.o: src/%.cpp
+	$(CPPCOMPILER) $(CPPFLAG) -c -o $@ $<
+
+clean:
+	rm obj/*
