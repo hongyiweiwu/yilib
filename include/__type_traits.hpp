@@ -4,9 +4,7 @@
 #include "util/nullptr_t.hpp"
 #include "util/max_align_t.hpp"
 #include "utility/declval.hpp"
-
-// TODO: This currently only supports Clang++. GCC and MSVC support is being investigated.
-#define __has_intrinsics_for(test) __has_builtin(__##test) || !__is_identifier(__##test) || __has_feature(test)
+#include "util/macros.hpp"
 
 namespace yilib {
     // Forward declaration of reference_wrapper, declared in "functional.hpp".

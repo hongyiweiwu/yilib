@@ -1,6 +1,7 @@
 #pragma once
 
 #include "__type_traits.hpp"
+#include "util/macros.hpp"
 
 namespace yilib {
     /* 20.15.4 Helper class */
