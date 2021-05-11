@@ -1,7 +1,7 @@
 #include "exception.hpp"
 #include "cstdlib.hpp"
 
-#include "stdatomic.h"
+#include <stdatomic.h>
 
 #include <cxxabi.h>
 

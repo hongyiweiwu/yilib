@@ -1,3 +1,5 @@
+#pragma once
+
 #define cpp_lib_addressof_constexpr               201603L 
 #define cpp_lib_allocator_traits_is_always_equal  201411L
 #define cpp_lib_any                               201606L 

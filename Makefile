@@ -5,7 +5,7 @@ LDFLAGS := -L/usr/local/opt/llvm/lib -lc++abi
 SRC_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(patsubst src/%.cpp, obj/%.o, $(SRC_FILES))
 
-all: $(OBJ_FILES)
+output: $(OBJ_FILES)
 	$(CPPCOMPILER) $(LDFLAGS) -o $@ $^
 
 obj/%.o: src/%.cpp

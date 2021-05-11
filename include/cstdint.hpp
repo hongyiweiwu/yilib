@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdint.h"
+#include <stdint.h>
 
 namespace yilib {
 #ifdef INT8_MAX

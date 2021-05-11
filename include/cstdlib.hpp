@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdlib.h"
+#include <stdlib.h>
 
 namespace yilib {
     using ::size_t;
@@ -9,31 +9,21 @@ namespace yilib {
     using ::lldiv_t;
 
     /* 17.5 Startup and termination */
-    [[noreturn]] void abort() noexcept {
-        ::abort();
-    }
-
-    int atexit(void (*func)()) noexcept {
-        return ::atexit(func);
-    }
+    [[noreturn]] void abort() noexcept;
+    int atexit(void (*func)()) noexcept;
 
 #ifndef __APPLE_CC__
-    // Mac's default C library doesn't have at_quick_exit.
+    // TODO: Mac's default C library doesn't have at_quick_exit.
     inline int at_quick_exit(void (*func)()) noexcept {
         return ::at_quick_exit(func);
     }
 #endif
 
-    [[noreturn]] void exit(int status) {
-        ::exit(status);
-    }
-
-    [[noreturn]] void _Exit(int status) noexcept {
-        ::_Exit(status);
-    }
+    [[noreturn]] void exit(int status);
+    [[noreturn]] void _Exit(int status) noexcept;
     
 #ifndef __APPLE_CC__
-    // Mac's default C library doesn't have quick_exit.
+    // TODO: Mac's default C library doesn't have quick_exit.
     [[noreturn]] inline void quick_exit(int status) noexcept {
         ::quick_exit(status);
     }
