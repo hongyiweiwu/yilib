@@ -7,6 +7,7 @@
 #include "type_traits/is_type.hpp"
 #include "type_traits/base.hpp"
 #include "type_traits/relations.hpp"
+#include "type_traits/array_manip.hpp"
 
 namespace yilib::__internal {
 #if __has_intrinsics_for(is_trivially_copyable)

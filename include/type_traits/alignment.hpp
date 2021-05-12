@@ -2,6 +2,7 @@
 
 #include "cstddef.hpp"
 
+#include "type_traits/base.hpp"
 #include "type_traits/is_type.hpp"
 
 namespace yilib::__internal {

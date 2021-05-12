@@ -5,7 +5,7 @@
 #include "type_traits/base.hpp"
 #include "type_traits/is_type.hpp"
 #include "type_traits/relations.hpp"
-
+#include "type_traits/cv_manip.hpp"
 
 namespace yilib::__internal {
     template<size_t Size, class ...Types> struct __find_first_with_size {};

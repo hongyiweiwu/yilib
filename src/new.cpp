@@ -22,18 +22,18 @@ namespace yilib {
     }
 }
 
-[[nodiscard]] void* operator new(size_t size) {
+[[nodiscard]] void* operator new(yilib::size_t size) {
     // Here, we assume that malloc always uses the maximum alignment needed in the system. We can then
     // defer the call to the new operator that requires alignment.
     return operator new(size, yilib::align_val_t(__STDCPP_DEFAULT_NEW_ALIGNMENT__));
 }
 
-[[nodiscard]] void* operator new(size_t size, yilib::align_val_t alignment) {
+[[nodiscard]] void* operator new(yilib::size_t size, yilib::align_val_t alignment) {
     if (static_cast<yilib::size_t>(alignment) < __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
         alignment = yilib::align_val_t(__STDCPP_DEFAULT_NEW_ALIGNMENT__);
     }
     void* ptr = nullptr;
-    while ((ptr = yilib::aligned_alloc(static_cast<size_t>(alignment), size)) == nullptr) {
+    while ((ptr = yilib::aligned_alloc(static_cast<yilib::size_t>(alignment), size)) == nullptr) {
         auto handler = yilib::get_new_handler();
         if (handler == nullptr) {
             throw yilib::bad_alloc();
@@ -45,7 +45,7 @@ namespace yilib {
     return ptr;
 }
 
-[[nodiscard]] void* operator new(size_t size, const yilib::nothrow_t&) noexcept {
+[[nodiscard]] void* operator new(yilib::size_t size, const yilib::nothrow_t&) noexcept {
     try {
         return operator new(size);
     } catch (const yilib::bad_alloc&) {
@@ -53,7 +53,7 @@ namespace yilib {
     }
 }
 
-[[nodiscard]] void* operator new(size_t size, yilib::align_val_t alignment, const yilib::nothrow_t&) noexcept {
+[[nodiscard]] void* operator new(yilib::size_t size, yilib::align_val_t alignment, const yilib::nothrow_t&) noexcept {
     try {
         return operator new(size, alignment);
     } catch (const yilib::bad_alloc&) {
@@ -125,4 +125,3 @@ void operator delete[](void* ptr, yilib::align_val_t alignment, const yilib::not
 }
 void operator delete(void* ptr, void*) noexcept {}
 void operator delete[](void* ptr, void*) noexcept {}
-

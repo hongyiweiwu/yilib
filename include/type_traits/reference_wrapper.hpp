@@ -1,5 +1,8 @@
 #pragma once
 
+#include "type_traits/decay.hpp"
+#include "type_traits/base.hpp"
+
 namespace yilib {
     // Forward declaration of reference_wrapper, declared in "functional.hpp".
     template<class T> class reference_wrapper;

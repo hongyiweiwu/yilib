@@ -23,14 +23,17 @@ namespace yilib {
         const char* what() const noexcept override;
     };
 
+    /* 17.9.5 Abnormal termination */
     using terminate_handler = void (*)();
     terminate_handler get_terminate() noexcept;
     terminate_handler set_terminate(terminate_handler f) noexcept;
     [[noreturn]] void terminate() noexcept;
 
 #ifdef _LIBCPPABI_VERSION
+    /* 17.9.6 uncaught_exceptions */
     int uncaught_exceptions() noexcept;
 
+    /* 17.9.7 Exception propagation */
     class exception_ptr {
     private:
         exception_ptr(void*) noexcept;
@@ -64,6 +67,7 @@ namespace yilib {
         }
     }
 
+    /* 17.9.8 nested_exception */
     class nested_exception {
     private:
         exception_ptr ptr;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "type_traits/base.hpp"
 #include "type_traits/is_type.hpp"
 #include "type_traits/reference_manip.hpp"
 #include "utility/declval.hpp"

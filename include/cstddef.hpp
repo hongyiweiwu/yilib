@@ -70,7 +70,7 @@ namespace yilib {
 
     template<class IntType>
     constexpr IntType to_integer(byte b) noexcept {
-        static_assert(__internal::is_integral<IntType>::value, "Parameter shift must be of an integral type.");
+        static_assert(__internal::is_integral<IntType>::value, "Return type of this function must be of an integral type.");
         return static_cast<IntType>(b);
     }
 }

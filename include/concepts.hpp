@@ -5,8 +5,6 @@
 #include "utility/declval.hpp"
 #include "utility/typecast.hpp"
 
-#include <concepts>
-
 namespace yilib {
     /* 18.4 Language-related concepts */
     template<class T, class U> concept same_as = is_same_v<T, U> && is_same_v<U, T>;
@@ -119,5 +117,66 @@ namespace yilib {
     };
 
     template<class T> concept move_constructible = constructible_from<T, T> && convertible_to<T, T>;
+    template<class T> concept copy_constructible = move_constructible<T>
+        && constructible_from<T, T&> && convertible_to<T&, T>
+        && constructible_from<T, const T&> && convertible_to<const T&, T>
+        && constructible_from<T, const T> && convertible_to<const T, T>;
 
+    /* 18.5 Comparison concepts */
+    namespace __internal {
+        template<class T> concept boolean_testable = convertible_to<T, bool>
+            && requires (T&& t) {
+                { !forward<T>(t) } -> convertible_to<bool>;
+            };
+
+        template<class T, class U> concept weakly_equality_comparable_with = requires(const remove_reference_t<T>& t, const remove_reference_t<U>& u) {
+            { t == u } -> boolean_testable;
+            { t != u } -> boolean_testable;
+            { u == t } -> boolean_testable;
+            { u != t } -> boolean_testable;
+        };
+    }
+
+    template<class T> concept equality_comparable = __internal::weakly_equality_comparable_with<T, T>;
+
+    template<class T, class U> concept equality_comparable_with = 
+        equality_comparable<T> && equality_comparable<U>
+        && common_reference_with<const remove_reference_t<T>&, const remove_reference_t<U>&> 
+        && equality_comparable<common_reference_t<const remove_reference_t<T>&, const remove_reference_t<U>&>>
+        && __internal::weakly_equality_comparable_with<T, U>;
+
+    namespace __internal {
+        template<class T, class U> concept partially_ordered_with = requires (const remove_reference_t<T>& t, const remove_reference_t<U>& u) {
+            { t < u } -> boolean_testable;
+            { t > u } -> boolean_testable;
+            { t <= u } -> boolean_testable;
+            { t >= u } -> boolean_testable;
+            { u < t } -> boolean_testable;
+            { u > t } -> boolean_testable;
+            { u <= t } -> boolean_testable;
+            { u >= t } -> boolean_testable;
+        };
+    }
+
+    template<class T> concept totally_ordered = equality_comparable<T> && __internal::partially_ordered_with<T, T>;
+    template<class T, class U> concept totally_ordered_with = totally_ordered<T> && totally_ordered<U> 
+        && equality_comparable_with<T, U>
+        && totally_ordered<common_reference_t<const remove_reference_t<T>&, const remove_reference_t<U>&>>
+        && __internal::partially_ordered_with<T, U>;
+
+    /* 18.6 Object concepts */
+    template<class T> concept movable = is_object_v<T> && move_constructible<T> && assignable_from<T&, T> && swappable<T>;
+    template<class T> concept copyable = copy_constructible<T> && movable<T> && assignable_from<T&, T&> && assignable_from<T&, const T&> && assignable_from<T&, const T>;
+    template<class T> concept semiregular = copyable<T> && default_initializable<T>;
+    template<class T> concept regular = semiregular<T> && equality_comparable<T>;
+
+    /* 18.7 Callable concepts */
+    template<class F, class ...Args> concept invocable = requires (F&& f, Args&& ...args) {
+        __internal::__INVOKE(forward<F>(f), forward<Args>(args)...);  
+    };
+    template<class F, class ...Args> concept regular_invocable = invocable<F, Args...>;
+    template<class F, class ...Args> concept predicate = regular_invocable<F, Args...> && __internal::boolean_testable<invoke_result_t<F, Args...>>;
+    template<class R, class T, class U> concept relation = predicate<R, T, T> && predicate<R, T, U> && predicate<R, U, U> && predicate<R, U, T>;
+    template<class R, class T, class U> concept equivalence_relation = relation<R, T, U>;
+    template<class R, class T, class U> concept strict_weak_order = relation<R, T, U>;
 }

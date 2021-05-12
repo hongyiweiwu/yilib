@@ -1,19 +1,13 @@
 #pragma once
 
-#include "cstdlib.hpp"
-#include "cstddef.hpp"
-#include "utility/declval.hpp"
-#include "utility/typecast.hpp"
 #include "util/macros.hpp"
 
 #include "type_traits/reference_manip.hpp"
 #include "type_traits/base.hpp"
 #include "type_traits/cv_manip.hpp"
 #include "type_traits/is_type.hpp"
-#include "type_traits/is_integral.hpp"
 #include "type_traits/array_manip.hpp"
 #include "type_traits/relations.hpp"
-#include "type_traits/pointer_manip.hpp"
 #include "type_traits/is_constructible.hpp"
 
 namespace yilib {

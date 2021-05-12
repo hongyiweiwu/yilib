@@ -6,6 +6,7 @@
 #include "util/macros.hpp"
 
 namespace yilib {
+    /* 17.6.4 Storage allocation errors */
     class bad_alloc : public exception {
     public:
         const char* what() const noexcept override;
@@ -30,6 +31,7 @@ namespace yilib {
     new_handler get_new_handler() noexcept;
     new_handler set_new_handler(new_handler new_p) noexcept;
 
+    /* 17.6.5 Pointer optimization barrier */
 #if __has_intrinsics_for(builtin_launder)
     template<class T> [[nodiscard]] constexpr T* launder(T* p) noexcept {
         static_assert(!is_function_v<T> && !is_void_v<T>, "T cannot be a function type or void.");
@@ -37,6 +39,7 @@ namespace yilib {
     }
 #endif
 
+    /* 17.6.6 Hardware interference size */
 #if __has_intrinsics_for(hardware_destructive_interference_size)
     inline constexpr size_t hardware_destructive_interference_size = __hardware_destructive_interference_size();
 #endif
@@ -46,6 +49,7 @@ namespace yilib {
 #endif
 }
 
+/* 17.6.3 Storage allocation and deallocation */
 [[nodiscard]] void* operator new(yilib::size_t size);
 [[nodiscard]] void* operator new(yilib::size_t size, yilib::align_val_t alignment);
 [[nodiscard]] void* operator new(yilib::size_t size, const yilib::nothrow_t&) noexcept;
