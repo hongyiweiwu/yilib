@@ -84,7 +84,7 @@ namespace yilib {
 
     template<class T> [[noreturn]] void throw_with_nested(T&& t) {
         using U = decay_t<T>;
-        static_assert(is_copy_constructible_v<U>, "decay_t<T> mumeet the Cpp17CopyConstructible requirements.");
+        static_assert(is_copy_constructible_v<U>, "decay_t<T> must meet the Cpp17CopyConstructible requirements.");
 
         if constexpr (is_class_v<U> && !is_final_v<U> && !is_base_of_v<nested_exception, U>) {
             throw __nested(__internal::forward<T>(t));

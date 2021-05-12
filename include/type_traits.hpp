@@ -1,6 +1,24 @@
 #pragma once
 
-#include "__type_traits.hpp"
+#include "type_traits/alignment.hpp"
+#include "type_traits/array_manip.hpp"
+#include "type_traits/base.hpp"
+#include "type_traits/common_reference.hpp"
+#include "type_traits/cv_manip.hpp"
+#include "type_traits/decay.hpp"
+#include "type_traits/is_assignable.hpp"
+#include "type_traits/is_constructible.hpp"
+#include "type_traits/is_integral.hpp"
+#include "type_traits/is_invocable.hpp"
+#include "type_traits/is_operation.hpp"
+#include "type_traits/is_type.hpp"
+#include "type_traits/pointer_manip.hpp"
+#include "type_traits/reference_wrapper.hpp"
+#include "type_traits/reference_manip.hpp"
+#include "type_traits/relations.hpp"
+#include "type_traits/signedness_manip.hpp"
+#include "type_traits/traits.hpp"
+
 #include "util/macros.hpp"
 
 namespace yilib {
@@ -294,6 +312,8 @@ namespace yilib {
     template<bool B, class T = void> using enable_if_t = typename enable_if<B, T>::type;
     template<bool B, class T, class F> struct conditional : __internal::conditional<B, T, F> {};
     template<bool B, class T, class F> using conditional_t = typename conditional<B, T, F>::type;
+    template<class ...T> struct common_type : __internal::common_type<T...> {};
+    template<class ...T> using common_type_t = typename common_type<T...>::type;
     template<class T, class U, template<class> class TQual, template<class> class UQual> struct basic_common_reference :
         __internal::basic_common_reference<T, U, TQual, UQual> {};
     template<class ...T> struct common_reference : __internal::common_reference<T...> {};
