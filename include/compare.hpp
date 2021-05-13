@@ -567,4 +567,22 @@ namespace std {
         inline constexpr __internal::compare_weak_order_fallback compare_weak_order_fallback{};
         inline constexpr __internal::compare_partial_order_fallback compare_partial_order_fallback{};
     }
+
+    namespace __internal {
+        constexpr auto synth_three_way = []<class T, class U>(const T& t, const U& u)
+            requires requires {
+                { t < u } -> boolean_testable;
+                { u < t } -> boolean_testable;
+            } {
+            if constexpr (three_way_comparable_with<T, U>) {
+                return t <=> u;
+            } else {
+                if (t < u) return weak_ordering::less;
+                if (u < t) return weak_ordering::greater;
+                return weak_ordering::equivalent;
+            }
+        };
+
+        template<class T, class U = T> using synth_three_way_result = decltype(synth_three_way(declval<T&>(), declval<U&>()));
+    }
 }
