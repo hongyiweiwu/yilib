@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-namespace yilib {
+namespace std {
     using ::size_t;
     using ::div_t;
     using ::ldiv_t;

@@ -1,9 +1,7 @@
-#include <limits>
-
 #include "type_traits.hpp"
 #include "climits.hpp"
 
-namespace yilib {
+namespace std {
     /* 17.3.4 Floating-point type properties */
     enum float_round_style {
         round_indeterminate = -1,

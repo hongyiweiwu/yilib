@@ -6,7 +6,7 @@
 // TODO: Currently only supports Clang's C++ ABI. 
 #include <cxxabi.h>
 
-namespace yilib {
+namespace std {
     /* 17.9.3 Class exception */
     class exception {
     public:

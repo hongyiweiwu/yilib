@@ -5,7 +5,7 @@
 #include "type_traits/base.hpp"
 #include "type_traits/is_type.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T> struct alignment_of : integral_constant<size_t, alignof(T)> {};
 
     template<size_t Len> requires (Len > 0) && (Len <= alignof(max_align_t))

@@ -2,7 +2,7 @@
 
 #include "type_traits/is_type.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T> struct remove_reference { using type = T; };
     template<class T> struct remove_reference<T&> { using type = T; };
     template<class T> struct remove_reference<T&&> { using type = T; };

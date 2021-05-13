@@ -2,7 +2,7 @@
 
 #include <signal.h>
 
-namespace yilib {
+namespace std {
     using sig_atomic_t = ::sig_atomic_t;
     using ::signal;
     using ::raise;

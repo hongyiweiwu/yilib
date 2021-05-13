@@ -5,11 +5,11 @@
 
 #include <cxxabi.h>
 
-namespace yilib {
+namespace std {
     exception::~exception() {}
-    const char* exception::what() const noexcept { return "yilib::exception"; }
+    const char* exception::what() const noexcept { return "std::exception"; }
 
-    const char* bad_exception::what() const noexcept { return "yilib::bad_exception"; }
+    const char* bad_exception::what() const noexcept { return "std::bad_exception"; }
 
     static constinit _Atomic(terminate_handler) __curr_terminate_handler;
 

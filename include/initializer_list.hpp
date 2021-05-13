@@ -2,7 +2,7 @@
 
 #include "cstddef.hpp"
 
-namespace yilib {
+namespace std {
     template<class E>
     class initializer_list {
     public:

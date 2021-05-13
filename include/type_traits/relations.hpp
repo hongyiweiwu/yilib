@@ -6,7 +6,7 @@
 
 #include "utility/declval.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<bool B, class T, class F> struct conditional { using type = T; };
     template<class T, class F> struct conditional<false, T, F> { using type = F; };
 

@@ -5,7 +5,7 @@
 #include "cstddef.hpp"
 #include "util/macros.hpp"
 
-namespace yilib {
+namespace std {
     /* 17.6.4 Storage allocation errors */
     class bad_alloc : public exception {
     public:
@@ -50,31 +50,31 @@ namespace yilib {
 }
 
 /* 17.6.3 Storage allocation and deallocation */
-[[nodiscard]] void* operator new(yilib::size_t size);
-[[nodiscard]] void* operator new(yilib::size_t size, yilib::align_val_t alignment);
-[[nodiscard]] void* operator new(yilib::size_t size, const yilib::nothrow_t&) noexcept;
-[[nodiscard]] void* operator new(yilib::size_t size, yilib::align_val_t alignment, const yilib::nothrow_t&) noexcept;
+[[nodiscard]] void* operator new(std::size_t size);
+[[nodiscard]] void* operator new(std::size_t size, std::align_val_t alignment);
+[[nodiscard]] void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
+[[nodiscard]] void* operator new(std::size_t size, std::align_val_t alignment, const std::nothrow_t&) noexcept;
 
 void operator delete(void* ptr) noexcept;
-void operator delete(void* ptr, yilib::size_t size) noexcept;
-void operator delete(void* ptr, yilib::align_val_t alignment) noexcept;
-void operator delete(void* ptr, yilib::size_t size, yilib::align_val_t alignment) noexcept;
-void operator delete(void* ptr, const yilib::nothrow_t&) noexcept;
-void operator delete(void* ptr, yilib::align_val_t alignment, const yilib::nothrow_t&) noexcept;
+void operator delete(void* ptr, std::size_t size) noexcept;
+void operator delete(void* ptr, std::align_val_t alignment) noexcept;
+void operator delete(void* ptr, std::size_t size, std::align_val_t alignment) noexcept;
+void operator delete(void* ptr, const std::nothrow_t&) noexcept;
+void operator delete(void* ptr, std::align_val_t alignment, const std::nothrow_t&) noexcept;
 
-[[nodiscard]] void* operator new[](yilib::size_t size);
-[[nodiscard]] void* operator new[](yilib::size_t size, yilib::align_val_t alignment);
-[[nodiscard]] void* operator new[](yilib::size_t size, const yilib::nothrow_t&) noexcept;
-[[nodiscard]] void* operator new[](yilib::size_t size, yilib::align_val_t alignment, const yilib::nothrow_t&) noexcept;
+[[nodiscard]] void* operator new[](std::size_t size);
+[[nodiscard]] void* operator new[](std::size_t size, std::align_val_t alignment);
+[[nodiscard]] void* operator new[](std::size_t size, const std::nothrow_t&) noexcept;
+[[nodiscard]] void* operator new[](std::size_t size, std::align_val_t alignment, const std::nothrow_t&) noexcept;
 
 void operator delete[](void* ptr) noexcept;
-void operator delete[](void* ptr, yilib::size_t size) noexcept;
-void operator delete[](void* ptr, yilib::align_val_t alignment) noexcept;
-void operator delete[](void* ptr, yilib::size_t size, yilib::align_val_t alignment) noexcept;
-void operator delete[](void* ptr, const yilib::nothrow_t&) noexcept;
-void operator delete[](void* ptr, yilib::align_val_t alignment, const yilib::nothrow_t&) noexcept;
+void operator delete[](void* ptr, std::size_t size) noexcept;
+void operator delete[](void* ptr, std::align_val_t alignment) noexcept;
+void operator delete[](void* ptr, std::size_t size, std::align_val_t alignment) noexcept;
+void operator delete[](void* ptr, const std::nothrow_t&) noexcept;
+void operator delete[](void* ptr, std::align_val_t alignment, const std::nothrow_t&) noexcept;
 
-[[nodiscard]] void* operator new(yilib::size_t size, void* ptr) noexcept;
-[[nodiscard]] void* operator new[](yilib::size_t size, void* ptr) noexcept;
+[[nodiscard]] void* operator new(std::size_t size, void* ptr) noexcept;
+[[nodiscard]] void* operator new[](std::size_t size, void* ptr) noexcept;
 void operator delete(void* ptr, void*) noexcept;
 void operator delete[](void* ptr, void*) noexcept;

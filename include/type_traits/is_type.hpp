@@ -8,7 +8,7 @@
 #include "util/macros.hpp"
 #include "utility/declval.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T, class = size_t> struct is_complete : false_type {};
     template<class T> struct is_complete<T, decltype(sizeof(T))> : true_type {};
 

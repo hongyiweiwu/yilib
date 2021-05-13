@@ -2,6 +2,6 @@
 
 #include <stdarg.h>
 
-namespace yilib {
+namespace std {
     using va_list = ::va_list;
 }

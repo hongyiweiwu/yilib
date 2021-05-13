@@ -3,7 +3,7 @@
 #include "type_traits/base.hpp"
 #include "type_traits/cv_manip.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T> struct __is_integral_impl : false_type {};
     template<> struct __is_integral_impl<bool> : true_type {};
     template<> struct __is_integral_impl<char> : true_type {};

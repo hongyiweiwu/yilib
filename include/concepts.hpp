@@ -5,7 +5,7 @@
 #include "utility/declval.hpp"
 #include "utility/typecast.hpp"
 
-namespace yilib {
+namespace std {
     /* 18.4 Language-related concepts */
     template<class T, class U> concept same_as = is_same_v<T, U> && is_same_v<U, T>;
     template<class Derived, class Base> concept derived_from = is_base_of_v<Base, Derived> && is_convertible_v<const volatile Derived*, const volatile Base*>;
@@ -44,7 +44,7 @@ namespace yilib {
         };
 
     namespace ranges {
-        // We use a separate __internal namespace under ranges instead of the traditional yilib::__internal because we don't
+        // We use a separate __internal namespace under ranges instead of the traditional std::__internal because we don't
         // want to pollute the latter with our custom deleted swap function.
         namespace __internal {
             // Prevents any ranges::swap declarations in the ranges namespace from engaging in overload resolution.
@@ -69,9 +69,9 @@ namespace yilib {
             struct __swap_fn {
                 template<class T, class U> requires __std_swap_usable<T, U>
                 constexpr void operator()(T&& e1, U&& e2) const
-                    noexcept(noexcept(swap(::yilib::__internal::forward<T>(e1), ::yilib::__internal::forward<U>(e2))))
+                    noexcept(noexcept(swap(::std::__internal::forward<T>(e1), ::std::__internal::forward<U>(e2))))
                 {
-                    swap(::yilib::__internal::forward<T>(e1), ::yilib::__internal::forward<U>(e2));
+                    swap(::std::__internal::forward<T>(e1), ::std::__internal::forward<U>(e2));
                 }
 
                 template<class T, class U, size_t N>
@@ -85,16 +85,16 @@ namespace yilib {
 
                 template<class T>
                 requires __exchangeable<T>
-                constexpr void operator()(T& e1, T& e2) const noexcept(noexcept(T(::yilib::__internal::move(e1)), e1 = ::yilib::__internal::move(e2), e2 = ::yilib::__internal::move(::yilib::__internal::declval<T&>()))) {
-                    T t(::yilib::__internal::move(e1));
-                    e1 = ::yilib::__internal::move(e2);
-                    e2 = ::yilib::__internal::move(t);
+                constexpr void operator()(T& e1, T& e2) const noexcept(noexcept(T(::std::__internal::move(e1)), e1 = ::std::__internal::move(e2), e2 = ::std::__internal::move(::std::__internal::declval<T&>()))) {
+                    T t(::std::__internal::move(e1));
+                    e1 = ::std::__internal::move(e2);
+                    e2 = ::std::__internal::move(t);
                 }
             };
         }
 
         inline namespace __inline_swap {
-            inline constexpr auto swap = ::yilib::ranges::__internal::__swap_fn{};
+            inline constexpr auto swap = ::std::ranges::__internal::__swap_fn{};
         }
     }
 
@@ -103,10 +103,10 @@ namespace yilib {
     template<class T, class U> concept swappable_with =
         common_reference_with<T, U> &&
         requires (T&& t, U&& u) {
-            ranges::swap(::yilib::__internal::forward<T>(t), ::yilib::__internal::forward<T>(t));
-            ranges::swap(::yilib::__internal::forward<U>(u), ::yilib::__internal::forward<U>(u));
-            ranges::swap(::yilib::__internal::forward<T>(t), ::yilib::__internal::forward<U>(u));
-            ranges::swap(::yilib::__internal::forward<U>(u), ::yilib::__internal::forward<T>(t));
+            ranges::swap(::std::__internal::forward<T>(t), ::std::__internal::forward<T>(t));
+            ranges::swap(::std::__internal::forward<U>(u), ::std::__internal::forward<U>(u));
+            ranges::swap(::std::__internal::forward<T>(t), ::std::__internal::forward<U>(u));
+            ranges::swap(::std::__internal::forward<U>(u), ::std::__internal::forward<T>(t));
         };
 
     template<class T> concept destructible = is_nothrow_destructible_v<T>;

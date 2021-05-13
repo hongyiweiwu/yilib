@@ -5,7 +5,7 @@
 #include "type_traits/is_type.hpp"
 #include "utility/declval.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T, class U, class _Dummy> struct __is_assignable_impl : false_type {};
     template<class T, class U> struct __is_assignable_impl<T, U, void_t<decltype(declval<T>() = declval<U>())>> : true_type {};
     template<class T, class U> struct is_assignable : __is_assignable_impl<T, U, void> {};

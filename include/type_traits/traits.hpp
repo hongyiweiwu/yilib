@@ -10,7 +10,7 @@
 #include "type_traits/relations.hpp"
 #include "type_traits/is_constructible.hpp"
 
-namespace yilib {
+namespace std {
     namespace __internal {
 #if __has_intrinsics_for(is_standard_layout)
         template<class T> struct is_standard_layout

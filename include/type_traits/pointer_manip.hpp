@@ -5,7 +5,7 @@
 #include "type_traits/cv_manip.hpp"
 #include "type_traits/is_type.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T> struct remove_pointer { using type = T; };
     template<class T> struct remove_pointer<T*> { using type = T; };
     template<class T> struct remove_pointer<T* const> { using type = T; };

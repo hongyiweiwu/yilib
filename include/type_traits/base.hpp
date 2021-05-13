@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T, T v> struct integral_constant {
         static constexpr T value = v;
         using value_type = T;

@@ -2,7 +2,7 @@
 
 #include "type_traits/reference_manip.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T> constexpr T&& forward(typename remove_reference<T>::type& t) noexcept {
         return static_cast<T&&>(t);
     }

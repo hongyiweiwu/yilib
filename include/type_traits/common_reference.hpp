@@ -8,7 +8,7 @@
 #include "type_traits/decay.hpp"
 #include "type_traits/relations.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
         template<class T1> auto __common_type(...) -> decltype(__common_type<T1, T1>(0));
         template<class T1, class T2> auto __common_type(int) -> decltype(false ? declval<typename decay<T1>::type>() : declval<typename decay<T2>::type>());
         template<class T1, class T2> auto __common_type(...) -> decltype(false ? declval<const typename remove_reference<typename decay<T1>::type>::type&>() : declval<const typename remove_reference<typename decay<T2>::type>::type&>());

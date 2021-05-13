@@ -9,7 +9,7 @@
 #include "type_traits/relations.hpp"
 #include "type_traits/array_manip.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
 #if __has_intrinsics_for(is_trivially_copyable)
     template<class T> struct is_trivially_copyable
         : bool_constant<__is_trivially_copyable(T)> {};

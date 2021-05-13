@@ -4,7 +4,7 @@
 
 #include "type_traits/is_integral.hpp"
 
-namespace yilib {
+namespace std {
     /* 17.2.3 Null pointers */
     using nullptr_t = decltype(nullptr);
 

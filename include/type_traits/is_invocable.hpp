@@ -10,7 +10,7 @@
 #include "utility/declval.hpp"
 #include "utility/typecast.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     // 20.14.4.1.1
     template<class MemberPtr, class Base, class T1, class ...Args> 
     requires is_member_function_pointer<MemberPtr Base::*>::value && is_base_of<Base, typename decay<T1>::type>::value

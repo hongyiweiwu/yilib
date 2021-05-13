@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T>
     auto __declval(int) -> T&&;
     template<class T>

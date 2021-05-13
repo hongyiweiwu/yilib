@@ -2,7 +2,7 @@
 
 #include <setjmp.h>
 
-namespace yilib {
+namespace std {
     using jmp_buf = ::jmp_buf;
     using ::longjmp;
 }

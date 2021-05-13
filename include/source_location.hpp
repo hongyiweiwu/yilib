@@ -3,7 +3,7 @@
 #include "util/macros.hpp"
 #include "cstdint.hpp"
 
-namespace yilib {
+namespace std {
 // TODO: Only Clang compatible for now.
 #if __has_intrinsics_for(builtin_LINE) && __has_intrinsics_for(builtin_FUNCTION) && __has_intrinsics_for(builtin_FILE) && __has_intrinsics_for(builtin_COLUMN)
     struct source_location {

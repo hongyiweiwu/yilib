@@ -7,7 +7,7 @@
 #include "type_traits/relations.hpp"
 #include "type_traits/cv_manip.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<size_t Size, class ...Types> struct __find_first_with_size {};
     template<size_t Size, class Type, class ...Types> struct __find_first_with_size<Size, Type, Types...>
         : conditional<Size == sizeof(Type), Type, typename __find_first_with_size<Size, Types...>::type> {};

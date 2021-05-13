@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T> struct remove_const { using type = T; };
     template<class T> struct remove_const<const T> { using type = T; };
 

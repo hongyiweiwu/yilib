@@ -3,7 +3,7 @@
 #include "utility/typecast.hpp"
 #include "utility/declval.hpp"
 
-namespace yilib {
+namespace std {
     /* 20.2.4 Forward/move */
     using __internal::forward;
     using __internal::move;

@@ -21,7 +21,7 @@
 
 #include "util/macros.hpp"
 
-namespace yilib {
+namespace std {
     /* 20.15.4 Helper class */
     template<class T, T v> struct integral_constant : __internal::integral_constant<T, v> {};
     template<bool B> struct bool_constant : __internal::bool_constant<B> {};

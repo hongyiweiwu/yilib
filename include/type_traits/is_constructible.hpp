@@ -5,7 +5,7 @@
 #include "type_traits/is_type.hpp"
 #include "utility/declval.hpp"
 
-namespace yilib::__internal {
+namespace std::__internal {
     template<class T, class _Dummy, class ...Args> struct __is_constructible_impl : false_type {};
     template<class T, class ...Args> struct __is_constructible_impl<T, decltype(::new T(declval<Args>()...)), Args...> : true_type {};
     template<class T, class ...Args> struct is_constructible

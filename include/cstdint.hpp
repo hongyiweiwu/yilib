@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace yilib {
+namespace std {
 #ifdef INT8_MAX
     using ::int8_t;
 #endif

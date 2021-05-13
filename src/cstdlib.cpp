@@ -1,6 +1,6 @@
 #include "cstdlib.hpp"
 
-namespace yilib {
+namespace std {
     [[noreturn]] void abort() noexcept {
         ::abort();
     }
