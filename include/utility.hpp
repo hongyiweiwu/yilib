@@ -158,66 +158,64 @@ namespace std {
             static_assert(is_default_constructible_v<T1> && is_default_constructible_v<T2>, "Both elements of the pair must be of default constructible types.");
         }
 
-        constexpr explicit(!is_convertible_v<const first_type&, first_type> || !is_convertible_v<const second_type&, second_type>)
+        constexpr explicit(!is_convertible_v<const T1&, T1> || !is_convertible_v<const T2&, T2>)
         pair(const T1& x, const T2& y) : first(x), second(y) {
             static_assert(is_copy_constructible_v<T1> && is_copy_constructible_v<T2>, "Both elements of the pair must be of copy constructible types.");
         }
 
         template<class U1, class U2>
-        constexpr explicit(!is_convertible_v<U1, first_type> || !is_convertible_v<U2, second_type>)
+        constexpr explicit(!is_convertible_v<U1, T1> || !is_convertible_v<U2, T2>)
         pair(U1&& x, U2&& y) : first(forward<U1>(x)), second(forward<U2>(y)) {
-            static_assert(is_constructible_v<first_type, U1> && is_constructible_v<second_type, U2>, "Both elements of the pair must be constructible from U1, U2, respectively.");
+            static_assert(is_constructible_v<T1, U1> && is_constructible_v<T2, U2>, "Both elements of the pair must be constructible from U1, U2, respectively.");
         }
 
         template<class U1, class U2>
-        constexpr explicit(!is_convertible_v<const U1&, first_type> || !is_convertible_v<const U2&, second_type>)
+        constexpr explicit(!is_convertible_v<const U1&, T1> || !is_convertible_v<const U2&, T2>)
         pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {
-            static_assert(is_constructible_v<first_type, const T1&> && is_constructible_v<second_type, const T2&>, "Both elements of the pair must be of copy constructible types.");
+            static_assert(is_constructible_v<T1, const T1&> && is_constructible_v<T2, const T2&>, "Both elements of the pair must be of copy constructible types.");
         }
 
         template<class U1, class U2>
-        constexpr explicit(!is_convertible_v<U1, first_type> || !is_convertible_v<U2, second_type>) 
+        constexpr explicit(!is_convertible_v<U1, T1> || !is_convertible_v<U2, T2>) 
         pair(pair<U1, U2>&& p) : first(forward<U1>(p.first)), second(forward<U2>(p.second)) {
-            static_assert(is_constructible_v<first_type, U1> && is_constructible_v<second_type, U2>, "Both elements of the pair must be constructible from U1, U2, respectively.");
+            static_assert(is_constructible_v<T1, U1> && is_constructible_v<T2, U2>, "Both elements of the pair must be constructible from U1, U2, respectively.");
         }
 
         // TODO: Implement!
         template<class ...Args1, class ...Args2>
-        constexpr pair(piecewise_construct_t, tuple<Args1...> first_args, tuple<Args2...> second_args) : first_type(), second_type() {
-            static_assert(is_constructible_v<first_type, Args1...> && is_constructible_v<second_type, Args2...>, "Both elements of the pair must be constructible from elements in the two tuples, respectively.");
+        constexpr pair(piecewise_construct_t, tuple<Args1...> first_args, tuple<Args2...> second_args) : T1(), T2() {
+            static_assert(is_constructible_v<T1, Args1...> && is_constructible_v<T2, Args2...>, "Both elements of the pair must be constructible from elements in the two tuples, respectively.");
         }
 
-        constexpr pair& operator=(enable_if_t<is_copy_assignable_v<first_type> && is_copy_assignable_v<second_type>, const pair&> p) {
+        constexpr pair& operator=(enable_if_t<is_copy_assignable_v<T1> && is_copy_assignable_v<T2>, const pair&> p) {
             first = p.first;
             second = p.second;
             return *this;
         }
-        constexpr pair& operator=(const pair& p) = delete;
 
         template<class U1, class U2> constexpr pair& operator=(const pair<U1, U2>& p) {
-            static_assert(is_assignable_v<first_type&, const U1&> && is_assignable_v<second_type&, const U2&>, "Both elements of the pair must be assignable from elements in p.");
+            static_assert(is_assignable_v<T1&, const U1&> && is_assignable_v<T2&, const U2&>, "Both elements of the pair must be assignable from elements in p.");
             first = p.first;
             second = p.second;
             return *this;
         }
 
-        constexpr pair& operator=(enable_if_t<is_move_assignable_v<first_type> && is_move_assignable_v<second_type>, pair&&> p) 
-            noexcept(noexcept(is_nothrow_move_assignable_v<first_type> && is_nothrow_move_assignable_v<second_type>)) {
-            first = forward<first_type>(p.first);
-            second = forward<second_type>(p.second);
+        constexpr pair& operator=(enable_if_t<is_move_assignable_v<T1> && is_move_assignable_v<T2>, pair&&> p) 
+            noexcept(noexcept(is_nothrow_move_assignable_v<T1> && is_nothrow_move_assignable_v<T2>)) {
+            first = forward<T1>(p.first);
+            second = forward<T2>(p.second);
             return *this;
         }
-        constexpr pair& operator=(pair&& p) = delete;
 
         template<class U1, class U2> constexpr pair& operator=(pair<U1, U2>&& p) {
-            static_assert(is_assignable_v<first_type&, U1> && is_assignable_v<second_type&, U2>, "Both elements of the pair must be assignable from elements in p.");
+            static_assert(is_assignable_v<T1&, U1> && is_assignable_v<T2&, U2>, "Both elements of the pair must be assignable from elements in p.");
             first = forward<U1>(p.first);
             second = forward<U2>(p.second);
             return *this;
         }
 
-        constexpr void swap(pair& p) noexcept(noexcept(is_nothrow_swappable_v<first_type> && is_nothrow_swappable_v<second_type>)) {
-            static_assert(is_swappable_v<first_type> && is_swappable_v<second_type>, "Both elements of the pair must be swappable.");
+        constexpr void swap(pair& p) noexcept(noexcept(is_nothrow_swappable_v<T1> && is_nothrow_swappable_v<T2>)) {
+            static_assert(is_swappable_v<T1> && is_swappable_v<T2>, "Both elements of the pair must be swappable.");
             swap(first, p.first);
             swap(second, p.second);
         }
@@ -238,7 +236,7 @@ namespace std {
     }
 
     template<class T1, class T2> constexpr void swap(pair<T1, T2>& x, pair<T1, T2>& y) noexcept(noexcept(x.swap(y))) {
-        static_assert(is_swappable_v<first_type> && is_swappable_v<second_type>, "Both elements of the pair must be swappable.");
+        static_assert(is_swappable_v<T1> && is_swappable_v<T2>, "Both elements of the pair must be swappable.");
         return x.swap(y);
     }
 
@@ -315,5 +313,20 @@ namespace std {
     constexpr const T2&& get(const pair<T1, T2>&& p) noexcept {
         return p.second;
     }
+
+    struct in_place_t {
+        explicit in_place_t() = default;
+    };
+    inline constexpr in_place_t in_place{};
+
+    template<class T> struct in_place_type_t {
+        explicit in_place_type_t() = default;
+    };
+    template<class T> inline constexpr in_place_type_t<T> in_place_type{};
+
+    template<size_t I> struct in_place_index_t {
+        explicit in_place_index_t() = default;
+    };
+    template<size_t I> inline constexpr in_place_index_t<I> in_place_index{};
 
 }
