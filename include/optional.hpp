@@ -57,8 +57,8 @@ namespace std {
                 ::new (static_cast<void*>(val)) T(forward<Args>(args)...);
             }
 
-            __optional_storage() requires is_trivially_constructible_v<T> = default;
-            __optional_storage() requires (!is_trivially_constructible_v<T>) : has_value(false), dummy() {}
+            __optional_storage() requires is_trivially_default_constructible_v<T> = default;
+            __optional_storage() requires (!is_trivially_default_constructible_v<T>) : has_value(false), dummy() {}
 
             ~__optional_storage() requires is_trivially_destructible_v<T> = default;
             ~__optional_storage() requires (!is_trivially_destructible_v<T>) {
