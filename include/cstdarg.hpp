@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdarg.h>
+#include "stdarg.h"
 
 namespace std {
     using va_list = ::va_list;

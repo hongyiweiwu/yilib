@@ -1,5 +1,7 @@
 #include "cstdlib.hpp"
 
+#include "stdlib.h"
+
 namespace std {
     [[noreturn]] void abort() noexcept {
         ::abort();
