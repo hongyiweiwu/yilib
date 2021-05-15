@@ -1,5 +1,5 @@
 CPPCOMPILER := /usr/local/opt/llvm/bin/clang++
-CPPFLAG :=-std=c++20 -Iinclude
+CPPFLAG := -nostdlib -nostdinc++ -std=c++20 -Iinclude
 LDFLAGS := -L/usr/local/opt/llvm/lib -lc++abi
 
 SRC_FILES := $(wildcard src/*.cpp)
