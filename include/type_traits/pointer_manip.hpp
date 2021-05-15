@@ -12,10 +12,10 @@ namespace std::__internal {
     template<class T> struct remove_pointer<T* volatile> { using type = T; };
     template<class T> struct remove_pointer<T* const volatile> { using type = T; };
 
-    template<class T> 
-    auto __add_pointer(int) -> typename enable_if<is_referenceable<T>::value, typename remove_reference<T>::type*>::type;
-    template<class T> 
-    auto __add_pointer(int) -> typename enable_if<is_void<typename remove_cv<T>::type>::value, T*>::type;
+    template<class T> requires is_referenceable<T>::value
+    auto __add_pointer(int) -> typename remove_reference<T>::type*;
+    template<class T> requires is_void<typename remove_cv<T>::type>::value
+    auto __add_pointer(int) -> T*;
     template<class T> 
     auto __add_pointer(...) -> T;
 

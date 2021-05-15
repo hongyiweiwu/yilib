@@ -12,18 +12,15 @@
 
 namespace std {
     /* 20.2.2 swap */
-    template<class T> constexpr void swap(T& a, T& b) noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>) {
-        static_assert(is_move_constructible_v<T>, "Swapped type must be move-constructible.");
-        static_assert(is_move_assignable_v<T>, "Swapped type must be move_assignable.");
-
+    template<class T> requires is_move_constructible_v<T> && is_move_assignable_v<T>
+    constexpr void swap(T& a, T& b) noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>) {
         T c = __internal::move(a);
         a = __internal::move(b);
         b = __internal::move(c);
     }
 
-    template<class T, size_t N> constexpr void swap(T (&a)[N], T (&b)[N]) noexcept(is_nothrow_swappable_v<T>) {
-        static_assert(is_swappable_v<T>, "Swapped type must be swappable.");
-
+    template<class T, size_t N> requires is_swappable_v<T>
+    constexpr void swap(T (&a)[N], T (&b)[N]) noexcept(is_nothrow_swappable_v<T>) {
         for (auto i = 0; i < N; i++) {
             swap(a[i], b[i]);
         }
@@ -49,8 +46,8 @@ namespace std {
     using __internal::declval;
 
     /* 20.2.7 Integer comparison functions */
-    template<class T, class U> constexpr bool cmp_equal(T t, U u) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<U>, "Both arguments must be of standard integer types.");
+    template<class T, class U> requires is_integral_v<T> && is_integral_v<U>
+    constexpr bool cmp_equal(T t, U u) noexcept {
         using UT = make_unsigned_t<T>;
         using UU = make_unsigned_t<U>;
         if constexpr (is_signed_v<T> == is_signed_v<U>) {
@@ -61,13 +58,13 @@ namespace std {
             return u < 0 ? false : t == UU(u);
         }
     }
-    template<class T, class U> constexpr bool cmp_not_equal(T t, U u) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<U>, "Both arguments must be of standard integer types.");
+    template<class T, class U> requires is_integral_v<T> && is_integral_v<U>
+    constexpr bool cmp_not_equal(T t, U u) noexcept {
         return !cmp_equal(t, u);
     }
 
-    template<class T, class U> constexpr bool cmp_less(T t, U u) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<U>, "Both arguments must be of standard integer types.");
+    template<class T, class U> requires is_integral_v<T> && is_integral_v<U>
+    constexpr bool cmp_less(T t, U u) noexcept {
         using UT = make_unsigned_t<T>;
         using UU = make_unsigned_t<U>;
         if constexpr (is_signed_v<T> == is_signed_v<U>) {
@@ -79,29 +76,29 @@ namespace std {
         }
     }
 
-    template<class T, class U> constexpr bool cmp_greater(T t, U u) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<U>, "Both arguments must be of standard integer types.");
+    template<class T, class U> requires is_integral_v<T> && is_integral_v<U>
+    constexpr bool cmp_greater(T t, U u) noexcept {
         return cmp_less(u, t);
     }
 
-    template<class T, class U> constexpr bool cmp_less_equal(T t, U u) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<U>, "Both arguments must be of standard integer types.");
+    template<class T, class U> requires is_integral_v<T> && is_integral_v<U>
+    constexpr bool cmp_less_equal(T t, U u) noexcept {
         return !cmp_greater(t, u);
     }
 
-    template<class T, class U> constexpr bool cmp_greater_equal(T t, U u) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<U>, "Both arguments must be of standard integer types.");
+    template<class T, class U> requires is_integral_v<T> && is_integral_v<U>
+    constexpr bool cmp_greater_equal(T t, U u) noexcept {
         return !cmp_less(t, u);
     }
 
-    template<class R, class T> constexpr bool in_range(T t) noexcept {
-        static_assert(is_integral_v<T> && is_integral_v<R>, "Both R and T must be integral types.");
+    template<class R, class T> requires is_integral_v<R> && is_integral_v<T>
+    constexpr bool in_range(T t) noexcept {
         return cmp_greater_equal(t, numeric_limits<R>::min()) && cmp_less_equal(t, numeric_limits<R>::max());
     }
 
     /* 20.3 Compile-time integer sequences */
-    template<class T, T ...I> struct integer_sequence {
-        static_assert(is_integral_v<T>, "T must be an integral type.");
+    template<class T, T ...I> requires is_integral_v<T>
+    struct integer_sequence {
         using value_type = T;
         static constexpr size_t size() noexcept { return sizeof...(I); }
     };
@@ -119,13 +116,14 @@ namespace std {
             }
         }
 
-        template<class T, class IntConstant> struct __make_integer_sequence {
-            static_assert(IntConstant::value >= 0, "N must be nonnegative.");
+        template<class T, class IntConstant> requires (IntConstant::value >= 0)
+        struct __make_integer_sequence {
             using type = decltype(__internal::__make_integer_sequence_test<T, IntConstant::value, IntConstant::value - 1>());
         };
     }
 
-    template<class T, T N> using make_integer_sequence = 
+    template<class T, T N> requires is_integral_v<T> && (N >= 0)
+    using make_integer_sequence = 
         typename __internal::__make_integer_sequence<T, integral_constant<T, N>>::type;
     template<size_t N> using make_index_sequence = make_integer_sequence<size_t, N>;
 
@@ -154,68 +152,59 @@ namespace std {
         pair(pair&&) = default;
 
         constexpr explicit(!__internal::__is_implicit_default_constructible<T1> || !__internal::__is_implicit_default_constructible<T2>) 
-        pair() : first(), second() {
-            static_assert(is_default_constructible_v<T1> && is_default_constructible_v<T2>, "Both elements of the pair must be of default constructible types.");
-        }
+        pair() requires is_default_constructible_v<T1> && is_default_constructible_v<T2>
+            : first(), second() {}
 
         constexpr explicit(!is_convertible_v<const T1&, T1> || !is_convertible_v<const T2&, T2>)
-        pair(const T1& x, const T2& y) : first(x), second(y) {
-            static_assert(is_copy_constructible_v<T1> && is_copy_constructible_v<T2>, "Both elements of the pair must be of copy constructible types.");
-        }
+        pair(const T1& x, const T2& y) requires is_copy_constructible_v<T1> && is_copy_constructible_v<T2>
+            : first(x), second(y) {}
 
-        template<class U1, class U2>
+        template<class U1, class U2> requires is_constructible_v<T1, U1> && is_constructible_v<T2, U2>
         constexpr explicit(!is_convertible_v<U1, T1> || !is_convertible_v<U2, T2>)
-        pair(U1&& x, U2&& y) : first(forward<U1>(x)), second(forward<U2>(y)) {
-            static_assert(is_constructible_v<T1, U1> && is_constructible_v<T2, U2>, "Both elements of the pair must be constructible from U1, U2, respectively.");
-        }
+        pair(U1&& x, U2&& y) : first(forward<U1>(x)), second(forward<U2>(y)) {}
 
-        template<class U1, class U2>
+        template<class U1, class U2> requires is_constructible_v<T1, const T1&> && is_constructible_v<T2, const T2&>
         constexpr explicit(!is_convertible_v<const U1&, T1> || !is_convertible_v<const U2&, T2>)
-        pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {
-            static_assert(is_constructible_v<T1, const T1&> && is_constructible_v<T2, const T2&>, "Both elements of the pair must be of copy constructible types.");
-        }
+        pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {}
 
-        template<class U1, class U2>
+        template<class U1, class U2> requires is_constructible_v<T1, U1> && is_constructible_v<T2, U2>
         constexpr explicit(!is_convertible_v<U1, T1> || !is_convertible_v<U2, T2>) 
-        pair(pair<U1, U2>&& p) : first(forward<U1>(p.first)), second(forward<U2>(p.second)) {
-            static_assert(is_constructible_v<T1, U1> && is_constructible_v<T2, U2>, "Both elements of the pair must be constructible from U1, U2, respectively.");
-        }
+        pair(pair<U1, U2>&& p) : first(forward<U1>(p.first)), second(forward<U2>(p.second)) {}
 
         // TODO: Implement!
-        template<class ...Args1, class ...Args2>
-        constexpr pair(piecewise_construct_t, tuple<Args1...> first_args, tuple<Args2...> second_args) : T1(), T2() {
-            static_assert(is_constructible_v<T1, Args1...> && is_constructible_v<T2, Args2...>, "Both elements of the pair must be constructible from elements in the two tuples, respectively.");
-        }
+        template<class ...Args1, class ...Args2> requires is_constructible_v<T1, Args1...> && is_constructible_v<T2, Args2...>
+        constexpr pair(piecewise_construct_t, tuple<Args1...> first_args, tuple<Args2...> second_args)  
+            : T1(), T2() {}
 
-        constexpr pair& operator=(enable_if_t<is_copy_assignable_v<T1> && is_copy_assignable_v<T2>, const pair&> p) {
+        constexpr pair& operator=(const pair& p) requires is_copy_assignable_v<T1> && is_copy_assignable_v<T2> {
             first = p.first;
             second = p.second;
             return *this;
         }
 
-        template<class U1, class U2> constexpr pair& operator=(const pair<U1, U2>& p) {
-            static_assert(is_assignable_v<T1&, const U1&> && is_assignable_v<T2&, const U2&>, "Both elements of the pair must be assignable from elements in p.");
+        template<class U1, class U2> requires is_assignable_v<T1&, const U1&> && is_assignable_v<T2&, const U2&>
+        constexpr pair& operator=(const pair<U1, U2>& p) {
             first = p.first;
             second = p.second;
             return *this;
         }
 
-        constexpr pair& operator=(enable_if_t<is_move_assignable_v<T1> && is_move_assignable_v<T2>, pair&&> p) 
-            noexcept(noexcept(is_nothrow_move_assignable_v<T1> && is_nothrow_move_assignable_v<T2>)) {
+        constexpr pair& operator=(pair&& p) noexcept(noexcept(is_nothrow_move_assignable_v<T1> && is_nothrow_move_assignable_v<T2>))
+            requires is_move_assignable_v<T1> && is_move_assignable_v<T2> {
             first = forward<T1>(p.first);
             second = forward<T2>(p.second);
             return *this;
         }
 
-        template<class U1, class U2> constexpr pair& operator=(pair<U1, U2>&& p) {
-            static_assert(is_assignable_v<T1&, U1> && is_assignable_v<T2&, U2>, "Both elements of the pair must be assignable from elements in p.");
+        template<class U1, class U2> requires is_assignable_v<T1&, U1> && is_assignable_v<T2&, U2>
+        constexpr pair& operator=(pair<U1, U2>&& p) {
             first = forward<U1>(p.first);
             second = forward<U2>(p.second);
             return *this;
         }
 
-        constexpr void swap(pair& p) noexcept(noexcept(is_nothrow_swappable_v<T1> && is_nothrow_swappable_v<T2>)) {
-            static_assert(is_swappable_v<T1> && is_swappable_v<T2>, "Both elements of the pair must be swappable.");
+        constexpr void swap(pair& p) noexcept(noexcept(is_nothrow_swappable_v<T1> && is_nothrow_swappable_v<T2>))
+            requires is_swappable_v<T1> && is_swappable_v<T2> {
             swap(first, p.first);
             swap(second, p.second);
         }
@@ -235,8 +224,8 @@ namespace std {
             return __internal::synth_three_way(x.second, y.second);
     }
 
-    template<class T1, class T2> constexpr void swap(pair<T1, T2>& x, pair<T1, T2>& y) noexcept(noexcept(x.swap(y))) {
-        static_assert(is_swappable_v<T1> && is_swappable_v<T2>, "Both elements of the pair must be swappable.");
+    template<class T1, class T2> requires is_swappable_v<T1> && is_swappable_v<T2>
+    constexpr void swap(pair<T1, T2>& x, pair<T1, T2>& y) noexcept(noexcept(x.swap(y))) {
         return x.swap(y);
     }
 
@@ -245,71 +234,71 @@ namespace std {
     }
 
     template<class T1, class T2> struct tuple_size<pair<T1, T2>> : integral_constant<size_t, 2> {};
-    template<size_t I, class T1, class T2> struct tuple_element<I, pair<T1, T2>> {
-        static_assert(I < 2, "A pair only consists of two elements.");
+    template<size_t I, class T1, class T2> requires (I < 2)
+    struct tuple_element<I, pair<T1, T2>> {
         using type = conditional_t<I == 0, T1, T2>;
     };
 
-    template<size_t I, class T1, class T2>
+    template<size_t I, class T1, class T2> requires (I < 2)
     constexpr tuple_element_t<I, pair<T1, T2>>& get(pair<T1, T2>& p) noexcept {
         if constexpr (I == 0) { return p.first; }
         else { return p.second; }
     }
 
-    template<size_t I, class T1, class T2>
+    template<size_t I, class T1, class T2> requires (I < 2)
     constexpr const tuple_element_t<I, pair<T1, T2>>& get(const pair<T1, T2>& p) noexcept {
         if constexpr (I == 0) { return p.first; }
         else { return p.second; }
     }
 
-    template<size_t I, class T1, class T2>
+    template<size_t I, class T1, class T2> requires (I < 2)
     constexpr tuple_element_t<I, pair<T1, T2>>&& get(pair<T1, T2>&& p) noexcept {
         if constexpr (I == 0) { return p.first; }
         else { return p.second; }
     }
 
-    template<size_t I, class T1, class T2>
+    template<size_t I, class T1, class T2> requires (I < 2)
     constexpr const tuple_element_t<I, pair<T1, T2>>&& get(const pair<T1, T2>&& p) noexcept {
         if constexpr (I == 0) { return p.first; }
         else { return p.second; }
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr T1& get(pair<T1, T2>& p) noexcept {
         return p.first;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr const T1& get(const pair<T1, T2>& p) noexcept {
         return p.first;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr T1&& get(pair<T1, T2>&& p) noexcept {
         return p.first;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr const T1&& get(const pair<T1, T2>&& p) noexcept {
         return p.first;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr T2& get(pair<T1, T2>& p) noexcept {
         return p.second;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr const T2& get(const pair<T1, T2>& p) noexcept {
         return p.second;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr T2&& get(pair<T1, T2>&& p) noexcept {
         return p.second;
     }
 
-    template<class T1, class T2>
+    template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr const T2&& get(const pair<T1, T2>&& p) noexcept {
         return p.second;
     }
@@ -328,5 +317,4 @@ namespace std {
         explicit in_place_index_t() = default;
     };
     template<size_t I> inline constexpr in_place_index_t<I> in_place_index{};
-
 }

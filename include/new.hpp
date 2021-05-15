@@ -33,8 +33,8 @@ namespace std {
 
     /* 17.6.5 Pointer optimization barrier */
 #if __has_intrinsics_for(builtin_launder)
-    template<class T> [[nodiscard]] constexpr T* launder(T* p) noexcept {
-        static_assert(!is_function_v<T> && !is_void_v<T>, "T cannot be a function type or void.");
+    template<class T> requires (!is_function_v<T>) && (!is_void_v<T>)
+    [[nodiscard]] constexpr T* launder(T* p) noexcept {
         return __builtin_launder(p);
     }
 #endif

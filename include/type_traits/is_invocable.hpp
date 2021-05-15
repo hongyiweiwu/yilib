@@ -21,7 +21,7 @@ namespace std::__internal {
 
     // 20.14.4.1.2
     template<class MemberPtr, class Base, class T1, class ...Args> 
-    requires is_member_function_pointer<MemberPtr Base::*>::value && __is_reference_wrapper<typename decay<T1>::type>::value
+    requires is_member_function_pointer<MemberPtr Base::*>::value && is_reference_wrapper<typename decay<T1>::type>::value
     constexpr auto __INVOKE(int*, MemberPtr Base::* fn, T1&& t1, Args&& ...args)
         noexcept(noexcept((t1.get().*fn)(forward<Args>(args)...))) -> decltype((t1.get().*fn)(forward<Args>(args)...)) {
             return (t1.get().*fn)(forward<Args>(args)...);
@@ -43,7 +43,7 @@ namespace std::__internal {
     }
 
     template<class MemberPtr, class Base, class T1>
-    requires is_member_object_pointer<MemberPtr Base::*>::value && __is_reference_wrapper<typename decay<T1>::type>::value
+    requires is_member_object_pointer<MemberPtr Base::*>::value && is_reference_wrapper<typename decay<T1>::type>::value
     constexpr auto __INVOKE(int*, MemberPtr Base::* fn, T1&& t1)
         noexcept(noexcept(t1.get().*fn)) -> decltype(t1.get().*fn) {
             return t1.get().*fn;
@@ -62,11 +62,15 @@ namespace std::__internal {
         return (forward<Fn>(fn))(forward<Args>(args)...);
     }
 
-    template<class Void, class ...Args> requires is_void<Void>::value
+    template<class ...Args>
     struct __is_invocable : false_type {};
-    template<class ...Args> struct __is_invocable<void_t<decltype(__INVOKE(static_cast<int*>(nullptr), declval<Args>()...))>, Args...> : true_type {};
+    template<class ...Args> requires requires { __INVOKE(static_cast<int*>(nullptr), declval<Args>()...); }
+    struct __is_invocable<Args...> : true_type {};
 
-    template<class Fn, class ...Args> struct is_invocable : __is_invocable<void, Fn, Args...> {};
+    template<class Fn, class ...Args> 
+        requires (is_complete<Fn>::value || is_void<Fn>::value || is_unbounded_array<Fn>::value)
+            && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
+    struct is_invocable : __is_invocable<Fn, Args...> {};
 
     template<class R, class ...Args>
     struct __is_invocable_r {
@@ -78,18 +82,26 @@ namespace std::__internal {
         >::type;
     };
 
-    template<class R, class Fn, class ...Args> struct is_invocable_r : __is_invocable_r<R, Fn, Args...>::type {};
+    template<class R, class Fn, class ...Args>
+        requires (is_complete<Fn>::value || is_void<Fn>::value || is_unbounded_array<Fn>::value)
+            && (is_complete<R>::value || is_void<R>::value || is_unbounded_array<R>::value)
+            && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
+    struct is_invocable_r : __is_invocable_r<R, Fn, Args...>::type {};
 
     template<class Fn, class ...Args>
     constexpr auto __INVOKE_NOTHROW(int*, Fn&& fn, Args&& ...args) noexcept -> decltype(auto) {
         return __INVOKE(static_cast<int*>(nullptr), forward<Fn>(fn), forward<Args>(args)...);
     }
 
-    template<class Void, class ...Args> requires is_void<Void>::value
+    template<class ...Args>
     struct __is_nothrow_invocable : false_type {};
-    template<class ...Args> struct __is_nothrow_invocable<void_t<decltype(__INVOKE_NOTHROW(static_cast<int*>(nullptr), declval<Args>()...))>, Args...> : true_type {};
+    template<class ...Args> requires requires { __INVOKE_NOTHROW(static_cast<int*>(nullptr), declval<Args>()...); }
+    struct __is_nothrow_invocable<Args...> : true_type {};
 
-    template<class Fn, class ...Args> struct is_nothrow_invocable : __is_nothrow_invocable<void, Fn, Args...> {};
+    template<class Fn, class ...Args> 
+        requires (is_complete<Fn>::value || is_void<Fn>::value || is_unbounded_array<Fn>::value)
+            && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
+    struct is_nothrow_invocable : __is_nothrow_invocable<Fn, Args...> {};
 
     template<class R, class ...Args>
     struct __is_nothrow_invocable_r {
@@ -101,12 +113,20 @@ namespace std::__internal {
         >::type;
     };
 
-    template<class R, class Fn, class ...Args> struct is_nothrow_invocable_r : __is_nothrow_invocable_r<R, Fn, Args...>::type {};
+    template<class R, class Fn, class ...Args> 
+        requires (is_complete<Fn>::value || is_void<Fn>::value || is_unbounded_array<Fn>::value)
+            && (is_complete<R>::value || is_void<R>::value || is_unbounded_array<R>::value)
+            && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
+    struct is_nothrow_invocable_r : __is_nothrow_invocable_r<R, Fn, Args...>::type {};
 
-    template<class Void, class ...Args> struct __invoke_result {};
-    template<class ...Args> struct __invoke_result<void_t<decltype(__INVOKE(static_cast<int*>(nullptr), declval<Args>()...))>, Args...> {
+    template<class ...Args> struct __invoke_result {};
+    template<class ...Args> requires requires { __INVOKE(static_cast<int*>(nullptr), declval<Args>()...); }
+    struct __invoke_result<Args...> {
         using type = decltype(__INVOKE(static_cast<int*>(nullptr), declval<Args>()...));
     };
 
-    template<class Fn, class ...Args> struct invoke_result : __invoke_result<void, Fn, Args...> {};
+    template<class Fn, class ...Args> 
+        requires (is_complete<Fn>::value || is_void<Fn>::value || is_unbounded_array<Fn>::value)
+            && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
+    struct invoke_result : __invoke_result<Fn, Args...> {};
 }

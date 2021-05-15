@@ -31,9 +31,13 @@ namespace std::__internal {
     template<class B> auto __is_base_of_test(B*) -> true_type;
     template<class B> auto __is_base_of_test(...) -> false_type;
 
-    template<class Base, class Derived, class = void> struct __is_base_of_impl : true_type {};
-    template<class Base, class Derived> struct __is_base_of_impl<Base, Derived, void_t<decltype(__is_base_of_test<Base>(declval<Derived*>()))>> : decltype(__is_base_of_test<Base>(declval<Derived*>())) {};
+    template<class Base, class Derived> struct __is_base_of_impl : true_type {};
+    template<class Base, class Derived> requires requires { __is_base_of_test<Base>(declval<Derived*>()); }
+    struct __is_base_of_impl<Base, Derived> : decltype(__is_base_of_test<Base>(declval<Derived*>())) {};
 
-    template<class Base, class Derived> struct is_base_of
+    template<class Base, class Derived> 
+        requires (!is_class<Base>::value) || (!is_class<Derived>::value) 
+            || is_same<typename remove_cv<Base>::type, typename remove_cv<Derived>::type>::value || is_complete<Derived>::value
+    struct is_base_of
         : bool_constant<is_class<Base>::value && is_class<Derived>::value && __is_base_of_impl<typename remove_cv<Base>::type, typename remove_cv<Derived>::type>::value> {};
 }

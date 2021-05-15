@@ -8,8 +8,8 @@ namespace std {
     template<class T> class reference_wrapper;
 
     namespace __internal {
-        template<class T> struct __is_reference_wrapper : false_type {};
-        template<class T> struct __is_reference_wrapper<::std::reference_wrapper<T>> : true_type {};
+        template<class T> struct is_reference_wrapper : false_type {};
+        template<class T> struct is_reference_wrapper<::std::reference_wrapper<T>> : true_type {};
 
         template<class T> struct unwrap_reference {};
         template<class T> struct unwrap_reference<::std::reference_wrapper<T>> { using type = T&; };

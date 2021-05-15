@@ -17,7 +17,7 @@
 #include "type_traits/reference_manip.hpp"
 #include "type_traits/relations.hpp"
 #include "type_traits/signedness_manip.hpp"
-#include "type_traits/traits.hpp"
+#include "type_traits/others.hpp"
 
 #include "util/macros.hpp"
 

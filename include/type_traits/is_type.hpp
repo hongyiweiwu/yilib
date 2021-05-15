@@ -5,12 +5,14 @@
 #include "type_traits/base.hpp"
 #include "type_traits/cv_manip.hpp"
 #include "type_traits/is_integral.hpp"
+#include "type_traits/array_manip.hpp"
 #include "util/macros.hpp"
 #include "utility/declval.hpp"
 
 namespace std::__internal {
-    template<class T, class = size_t> struct is_complete : false_type {};
-    template<class T> struct is_complete<T, decltype(sizeof(T))> : true_type {};
+    template<class T> struct is_complete : false_type {};
+    template<class T> requires requires { sizeof(T); }
+    struct is_complete<T> : true_type {};
 
     template<class T> struct __is_void_impl : false_type {};
     template<> struct __is_void_impl<void> : true_type {};
@@ -60,8 +62,9 @@ namespace std::__internal {
     template<class T> struct is_union : bool_constant<__is_union(T)> {};
 #endif
 
-    template<class T, bool IsUnion = is_union<T>::value, typename Dummy = void> struct __is_class_impl : false_type {};
-    template<class T> struct __is_class_impl<T, false, void_t<decltype(declval<int T::*>())>> : true_type {};
+    template<class T> struct __is_class_impl : false_type {};
+    template<class T> requires (!is_union<T>::value) && requires { declval<int T::*>(); }
+    struct __is_class_impl<T> : true_type {};
     template<class T> struct is_class : __is_class_impl<typename remove_cv<T>::type> {};
 
     template<class T> struct is_reference : bool_constant<is_lvalue_reference<T>::value || is_rvalue_reference<T>::value> {};
@@ -91,28 +94,31 @@ namespace std::__internal {
     template<class T> struct is_volatile<volatile T> : true_type {};
 
 #if __has_intrinsics_for(is_empty)
-    template<class T> struct is_empty
-        : bool_constant<__is_empty(T)> {};
+    template<class T> requires (!is_class<T>::value) || is_complete<T>::value
+    struct is_empty : bool_constant<__is_empty(T)> {};
 #endif
 
-    template<class T, class U = void*> struct __is_polymorphic_impl : false_type {};
-    template<class T> struct __is_polymorphic_impl<T, decltype(dynamic_cast<void*>(static_cast<T*>(nullptr)))> : true_type {};
+    template<class T> struct __is_polymorphic_impl : false_type {};
+    template<class T> requires requires { dynamic_cast<void*>(static_cast<T*>(nullptr)); }
+    struct __is_polymorphic_impl<T> : true_type {};
 
-    template<class T> using is_polymorphic = __is_polymorphic_impl<typename remove_cv<T>::type>;
+    template<class T> requires (!is_class<T>::value) || is_complete<T>::value
+    using is_polymorphic = __is_polymorphic_impl<typename remove_cv<T>::type>;
 
 #if __has_intrinsics_for(is_abstract)
-    template<class T> struct is_abstract
-        : bool_constant<__is_abstract(T)> {};
+    template<class T> requires (!is_class<T>::value) || is_complete<T>::value
+    struct is_abstract : bool_constant<__is_abstract(T)> {};
 #endif
 
 #if __has_intrinsics_for(is_final)
-    template<class T> struct is_final
-        : bool_constant<__is_final(T)> {};
+    template<class T> requires (!is_class<T>::value) || is_complete<T>::value || (!is_union<T>::value)
+    struct is_final : bool_constant<__is_final(T)> {};
 #endif
 
 #if __has_intrinsics_for(is_aggregate)
-    template<class T> struct is_aggregate
-        : bool_constant<__is_aggregate(T)> {};
+    template<class T> 
+        requires is_complete<typename remove_all_extents<T>::type>::value || is_void<typename remove_all_extents<T>::type>::value
+    struct is_aggregate : bool_constant<__is_aggregate(T)> {};
 #endif
 
     template<class T> struct is_signed
@@ -123,8 +129,5 @@ namespace std::__internal {
 
     template<class T> auto __is_referenceable_test(int) -> T&;
     template<class T> auto __is_referenceable_test(...) -> void;
-
-    template<class T> struct __is_referenceable : true_type {};
-    template<> struct __is_referenceable<void> : false_type {};
-    template<class T> struct is_referenceable : __is_referenceable<decltype(__is_referenceable_test<T>(0))> {};
+    template<class T> struct is_referenceable : bool_constant<is_void<decltype(__is_referenceable_test<T>(0))>::value> {};
 }

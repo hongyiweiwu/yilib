@@ -6,7 +6,8 @@
 #include "type_traits/is_type.hpp"
 
 namespace std::__internal {
-    template<class T> struct alignment_of : integral_constant<size_t, alignof(T)> {};
+    template<class T> requires requires { alignof(T); }
+    struct alignment_of : integral_constant<size_t, alignof(T)> {};
 
     template<size_t Len> requires (Len > 0) && (Len <= alignof(max_align_t))
     consteval size_t __default_alignment() noexcept {

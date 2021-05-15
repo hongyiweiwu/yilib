@@ -6,8 +6,10 @@
 #include "type_traits/array_manip.hpp"
 
 namespace std::__internal {
-    template<class T> auto __decay(int) -> typename enable_if<is_array<T>::value, typename remove_extent<T>::type*>::type;
-    template<class T> auto __decay(int) -> typename enable_if<is_function<T>::value, typename add_pointer<T>::type>::type;
+    template<class T> requires is_array<T>::value 
+    auto __decay(int) -> typename remove_extent<T>::type*;
+    template<class T> requires is_function<T>::value 
+    auto __decay(int) -> typename add_pointer<T>::type;
     template<class T> auto __decay(...) -> typename remove_cv<T>::type;
 
     template<class T> struct decay {
