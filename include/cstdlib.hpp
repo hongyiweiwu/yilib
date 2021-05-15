@@ -12,8 +12,7 @@ namespace std {
     [[noreturn]] void abort() noexcept;
     int atexit(void (*func)()) noexcept;
 
-#ifndef __APPLE_CC__
-    // TODO: Mac's default C library doesn't have at_quick_exit.
+#ifndef __APPLE__
     inline int at_quick_exit(void (*func)()) noexcept {
         return ::at_quick_exit(func);
     }
@@ -22,8 +21,7 @@ namespace std {
     [[noreturn]] void exit(int status);
     [[noreturn]] void _Exit(int status) noexcept;
     
-#ifndef __APPLE_CC__
-    // TODO: Mac's default C library doesn't have quick_exit.
+#ifndef __APPLE__
     [[noreturn]] inline void quick_exit(int status) noexcept {
         ::quick_exit(status);
     }
