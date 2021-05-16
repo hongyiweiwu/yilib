@@ -569,7 +569,7 @@ namespace std {
     }
 
     namespace __internal {
-        template<class T, class U> requires requires {
+        template<class T, class U> requires requires (const T& t, const U& u) {
             { t < u } -> boolean_testable;
             { u < t } -> boolean_testable;
         } constexpr auto synth_three_way(const T& t, const U& u) {

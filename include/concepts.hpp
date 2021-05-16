@@ -46,7 +46,7 @@ namespace std {
     namespace ranges {
         // We use a separate __internal namespace under ranges instead of the traditional std::__internal because we don't
         // want to pollute the latter with our custom deleted swap function.
-        namespace __internal {
+        namespace __swap_internal {
             // Prevents any ranges::swap declarations in the ranges namespace from engaging in overload resolution.
             template<class T> void swap(T&, T&) = delete;
 
@@ -94,7 +94,7 @@ namespace std {
         }
 
         inline namespace __inline_swap {
-            inline constexpr auto swap = ::std::ranges::__internal::__swap_fn{};
+            inline constexpr auto swap = ::std::ranges::__swap_internal::__swap_fn{};
         }
     }
 
