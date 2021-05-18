@@ -6,28 +6,21 @@
 #include "utility/declval.hpp"
 
 namespace std::__internal {
-    template<class T, class ...Args> struct __is_constructible_impl : false_type {};
-    template<class T, class ...Args> requires requires { T(declval<Args>()...); }
-    struct __is_constructible_impl<T, Args...> : true_type {};
     template<class T, class ...Args>
         requires (is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value)
             && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
-    struct is_constructible
-        : __is_constructible_impl<T, Args...> {};
+    struct is_constructible : bool_constant<requires { T(declval<Args>()...); }> {};
 
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
-    struct is_default_constructible 
-        : is_constructible<T> {};
+    struct is_default_constructible : is_constructible<T> {};
 
-    template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_copy_constructible 
-        : bool_constant<is_constructible<T, const T&>::value> {};
-    template<class T> struct __is_copy_constructible<T, false> : false_type {};
+    template<class T> struct __is_copy_constructible : bool_constant<is_constructible<T, const T&>::value> {};
+    template<class T> requires (!is_referenceable<T>::value) struct __is_copy_constructible<T> : false_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_copy_constructible : __is_copy_constructible<T> {};
 
-    template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_move_constructible 
-        : bool_constant<is_constructible<T, T&&>::value> {};
-    template<class T> struct __is_move_constructible<T, false> : false_type {};
+    template<class T> struct __is_move_constructible : bool_constant<is_constructible<T, T&&>::value> {};
+    template<class T> requires (!is_referenceable<T>::value) struct __is_move_constructible<T> : false_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_move_constructible : __is_move_constructible<T> {};
 
@@ -45,40 +38,36 @@ namespace std::__internal {
 #endif
 
 #if __has_intrinsics_for(is_trivially_constructible)
-    template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_trivially_copy_constructible 
-        : bool_constant<is_trivially_constructible<T, const T&>::value> {};
-    template<class T> struct __is_trivially_copy_constructible<T, false> : false_type {};
+    template<class T> struct __is_trivially_copy_constructible : bool_constant<is_trivially_constructible<T, const T&>::value> {};
+    template<class T> requires (!is_referenceable<T>::value) struct __is_trivially_copy_constructible<T> : false_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_trivially_copy_constructible : __is_trivially_copy_constructible<T> {};
 #endif
 
 #if __has_intrinsics_for(is_trivially_constructible)
-    template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_trivially_move_constructible 
-        : bool_constant<is_trivially_constructible<T, T&&>::value> {};
-    template<class T> struct __is_trivially_move_constructible<T, false> : false_type {};
+    template<class T> struct __is_trivially_move_constructible : bool_constant<is_trivially_constructible<T, T&&>::value> {};
+    template<class T> requires (!is_referenceable<T>::value) struct __is_trivially_move_constructible<T> : false_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_trivially_move_constructible : __is_trivially_move_constructible<T> {};
 #endif
 
-    template<class T, class __Dummy, class ...Args> struct __is_nothrow_constructible_impl : false_type {};
-    template<class T, class ...Args> struct __is_nothrow_constructible_impl<T, decltype(noexcept(::new T(declval<Args>()...))), Args...> : true_type {};
+    template<class T, class ...Args> struct __is_nothrow_constructible_impl : false_type {};
+    template<class T, class ...Args> requires (noexcept(::new T(declval<Args>()...))) struct __is_nothrow_constructible_impl<T, Args...> : true_type {};
     template<class T, class ...Args> 
         requires (is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value)
             && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
-    struct is_nothrow_constructible : __is_nothrow_constructible_impl<T, bool, Args...> {};
+    struct is_nothrow_constructible : __is_nothrow_constructible_impl<T, Args...> {};
 
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_nothrow_default_constructible : is_nothrow_constructible<T> {};
 
-    template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_nothrow_copy_constructible 
-        : bool_constant<is_nothrow_constructible<T, const T&>::value> {};
-    template<class T> struct __is_nothrow_copy_constructible<T, false> : false_type {};
+    template<class T> struct __is_nothrow_copy_constructible : bool_constant<is_nothrow_constructible<T, const T&>::value> {};
+    template<class T> requires (!is_referenceable<T>::value) struct __is_nothrow_copy_constructible<T> : false_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_nothrow_copy_constructible : __is_nothrow_copy_constructible<T> {};
 
-    template<class T, bool Referenceable = is_referenceable<T>::value> struct __is_nothrow_move_constructible 
-        : bool_constant<is_nothrow_constructible<T, T&&>::value> {};
-    template<class T> struct __is_nothrow_move_constructible<T, false> : false_type {};
+    template<class T> struct __is_nothrow_move_constructible : bool_constant<is_nothrow_constructible<T, T&&>::value> {};
+    template<class T> requires (!is_referenceable<T>::value) struct __is_nothrow_move_constructible<T> : false_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_nothrow_move_constructible : __is_nothrow_move_constructible<T> {};
 }

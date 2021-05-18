@@ -129,5 +129,5 @@ namespace std::__internal {
 
     template<class T> auto __is_referenceable_test(int) -> T&;
     template<class T> auto __is_referenceable_test(...) -> void;
-    template<class T> struct is_referenceable : bool_constant<is_void<decltype(__is_referenceable_test<T>(0))>::value> {};
+    template<class T> struct is_referenceable : bool_constant<!is_void<decltype(__is_referenceable_test<T>(0))>::value> {};
 }

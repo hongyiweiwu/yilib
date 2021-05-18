@@ -139,42 +139,42 @@ namespace std {
     public:
         constexpr tuple& operator=(const tuple& tpl)
         requires (is_copy_assignable_v<T> && ...) {
-            constexpr auto helper = [this]<size_t ...I>(const tuple& tpl) {
-                ((__leaf_t<I>::get() = tpl.__leaf_t<I>::get()), ...);
+            constexpr auto helper = []<size_t ...I>(tuple& self, const tuple& tpl) {
+                ((self.__leaf_t<I>::get() = tpl.__leaf_t<I>::get()), ...);
             };
 
-            helper(tpl);
+            helper(*this, tpl);
             return *this;
         }
 
         constexpr tuple& operator=(tuple&& tpl)
         noexcept((is_nothrow_move_assignable_v<T> && ...))
         requires (is_move_assignable_v<T> && ...) {
-            constexpr auto helper = [this]<size_t ...I>(tuple&& tpl) {
-                ((__leaf_t<I>::get() = forward<T>(tpl.__leaf_t<I>::get())), ...);
+            constexpr auto helper = []<size_t ...I>(tuple& self, tuple&& tpl) {
+                ((self.__leaf_t<I>::get() = forward<T>(tpl.__leaf_t<I>::get())), ...);
             };
 
-            helper(move(tpl));
+            helper(*this, move(tpl));
             return *this;
         }
 
         template<class ...U> requires (sizeof...(T) == sizeof...(U)) && (is_assignable_v<T&, const U&> && ...)
         constexpr tuple& operator=(const tuple<U...>& tpl) {
-            constexpr auto helper = [this]<size_t ...I>(tuple&& tpl) {
-                ((__leaf_t<I>::get() = tpl.__leaf_t<I>::get()), ...);
+            constexpr auto helper = []<size_t ...I>(tuple& self, const tuple<U...>& tpl) {
+                ((self.__leaf_t<I>::get() = tpl.__leaf_t<I>::get()), ...);
             };
 
-            helper(tpl);
+            helper(*this, tpl);
             return *this;
         }
 
         template<class ...U> requires (sizeof...(T) == sizeof...(U)) && (is_assignable_v<T&, U> && ...)
         constexpr tuple& operator=(tuple<U...>&& tpl) {
-            constexpr auto helper = [this]<size_t ...I>(tuple&& tpl) {
-                ((__leaf_t<I>::get() = forward<U>(tpl.__leaf_t<I>::get())), ...);
+            constexpr auto helper = []<size_t ...I>(tuple& self, tuple&& tpl) {
+                ((self.__leaf_t<I>::get() = forward<U>(tpl.__leaf_t<I>::get())), ...);
             };
 
-            helper(tpl);
+            helper(*this, tpl);
             return *this;
         }
 

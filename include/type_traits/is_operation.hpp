@@ -15,16 +15,13 @@ namespace std::__internal {
     struct is_trivially_copyable : bool_constant<__is_trivially_copyable(T)> {};
 #endif
 
-    template<class T, class U> struct __is_swappable_with : false_type {};
-    template<class T, class U> requires requires {
-        swap(declval<T>(), declval<U>());
-        swap(declval<U>(), declval<T>());
-    } struct __is_swappable_with<T, U> : true_type {};
-
     template<class T, class U> 
         requires (is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value)
             && (is_complete<U>::value || is_void<U>::value || is_unbounded_array<U>::value)
-    struct is_swappable_with : __is_swappable_with<T, U> {};
+    struct is_swappable_with : bool_constant<requires {
+        swap(declval<T>(), declval<U>());
+        swap(declval<U>(), declval<T>());
+    }> {};
 
     template<class T> struct __is_swappable : bool_constant<is_swappable_with<T&, T&>::value> {};
     template<class T> requires (!is_referenceable<T>::value) struct __is_swappable<T> : false_type {};
@@ -59,10 +56,8 @@ namespace std::__internal {
     struct is_nothrow_swappable : __is_nothrow_swappable<T> {};
 
     template<class T> struct __is_nothrow_destructible : false_type {};
-    template<class T> requires is_reference<T>::value
-    struct __is_nothrow_destructible<T> : true_type {};
-    template<class T> struct __is_nothrow_destructible<T&&> : true_type {};
-    template<class T> requires is_object<T>::value && (noexcept(declval<T&>().~T()))
+    template<class T> requires is_reference<T>::value struct __is_nothrow_destructible<T> : true_type {};
+    template<class T> requires is_object<T>::value && (noexcept(declval<T&>().~T())) 
     struct __is_nothrow_destructible<T> : true_type {};
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_nothrow_destructible : __is_nothrow_destructible<typename remove_all_extents<T>::type> {};
