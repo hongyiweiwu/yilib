@@ -8,7 +8,9 @@
 #include "type_traits.hpp"
 #include "cstddef.hpp"
 #include "limits.hpp"
-#include "tuple.hpp"
+
+#include "__tuple.hpp"
+// #include "tuple.hpp"
 
 namespace std {
     /* 20.2.2 swap */
@@ -171,10 +173,15 @@ namespace std {
         constexpr explicit(!is_convertible_v<U1, T1> || !is_convertible_v<U2, T2>) 
         pair(pair<U1, U2>&& p) : first(forward<U1>(p.first)), second(forward<U2>(p.second)) {}
 
-        // TODO: Implement!
+private:
+        // This is a helper constructor for the actual public constructor below.
+        template<class ...Args1, class ...Args2, size_t ...I1, size_t ...I2>
+        constexpr pair(piecewise_construct_t, index_sequence<I1...>, index_sequence<I2...>, tuple<Args1...>&& first_args, tuple<Args2...>&& second_args)
+            : T1(forward<Args1>(get<I1>(first_args))...), T2(forward<Args2>(get<I2>(second_args))...) {}
+public:
         template<class ...Args1, class ...Args2> requires is_constructible_v<T1, Args1...> && is_constructible_v<T2, Args2...>
-        constexpr pair(piecewise_construct_t, tuple<Args1...> first_args, tuple<Args2...> second_args)  
-            : T1(), T2() {}
+        constexpr pair(piecewise_construct_t pc, tuple<Args1...> first_args, tuple<Args2...> second_args)  
+            : pair(pc, make_index_sequence<sizeof...(Args1)>{}, make_index_sequence<sizeof...(Args2)>{}, move(first_args), move(second_args)) {}
 
         constexpr pair& operator=(const pair& p) requires is_copy_assignable_v<T1> && is_copy_assignable_v<T2> {
             first = p.first;

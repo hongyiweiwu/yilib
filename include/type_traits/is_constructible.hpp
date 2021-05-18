@@ -6,13 +6,14 @@
 #include "utility/declval.hpp"
 
 namespace std::__internal {
-    template<class T, class _Dummy, class ...Args> struct __is_constructible_impl : false_type {};
-    template<class T, class ...Args> struct __is_constructible_impl<T, decltype(::new T(declval<Args>()...)), Args...> : true_type {};
+    template<class T, class ...Args> struct __is_constructible_impl : false_type {};
+    template<class T, class ...Args> requires requires { T(declval<Args>()...); }
+    struct __is_constructible_impl<T, Args...> : true_type {};
     template<class T, class ...Args>
         requires (is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value)
             && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
     struct is_constructible
-        : __is_constructible_impl<T, T*, Args...> {};
+        : __is_constructible_impl<T, Args...> {};
 
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_default_constructible 

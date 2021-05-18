@@ -9,6 +9,8 @@
 #include "limits.hpp"
 #include "new.hpp"
 
+#include "tuple.hpp"
+
 namespace std {
     namespace __internal {
         template<class T> constexpr T* addressof(T& r) noexcept {
@@ -146,7 +148,7 @@ namespace std {
 
     template<class T, class Alloc> requires __internal::is_specialized_of_pair<T>::value
     constexpr auto uses_allocator_construction_args(const Alloc& alloc) noexcept {
-        return uses_allocator_construction_args<T>(alloc, piecewise_construct, tuple<>{}, tuple<>{});
+        return uses_allocator_construction_args<T>(alloc, piecewise_construct, forward_as_tuple(), forward_as_tuple());
     }
 
     template<class T, class Alloc, class U, class V> requires __internal::is_specialized_of_pair<T>::value

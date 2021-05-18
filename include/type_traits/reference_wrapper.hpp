@@ -11,7 +11,7 @@ namespace std {
         template<class T> struct is_reference_wrapper : false_type {};
         template<class T> struct is_reference_wrapper<::std::reference_wrapper<T>> : true_type {};
 
-        template<class T> struct unwrap_reference {};
+        template<class T> struct unwrap_reference { using type = T; };
         template<class T> struct unwrap_reference<::std::reference_wrapper<T>> { using type = T&; };
 
         template<class T> struct unwrap_ref_decay : unwrap_reference<typename decay<T>::type> {};
