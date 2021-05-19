@@ -19,4 +19,6 @@ namespace std {
         ptr = static_cast<void*>(static_cast<char*>(ptr) + spacing);
         return ptr;
     }
+
+    const char* bad_weak_ptr::what() const noexcept { return "std::bad_weak_ptr"; }
 }
