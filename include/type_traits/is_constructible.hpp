@@ -52,7 +52,7 @@ namespace std::__internal {
 #endif
 
     template<class T, class ...Args> struct __is_nothrow_constructible_impl : false_type {};
-    template<class T, class ...Args> requires (noexcept(::new T(declval<Args>()...))) struct __is_nothrow_constructible_impl<T, Args...> : true_type {};
+    template<class T, class ...Args> requires (noexcept(T(declval<Args>()...))) struct __is_nothrow_constructible_impl<T, Args...> : true_type {};
     template<class T, class ...Args> 
         requires (is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value)
             && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)

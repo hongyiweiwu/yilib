@@ -1,6 +1,19 @@
 #pragma once
 
+#include "utility.hpp"
+
 namespace std {
+    /* 20.14.8 Comparisons */
+    template<class T = void> struct less {
+        constexpr bool operator()(const T& x, const T& y) const { return x < y; }
+    };
+
+    template<> struct less<void> {
+        template<class T, class U> constexpr auto operator()(T&& t, U&& u) const {
+            return forward<T>(t) < forward<U>(u);
+        }
+    };
+
     /* 20.14.19 Class template hash */
     namespace __internal {
         /* Used purely to specify a specialization of std::hash that represents when std::hash is supposed to be deleted. All deleted std::hash specializations

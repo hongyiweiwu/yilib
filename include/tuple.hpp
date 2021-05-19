@@ -71,6 +71,7 @@ namespace std {
     }
 
     /* 20.5.3 Class template tuple */
+    // TODO: Implement allocator-based constructors.
     template<class ...T> class tuple 
         : public __internal::__tuple_leaf_wrapper<make_index_sequence<sizeof...(T)>, T...> {
     private:
@@ -416,7 +417,7 @@ namespace std {
     }
 
     /* 20.5.9 Tuple traits */
-    // Forward declaration. Originally declared in "allocator.hpp".
+    // Forward declaration. Originally declared in "memory.hpp".
     template<class T, class Alloc> struct uses_allocator;
     template<class ...Types, class Alloc> struct uses_allocator<tuple<Types...>, Alloc> : true_type {};
 
