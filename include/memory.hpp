@@ -5,3 +5,4 @@
 #include "memory/allocators.hpp"
 #include "memory/pointer_util.hpp"
 #include "memory/shared_ptr.hpp"
+#include "memory/specialized_algorithms.hpp"

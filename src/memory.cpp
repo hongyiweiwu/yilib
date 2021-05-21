@@ -2,6 +2,8 @@
 #include "cstddef.hpp"
 #include "type_traits.hpp"
 
+#include "stdatomic.h"
+
 namespace std {
     void declare_reachable(void* p) {}
     void declare_no_pointers(char* p, size_t n) {}

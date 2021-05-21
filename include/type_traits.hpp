@@ -338,15 +338,15 @@ namespace std {
 
     /* 20.15.10 Member relationships */
 #if __has_intrinsics_for(is_pointer_interconvertible_with_class)
-    using __internal::is_pointer_interconvertible_with_class(mp);
+    using __internal::is_pointer_interconvertible_with_class;
 #endif
 
 #if __has_intrinsics_for(is_corresponding_member)
-    using __internal::is_corresponding_member(M1 S1::* mp, M2 S2::* mq);
+    using __internal::is_corresponding_member;
 #endif
 
     /* 20.15.11 Constant evaluation context */
 #if __has_intrinsics_for(builtin_is_constant_evaluated)
-    using __internal::is_constant_evaluated();
+    using __internal::is_constant_evaluated;
 #endif
 }

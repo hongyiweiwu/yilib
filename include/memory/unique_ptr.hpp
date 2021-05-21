@@ -182,7 +182,7 @@ namespace std {
             && (!is_pointer_v<deleter_type>) && is_nothrow_default_constructible_v<deleter_type>
         explicit unique_ptr(type_identity_t<U> p) noexcept : p(p), d() {} 
 
-        template<class U> requires is_reference_v<D> || is_nothrow_copy_constructible_v<D>
+        template<class U> requires is_reference_v<D> && is_nothrow_copy_constructible_v<D>
             && (is_same_v<U, pointer> || is_null_pointer_v<U> || (is_same_v<pointer, element_type*> && is_pointer_v<U> && is_convertible_v<U, element_type*>))
         unique_ptr(type_identity_t<U> p, const D& d) noexcept : p(p), d(d) {}
 

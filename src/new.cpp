@@ -2,6 +2,9 @@
 #include "cstddef.hpp"
 #include "cstdlib.hpp"
 
+// TODO: Replace with "cmath.hpp" once it's implemented.
+#include "math.h"
+
 #include <stdatomic.h>
 
 namespace std {
@@ -32,6 +35,11 @@ namespace std {
     if (static_cast<std::size_t>(alignment) < __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
         alignment = std::align_val_t(__STDCPP_DEFAULT_NEW_ALIGNMENT__);
     }
+
+    if (size % static_cast<size_t>(alignment) != 0) {
+        size = ceil(double(size) / static_cast<size_t>(alignment)) * static_cast<size_t>(alignment);
+    }
+
     void* ptr = nullptr;
     while ((ptr = std::aligned_alloc(static_cast<std::size_t>(alignment), size)) == nullptr) {
         auto handler = std::get_new_handler();
