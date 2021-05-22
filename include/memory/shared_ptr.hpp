@@ -121,24 +121,28 @@ namespace std {
 
         template<class T>
         struct __ctrl_obj : public __ctrl {
+        public:
+            /* Tag used in constructors to specify that the constructor shouldn't construct the object in storage. */
+            struct noop_t { explicit noop_t() = default; };
         private:
             aligned_storage_t<sizeof(T), alignof(T)> storage;
             _Atomic bool is_freed;
         public:
             template<class ...Args> // requires is_constructible_v<T, Args...>
             __ctrl_obj(Args&& ...args) noexcept : __ctrl(), storage() {
-                new (static_cast<void*>(&storage)) T(forward<Args>(args)...);
+                ::new (static_cast<void*>(&storage)) T(forward<Args>(args)...);
+                atomic_init(&is_freed, false);
+            }
+
+            /* Noop constructor that does not attempt to construct the storage in anyway. The caller needs to get a pointer to the storage by get_object_ptr()
+             * and construct the object explicitly. */
+            explicit __ctrl_obj(noop_t) noexcept : storage() {
                 atomic_init(&is_freed, false);
             }
 
             void delete_content() noexcept override {
                 atomic_store(&is_freed, true);
-
-                if constexpr (is_array_v<T>) {
-                    destroy_at(launder(reinterpret_cast<T*>(&storage)));
-                } else {
-                    launder(reinterpret_cast<T*>(&storage))->~T();
-                }
+                destroy_at(launder(reinterpret_cast<T*>(&storage)));
             }
 
             bool is_empty() const noexcept override {
@@ -157,9 +161,29 @@ namespace std {
         public:
             using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<__ctrl_ptr_with_deleter_alloc>;
 
-            template<class ...Args> requires is_constructible_v<T, Args...>
+            template<class ...Args> // requires is_constructible_v<T, Args...>
             __ctrl_obj_with_alloc(Alloc&& a, Args&& ...args) noexcept 
-                : __ctrl_obj<T>(forward<Args>(args)...), a(move(a)) {}
+                : __ctrl_obj<T>(noop_t{}), a(move(a)) {
+                if constexpr (!is_array_v<T>) {
+                    // It's the responsible of the caller to initialize arrays.
+                    using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<remove_cv_t<T>>;
+                    allocator_type temp(a);
+                    allocator_traits<allocator_type>::construct(temp, reinterpret_cast<remove_cv_t<T>*>(&storage), forward<Args>(args)...));
+                }
+            }
+
+            __ctrl_obj_with_alloc(noop_t) noexcept : __ctrl_obj<T>(noop_t{}), a(move(a)) {}
+
+            void delete_content() noexcept override {
+                atomic_store(&is_freed, true);
+                if constexpr (is_array_v<T>) {
+                    destroy_at(launder(reinterpret_cast<T*>(&storage)));
+                } else {
+                    using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<remove_cv_t<T>>;
+                    allocator_type temp(a);
+                    allocator_traits<allocator_type>::destroy(temp, launder(reinterpret_cast<remove_cv<T>*>(&storage)));
+                }
+            }
 
             void delete_block() noexcept {
                 allocator_type temp(a);
@@ -168,7 +192,6 @@ namespace std {
             }
         };
     }
-
 
     // Forward declaration. Implemented directly below.
     template<class T> class weak_ptr;
@@ -476,8 +499,22 @@ namespace std {
     }
 
     template<class T> requires (!is_unbounded_array_v<T>)
-    shared_ptr<T> make_shared_for_overwrite() { return make_shared<T>(); }
+    shared_ptr<T> make_shared_for_overwrite() {
+        if constexpr (is_array_v<T>) return make_shared<T>();
+
+        auto ctrl = new __internal::__ctrl_obj<T>(__ctrl_obj<T>::noop_t{});
+        ::new (static_cast<void*>(ctrl->get_object_ptr())) T;
+
+        return shared_ptr<T>::__make_shared(ctrl);
+    }
 
     template<class T, class A> requires (!is_bounded_array_v<T>)
-    shared_ptr<T> allocate_shared_for_overwrite(const A& a) { return make_shared<T>(a); }
+    shared_ptr<T> allocate_shared_for_overwrite(const A& a) {
+        if constexpr (is_array_v<T>) return allocate_shared<T>(a);
+
+        auto ctrl = new __internal::__ctrl_obj<T>(__ctrl_obj<T>::noop_t{});
+        ::new (static_cast<void*>(ctrl->get_object_ptr())) T;
+
+        return shared_ptr<T>::__make_shared(ctrl);
+    }
 }
