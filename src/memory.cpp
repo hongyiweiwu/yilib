@@ -1,6 +1,7 @@
-#include "memory.hpp"
 #include "cstddef.hpp"
 #include "type_traits.hpp"
+
+#include "memory/shared_ptr.hpp"
 
 #include "stdatomic.h"
 
@@ -23,4 +24,40 @@ namespace std {
     }
 
     const char* bad_weak_ptr::what() const noexcept { return "std::bad_weak_ptr"; }
+
+    namespace __internal {
+        __ctrl::__ctrl() noexcept {
+            atomic_init(&weak_count, 1);
+            atomic_init(&shared_count, 1);
+        }
+
+        long __ctrl::get_weak_count() const noexcept { return atomic_load(&weak_count); }
+        long __ctrl::get_shared_count() const noexcept { return atomic_load(&shared_count); }
+
+        long __ctrl::decrement_shared_count() noexcept {
+            if (is_empty()) return 0;
+
+            const auto count = atomic_fetch_sub(&shared_count, 1);
+            if (!count) {
+                delete_content();
+                decrement_weak_count();
+            }
+
+            return count;
+        }
+
+        long __ctrl::decrement_weak_count() noexcept {
+            const auto count = atomic_fetch_sub(&weak_count, 1);
+            if (!count) delete_block();
+
+            return count;
+        }
+
+        long __ctrl::increment_shared_count() noexcept {
+            if (!is_empty()) return atomic_fetch_add(&shared_count, 1);
+            return 0;
+        }
+
+        void __ctrl::delete_block() noexcept { delete this; }
+    }
 }

@@ -28,54 +28,33 @@ namespace std {
             _Atomic long shared_count;
         public:
             // A block is always constructed by a shared_ptr, so we always initialize both counters by 1.
-            __ctrl() noexcept {
-                atomic_init(&weak_count, 1);
-                atomic_init(&shared_count, 1);
-            }
+            __ctrl() noexcept;
 
             /* Returns whether this control block still holds an object. */
             virtual bool is_empty() const noexcept = 0;
 
             /* Returns the weak_count. */
-            long get_weak_count() const noexcept { return atomic_load(&weak_count); }
+            long get_weak_count() const noexcept;
             /* Returns the shared_count */
-            long get_shared_count() const noexcept { return atomic_load(&shared_count); }
+            long get_shared_count() const noexcept;
 
             /* Decrements the shared_count by 1. If the shared_count reaches 0, decrements weak_count as well (and triggers all consequences in decrement_weak_count).
              * The operation on each counter is atomic, but this function is not. */
-            long decrement_shared_count() noexcept {
-                if (is_empty()) return 0;
-
-                const auto count = atomic_fetch_sub(&shared_count, 1);
-                if (!count) {
-                    delete_content();
-                    decrement_weak_count();
-                }
-
-                return count;
-            }
+            long decrement_shared_count() noexcept;
 
             /* Decrements the weak_count by 1. If the weak_count reaches 0, the control block is self-deleted and deallocated. */
-            long decrement_weak_count() noexcept {
-                const auto count = atomic_fetch_sub(&weak_count, 1);
-                if (!count) delete_block();
-
-                return count;
-            }
+            long decrement_weak_count() noexcept;
 
             /* Increments shared_count by 1 if the current block still holds an object. Returns the result shared_count. */
-            virtual long increment_shared_count() noexcept {
-                if (!is_empty()) return atomic_fetch_add(&shared_count, 1);
-                return 0;
-            }
+            virtual long increment_shared_count() noexcept;
 
             /* Deletes the content held by the pointers holding this control block. This function is executed immediately when shared_count hits 0. Depending on what
              * type of control block this is, the behavior of this function is different. */
             virtual void delete_content() noexcept = 0;
             /* Deletes the entire block. The block will be nonexistent after this call and its memory freed. This is called when weak_count hits 0. */
-            virtual void delete_block() noexcept { delete this; }
+            virtual void delete_block() noexcept;
 
-            virtual ~__ctrl() noexcept {}
+            virtual ~__ctrl() noexcept {};
         };
 
         template<class T>
@@ -128,7 +107,7 @@ namespace std {
             aligned_storage_t<sizeof(T), alignof(T)> storage;
             _Atomic bool is_freed;
         public:
-            template<class ...Args> // requires is_constructible_v<T, Args...>
+            template<class ...Args>
             __ctrl_obj(Args&& ...args) noexcept : __ctrl(), storage() {
                 ::new (static_cast<void*>(&storage)) T(forward<Args>(args)...);
                 atomic_init(&is_freed, false);
@@ -161,27 +140,27 @@ namespace std {
         public:
             using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<__ctrl_ptr_with_deleter_alloc>;
 
-            template<class ...Args> // requires is_constructible_v<T, Args...>
+            template<class ...Args>
             __ctrl_obj_with_alloc(Alloc&& a, Args&& ...args) noexcept 
-                : __ctrl_obj<T>(noop_t{}), a(move(a)) {
+                : __ctrl_obj<T>(typename __ctrl_obj<T>::noop_t{}), a(move(a)) {
                 if constexpr (!is_array_v<T>) {
                     // It's the responsible of the caller to initialize arrays.
                     using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<remove_cv_t<T>>;
                     allocator_type temp(a);
-                    allocator_traits<allocator_type>::construct(temp, reinterpret_cast<remove_cv_t<T>*>(&storage), forward<Args>(args)...));
+                    allocator_traits<allocator_type>::construct(temp, reinterpret_cast<remove_cv_t<T>*>(&__ctrl_obj<T>::storage), forward<Args>(args)...);
                 }
             }
 
-            __ctrl_obj_with_alloc(noop_t) noexcept : __ctrl_obj<T>(noop_t{}), a(move(a)) {}
+            __ctrl_obj_with_alloc(typename __ctrl_obj<T>::noop_t) noexcept : __ctrl_obj<T>(typename __ctrl_obj<T>::noop_t{}), a(move(a)) {}
 
             void delete_content() noexcept override {
-                atomic_store(&is_freed, true);
+                atomic_store(&__ctrl_obj<T>::is_freed, true);
                 if constexpr (is_array_v<T>) {
-                    destroy_at(launder(reinterpret_cast<T*>(&storage)));
+                    destroy_at(launder(reinterpret_cast<T*>(&__ctrl_obj<T>::storage)));
                 } else {
                     using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<remove_cv_t<T>>;
                     allocator_type temp(a);
-                    allocator_traits<allocator_type>::destroy(temp, launder(reinterpret_cast<remove_cv<T>*>(&storage)));
+                    allocator_traits<allocator_type>::destroy(temp, launder(reinterpret_cast<remove_cv<T>*>(&__ctrl_obj<T>::storage)));
                 }
             }
 
@@ -502,7 +481,7 @@ namespace std {
     shared_ptr<T> make_shared_for_overwrite() {
         if constexpr (is_array_v<T>) return make_shared<T>();
 
-        auto ctrl = new __internal::__ctrl_obj<T>(__ctrl_obj<T>::noop_t{});
+        auto ctrl = new __internal::__ctrl_obj<T>(typename __internal::__ctrl_obj<T>::noop_t{});
         ::new (static_cast<void*>(ctrl->get_object_ptr())) T;
 
         return shared_ptr<T>::__make_shared(ctrl);
@@ -512,7 +491,7 @@ namespace std {
     shared_ptr<T> allocate_shared_for_overwrite(const A& a) {
         if constexpr (is_array_v<T>) return allocate_shared<T>(a);
 
-        auto ctrl = new __internal::__ctrl_obj<T>(__ctrl_obj<T>::noop_t{});
+        auto ctrl = new __internal::__ctrl_obj<T>(typename __internal::__ctrl_obj<T>::noop_t{});
         ::new (static_cast<void*>(ctrl->get_object_ptr())) T;
 
         return shared_ptr<T>::__make_shared(ctrl);
