@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "memory/pointer_util.hpp"
 
 namespace std {
     /* 25.11.8 construct_at */
