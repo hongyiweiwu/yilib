@@ -37,7 +37,7 @@ namespace std {
         long __ctrl::get_shared_count() const noexcept { return atomic_load(&shared_count); }
 
         long __ctrl::decrement_shared_count() noexcept {
-            if (is_empty()) return 0;
+            if (is_null()) return 0;
 
             const auto count = atomic_fetch_sub(&shared_count, 1);
             if (!count) {
@@ -56,8 +56,11 @@ namespace std {
         }
 
         long __ctrl::increment_shared_count() noexcept {
-            if (!is_empty()) return atomic_fetch_add(&shared_count, 1);
-            return 0;
+            return is_null() ? 0 : atomic_fetch_add(&shared_count, 1);
+        }
+
+        long __ctrl::increment_weak_count() noexcept {
+            return atomic_fetch_add(&weak_count, 1);
         }
 
         void __ctrl::delete_block() noexcept { delete this; }

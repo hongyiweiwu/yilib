@@ -32,7 +32,7 @@ namespace std {
             __ctrl() noexcept;
 
             /* Returns whether this control block still holds an object. */
-            virtual bool is_empty() const noexcept = 0;
+            virtual bool is_null() const noexcept = 0;
 
             /* Returns the deleter that this block controls if it exists, nullptr otherwise. */
             virtual void* get_deleter() const noexcept;
@@ -52,6 +52,9 @@ namespace std {
             /* Increments shared_count by 1 if the current block still holds an object. Returns the result shared_count. */
             virtual long increment_shared_count() noexcept;
 
+            /* Increments weak_count by 1. */
+            long increment_weak_count() noexcept;
+
             /* Deletes the content held by the pointers holding this control block. This function is executed immediately when shared_count hits 0. Depending on what
              * type of control block this is, the behavior of this function is different. */
             virtual void delete_content() noexcept = 0;
@@ -68,7 +71,9 @@ namespace std {
         public:
             __ctrl_ptr(T* ptr) noexcept : __ctrl(), ptr(ptr) {}
 
-            bool is_empty() const noexcept override { return !ptr; }
+            bool is_null() const noexcept override { return !ptr; }
+            // We don't have to check for nullptr here, because no shared_ptr can be constructed with a nullptr without a deleter, which will
+            // use the overload from __ctrl_ptr_with_deleter.
             void delete_content() noexcept override { delete ptr; }
         };
 
@@ -130,7 +135,7 @@ namespace std {
                 destroy_at(launder(reinterpret_cast<T*>(&storage)));
             }
 
-            bool is_empty() const noexcept override {
+            bool is_null() const noexcept override {
                 return atomic_load(&is_freed);
             }
 
@@ -247,8 +252,7 @@ namespace std {
         }
 
         long use_count() const noexcept {
-            if (!ctrl) { return 0; }
-            else return ctrl->get_shared_count();
+            return ctrl ? ctrl->get_shared_count() : 0;
         }
 
         explicit operator bool() const noexcept { return get() != nullptr; }
@@ -600,7 +604,7 @@ namespace std {
     /* 20.11.3.11 get_deleter */
     template<class D, class T>
     D* get_deleter(const shared_ptr<T>& p) noexcept {
-        return p.ctrl->get_deleter();
+        return p.ctrl ? p.ctrl->get_deleter() : nullptr;
     }
 
     /* 20.11.3.12 I/O */
