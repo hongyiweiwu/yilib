@@ -7,3 +7,4 @@
 #include "memory/shared_ptr.hpp"
 #include "memory/specialized_algorithms.hpp"
 #include "memory/weak_ptr.hpp"
+#include "memory/smart_ptr_support.hpp"

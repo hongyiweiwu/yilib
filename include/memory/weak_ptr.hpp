@@ -9,6 +9,8 @@ namespace std {
     template<class T>
     class weak_ptr {
     public:
+        template<class U> friend class shared_ptr;
+
         using element_type = remove_extent_t<T>;
 
     private:
@@ -109,24 +111,8 @@ namespace std {
         }
     };
 
+    template<class T> weak_ptr(shared_ptr<T>) -> weak_ptr<T>;
+
     /* 20.11.4.7 Specialized algorithms */
     template<class T> void swap(weak_ptr<T>& a, weak_ptr<T>& b) noexcept { a.swap(b); }
-
-    /* 20.11.6 Class template enable_shared_from_this */
-    template<class T> class enable_shared_from_this {
-    protected:
-        constexpr enable_shared_from_this() noexcept = default;
-        enable_shared_from_this(const enable_shared_from_this&) noexcept : weak_this() {};
-        enable_shared_from_this& operator=(enable_shared_from_this&) noexcept { return *this; }
-        ~enable_shared_from_this() = default;
-
-    public:
-        shared_ptr<T> shared_from_this() { return shared_ptr<T>(weak_this); }
-        shared_ptr<T const> shared_from_this() const { return shared_ptr<T>(weak_this); }
-        weak_ptr<T> weak_from_this() noexcept { return weak_this; }
-        weak_ptr<T const> weak_from_this() const noexcept { return weak_this; }
-
-    private:
-        mutable weak_ptr<T> weak_this;
-    };
 }
