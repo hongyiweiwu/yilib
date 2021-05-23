@@ -6,3 +6,4 @@
 #include "memory/pointer_util.hpp"
 #include "memory/shared_ptr.hpp"
 #include "memory/specialized_algorithms.hpp"
+#include "memory/weak_ptr.hpp"
