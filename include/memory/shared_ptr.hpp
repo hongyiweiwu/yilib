@@ -5,6 +5,7 @@
 #include "cstddef.hpp"
 #include "functional.hpp"
 #include "util/always_false.hpp"
+#include "compare.hpp"
 #include "new.hpp"
 
 #include "memory/unique_ptr.hpp"
@@ -32,6 +33,9 @@ namespace std {
 
             /* Returns whether this control block still holds an object. */
             virtual bool is_empty() const noexcept = 0;
+
+            /* Returns the deleter that this block controls if it exists, nullptr otherwise. */
+            virtual void* get_deleter() const noexcept;
 
             /* Returns the weak_count. */
             long get_weak_count() const noexcept;
@@ -75,6 +79,8 @@ namespace std {
         public:
             __ctrl_ptr_with_deleter(T* ptr, D&& deleter) noexcept
                 : __ctrl_ptr<T>(ptr), deleter(move(deleter)) {}
+
+            D* get_deleter() const noexcept override { return addressof(deleter); }
 
             void delete_content() noexcept override { 
                 deleter(__ctrl_ptr<T>::ptr);
@@ -442,6 +448,9 @@ namespace std {
             shared_ptr(move(r)).swap(*this);
             return *this;
         }
+
+        template<class D>
+        friend D* get_deleter(const shared_ptr& p) noexcept;
     };
 
     template<class T> shared_ptr(weak_ptr<T>) -> shared_ptr<T>;
@@ -523,4 +532,80 @@ namespace std {
 
         return shared_ptr<T>::__make_shared(ctrl);
     }
+
+    /* 20.11.3.8 Comparison */
+    template<class T, class U> bool operator==(const shared_ptr<T>& a, const shared_ptr<U>& b) noexcept { return a.get() == b.get(); }
+    template<class T> bool operator==(const shared_ptr<T>& a, nullptr_t) noexcept { return !a; }
+    template<class T, class U> strong_ordering operator<=>(const shared_ptr<T>& a, const shared_ptr<T>& b) noexcept {
+        return compare_three_way()(a.get(), b.get());
+    }
+    template<class T> strong_ordering operator<=>(const shared_ptr<T>& a, nullptr_t) noexcept {
+        return compare_three_way()(a.get(), nullptr);
+    }
+
+    /* 20.11.3.9 Specialized algorithms */
+    template<class T> void swap(shared_ptr<T>& a, shared_ptr<T>& b) noexcept { a.swap(b); }
+
+    /* 20.11.3.10 Casts */
+    template<class T, class U> requires requires { static_cast<T*>((U*) nullptr); }
+    shared_ptr<T> static_pointer_cast(const shared_ptr<U>& r) noexcept {
+        return shared_ptr<T>(r, static_cast<typename shared_ptr<T>::element_type*>(r.get()));
+    }
+
+    template<class T, class U> requires requires { static_cast<T*>((U*) nullptr); }
+    shared_ptr<T> static_pointer_cast(shared_ptr<U>&& r) noexcept {
+        return shared_ptr<T>(move(r), static_cast<typename shared_ptr<T>::element_type*>(r.get()));
+    }
+
+    template<class T, class U> requires requires { dynamic_cast<T*>((U*) nullptr); }
+    shared_ptr<T> dynamic_pointer_cast(const shared_ptr<U>& r) noexcept {
+        if (auto ptr = static_cast<typename shared_ptr<T>::element_type*>(r.get()); ptr) {
+            return shared_ptr<T>(r, ptr);
+        } else {
+            return shared_ptr<T>();
+        }
+    }
+
+    template<class T, class U> requires requires { dynamic_cast<T*>((U*) nullptr); }
+    shared_ptr<T> dynamic_pointer_cast(shared_ptr<U>&& r) noexcept {
+        if (auto ptr = static_cast<typename shared_ptr<T>::element_type*>(r.get()); ptr) {
+            return shared_ptr<T>(move(r), ptr);
+        } else {
+            return shared_ptr<T>();
+        }
+    }
+
+
+    template<class T, class U> requires requires { const_cast<T*>((U*) nullptr); }
+    shared_ptr<T> const_pointer_cast(const shared_ptr<U>& r) noexcept {
+        return shared_ptr<T>(r, const_cast<typename shared_ptr<T>::element_type*>(r.get()));
+    }
+
+    template<class T, class U> requires requires { const_cast<T*>((U*) nullptr); }
+    shared_ptr<T> const_pointer_cast(shared_ptr<U>&& r) noexcept {
+        return shared_ptr<T>(move(r), const_cast<typename shared_ptr<T>::element_type*>(r.get()));
+    }
+
+
+    template<class T, class U> requires requires { reinterpret_cast<T*>((U*) nullptr); }
+    shared_ptr<T> reinterpret_pointer_cast(const shared_ptr<U>& r) noexcept {
+        return shared_ptr<T>(r, reinterpret_cast<typename shared_ptr<T>::element_type*>(r.get()));
+    }
+
+    template<class T, class U> requires requires { reinterpret_cast<T*>((U*) nullptr); }
+    shared_ptr<T> reinterpret_pointer_cast(shared_ptr<U>&& r) noexcept {
+        return shared_ptr<T>(move(r), reinterpret_cast<typename shared_ptr<T>::element_type*>(r.get()));
+    }
+
+    /* 20.11.3.11 get_deleter */
+    template<class D, class T>
+    D* get_deleter(const shared_ptr<T>& p) noexcept {
+        return p.ctrl->get_deleter();
+    }
+
+    /* 20.11.3.12 I/O */
+    // TODO: Uncomment this when iostream is done.
+    /*
+    template<class E, class T, class Y>
+    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const shared_ptr<Y>& p) { return os << p.get(); } */
 }

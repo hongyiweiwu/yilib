@@ -31,6 +31,8 @@ namespace std {
             atomic_init(&shared_count, 1);
         }
 
+        void* __ctrl::get_deleter() const noexcept { return nullptr; }
+
         long __ctrl::get_weak_count() const noexcept { return atomic_load(&weak_count); }
         long __ctrl::get_shared_count() const noexcept { return atomic_load(&shared_count); }
 
