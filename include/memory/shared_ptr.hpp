@@ -54,7 +54,7 @@ namespace std {
             /* Deletes the entire block. The block will be nonexistent after this call and its memory freed. This is called when weak_count hits 0. */
             virtual void delete_block() noexcept;
 
-            virtual ~__ctrl() noexcept {};
+            virtual ~__ctrl() noexcept = default;
         };
 
         template<class T>
@@ -174,6 +174,12 @@ namespace std {
 
     // Forward declaration. Implemented directly below.
     template<class T> class weak_ptr;
+    template<class T> class enabled_shared_from_this;
+
+    namespace __internal {
+        template<class T> auto __enable_shared_from_this_test(enabled_shared_from_this<T>&) -> true_type;
+        template<class ...> auto __enable_shared_from_this_test(...) -> false_type;
+    }
 
     template<class T> class shared_ptr {
     public:
@@ -186,6 +192,15 @@ namespace std {
         element_type* ptr;
         __internal::__ctrl* ctrl;
 
+        /* If U has an unambiguous and accessible base class that is a specialization of std::enable_shared_from_this, replaces the weak_this member
+         * of the pointer with a newly constructed alias shared_ptr that shares a control block with this, but "owns" ptr. */
+        template<class U> void __enable_shared_from_this(U* ptr) noexcept {
+            if constexpr (is_object_v<U> && decltype(__internal::__enable_shared_from_this_test(declval<U&>()))::value) {
+                if (ptr != nullptr && ptr->weak_this.expired()) {
+                    ptr->weak_this = shared_ptr<remove_cv_t<U>>(*this, const_cast<remove_cv_t<U>*>(ptr));
+                }
+            }
+        }
     public:
         /* 20.11.3.5 Modifiers */
         void swap(shared_ptr& r) noexcept {
@@ -242,6 +257,7 @@ namespace std {
         
         /* 20.11.3.2 Constructors */
         constexpr shared_ptr() noexcept : ptr(nullptr), ctrl(nullptr) {}
+        constexpr shared_ptr(nullptr_t) noexcept : ptr(nullptr), ctrl(nullptr) {}
 
         template<class Y> requires __internal::is_complete<Y>::value && is_array_v<T>
             && ((is_unbounded_array_v<T> && is_convertible_v<Y(*)[], T*> && requires (Y* p) { { delete[] p } noexcept; })
@@ -249,6 +265,7 @@ namespace std {
         explicit shared_ptr(Y* p) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, void (*)(element_type*)>(p, [](element_type* p) { delete[] p; });
+                __enable_shared_from_this(p);
             } catch (const exception& e) {
                 delete[] p;
                 throw;
@@ -260,6 +277,7 @@ namespace std {
         explicit shared_ptr(Y* p) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr<T>(p);
+                __enable_shared_from_this(p);
             } catch (const exception& e) {
                 delete p;
                 throw;
@@ -274,6 +292,7 @@ namespace std {
         shared_ptr(Y* p, D d) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(p, move(d));
+                __enable_shared_from_this(p);
             } catch (const exception& e) {
                 d(p);
                 throw;
@@ -294,6 +313,7 @@ namespace std {
                 allocator_traits<allocator_type>::construct(alloc, ptr, p, move(d), move(a));
 
                 ctrl = ptr;
+                __enable_shared_from_this(p);
             } catch (const exception& e) {
                 d(p);
                 throw;
@@ -370,18 +390,25 @@ namespace std {
             } else if constexpr (!is_reference_v<D>) {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(ptr, r.get_deleter());
                 ptr = r.release();
+                __enable_shared_from_this(ptr);
             } else {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(ptr, ref(r.get_deleter()));
                 ptr = r.release();
+                __enable_shared_from_this(ptr);
             }
         }
 
         /* Make a new shared_ptr by simply assigning its member variables with the provided ones. This is only used internally for implementing the
          * make_shared series of functions. */
-        static shared_ptr<T> __make_shared(__internal::__ctrl_obj<T>* ctrl) {
+        static shared_ptr<T> __make_shared(__internal::__ctrl_obj<T>* ctrl, bool enable_shared_from_this = false) {
             auto result = shared_ptr<T>();
             result.ptr = ctrl->get_object_ptr();
             result.ctrl = ctrl;
+
+            if (enable_shared_from_this) {
+                result.__enable_shared_from_this(result.ptr);
+            }
+
             return result;
         }
 
@@ -424,7 +451,7 @@ namespace std {
     // TODO: Implement support for U[].
     template<class T, class ...Args> requires (!is_array_v<T>)
     shared_ptr<T> make_shared(Args&&... args) {
-        return shared_ptr<T>::__make_shared(new __internal::__ctrl_obj<T>(forward<Args>(args)...));
+        return shared_ptr<T>::__make_shared(new __internal::__ctrl_obj<T>(forward<Args>(args)...), true);
     }
 
     template<class T, class A, class ...Args> requires (!is_array_v<T>)
@@ -434,7 +461,7 @@ namespace std {
 
         auto ctrl = allocator_traits<allocator_type>::allocate(alloc, 1);
         allocator_traits<allocator_type>::construct(alloc, ctrl, forward<Args>(args)...);
-        return shared_ptr<T>::__make_shared(ctrl);
+        return shared_ptr<T>::__make_shared(ctrl, true);
     }
 
     template<class T> requires is_bounded_array_v<T>
