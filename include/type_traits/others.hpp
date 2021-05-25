@@ -9,6 +9,7 @@
 #include "type_traits/array_manip.hpp"
 #include "type_traits/relations.hpp"
 #include "type_traits/is_constructible.hpp"
+#include "type_traits/is_operation.hpp"
 
 namespace std::__internal {
 #if __has_intrinsics_for(is_standard_layout)

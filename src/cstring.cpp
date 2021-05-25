@@ -4,19 +4,19 @@
 
 namespace std {
 const void* memchr(const void* s, int c, size_t n) {
-    return memchr(s, c, n);
+    return ::memchr(s, c, n);
 }
 
 void* memchr(void* s, int c, size_t n) {
-    return memchr(s, c, n);
+    return ::memchr(s, c, n);
 }
 
 const char* strchr(const char* s, int c) {
-    return strchr(s, c);
+    return ::strchr(s, c);
 }
 
 char* strchr(char* s, int c) {
-    return strchr(s, c);
+    return ::strchr(s, c);
 }
 
 const char* strpbrk(const char* s1, const char* s2) {
