@@ -27,8 +27,8 @@ namespace std::pmr {
             constexpr null_memory_resource() : memory_resource() {}
             null_memory_resource(const null_memory_resource&) = delete;
 
-            void* do_allocate(size_t bytes, size_t alignment) { throw bad_alloc(); }
-            void do_deallocate(void* p, size_t bytes, size_t alignment) {}
+            void* do_allocate(size_t, size_t) { throw bad_alloc(); }
+            void do_deallocate(void*, size_t, size_t) {}
             bool do_is_equal(const memory_resource& other) const noexcept { return &other == this; }
 
         public:
@@ -139,6 +139,6 @@ namespace std::pmr {
         return addr;
     }
 
-    void monotonic_buffer_resource::do_deallocate(void* p, size_t bytes, size_t alignment) {}
+    void monotonic_buffer_resource::do_deallocate(void*, size_t, size_t) {}
     bool monotonic_buffer_resource::do_is_equal(const memory_resource& other) const noexcept { return this == &other; }
 }

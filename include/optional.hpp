@@ -172,7 +172,7 @@ namespace std {
         }
 
         template<class U, class ...Args> requires is_constructible_v<T, initializer_list<U>&, Args...>
-        T& emplace(initializer_list<U> il, Args&& ...args) {
+        T& emplace(initializer_list<U>, Args&& ...args) {
             *this = nullopt;
             val.emplace(forward<Args>(args)...);
             return *this;

@@ -161,7 +161,7 @@ namespace std {
             return curr;
         }
 
-        void reset(nullptr_t p = nullptr) noexcept { reset(pointer()); }
+        void reset(nullptr_t = nullptr) noexcept { reset(pointer()); }
 
         template<class U> requires is_same_v<U, pointer> || (is_same_v<pointer, element_type*> && is_pointer_v<U> && is_convertible_v<U, element_type*>)
         void reset(U p) noexcept requires requires { get_deleter()(get()); } {

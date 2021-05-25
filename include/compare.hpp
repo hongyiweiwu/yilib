@@ -34,18 +34,18 @@ namespace std {
         static const partial_ordering greater;
         static const partial_ordering unordered;
 
-        friend constexpr bool operator==(partial_ordering v, nullptr_t zero) noexcept;
+        friend constexpr bool operator==(partial_ordering v, nullptr_t) noexcept;
         friend constexpr bool operator==(partial_ordering v, partial_ordering w) noexcept = default;
-        friend constexpr bool operator<(partial_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator>(partial_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator<=(partial_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator>=(partial_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator<(nullptr_t zero, partial_ordering v) noexcept;
-        friend constexpr bool operator>(nullptr_t zero, partial_ordering v) noexcept;
-        friend constexpr bool operator<=(nullptr_t zero, partial_ordering v) noexcept;
-        friend constexpr bool operator>=(nullptr_t zero, partial_ordering v) noexcept;
-        friend constexpr partial_ordering operator<=>(partial_ordering v, nullptr_t zero) noexcept;
-        friend constexpr partial_ordering operator<=>(nullptr_t zero, partial_ordering v) noexcept;
+        friend constexpr bool operator<(partial_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator>(partial_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator<=(partial_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator>=(partial_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator<(nullptr_t, partial_ordering v) noexcept;
+        friend constexpr bool operator>(nullptr_t, partial_ordering v) noexcept;
+        friend constexpr bool operator<=(nullptr_t, partial_ordering v) noexcept;
+        friend constexpr bool operator>=(nullptr_t, partial_ordering v) noexcept;
+        friend constexpr partial_ordering operator<=>(partial_ordering v, nullptr_t) noexcept;
+        friend constexpr partial_ordering operator<=>(nullptr_t, partial_ordering v) noexcept;
     };
 
     inline constexpr partial_ordering partial_ordering::less(__internal::__ord::less);
@@ -53,47 +53,47 @@ namespace std {
     inline constexpr partial_ordering partial_ordering::greater(__internal::__ord::greater);
     inline constexpr partial_ordering partial_ordering::unordered(__internal::__ncmp::unordered);
 
-    constexpr bool operator==(partial_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator==(partial_ordering v, nullptr_t) noexcept {
         return v.is_ordered && v.value == 0;
     }
 
-    constexpr bool operator<(partial_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator<(partial_ordering v, nullptr_t) noexcept {
         return v.is_ordered && v.value < 0;
     }
 
-    constexpr bool operator>(partial_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator>(partial_ordering v, nullptr_t) noexcept {
         return v.is_ordered && v.value > 0;
     }
 
-    constexpr bool operator<=(partial_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator<=(partial_ordering v, nullptr_t) noexcept {
         return v.is_ordered && v.value <= 0;
     }
 
-    constexpr bool operator>=(partial_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator>=(partial_ordering v, nullptr_t) noexcept {
         return v.is_ordered && v.value >= 0;
     }
 
-    constexpr bool operator<(nullptr_t zero, partial_ordering v) noexcept {
+    constexpr bool operator<(nullptr_t, partial_ordering v) noexcept {
         return v.is_ordered && 0 < v.value;
     }
 
-    constexpr bool operator>(nullptr_t zero, partial_ordering v) noexcept {
+    constexpr bool operator>(nullptr_t, partial_ordering v) noexcept {
         return v.is_ordered && 0 > v.value;
     }
 
-    constexpr bool operator<=(nullptr_t zero, partial_ordering v) noexcept {
+    constexpr bool operator<=(nullptr_t, partial_ordering v) noexcept {
         return v.is_ordered && 0 <= v.value;
     }
 
-    constexpr bool operator>=(nullptr_t zero, partial_ordering v) noexcept {
+    constexpr bool operator>=(nullptr_t, partial_ordering v) noexcept {
         return v.is_ordered && 0 >= v.value;
     }
 
-    constexpr partial_ordering operator<=>(partial_ordering v, nullptr_t zero) noexcept {
+    constexpr partial_ordering operator<=>(partial_ordering v, nullptr_t) noexcept {
         return v;
     }
 
-    constexpr partial_ordering operator<=>(nullptr_t zero, partial_ordering v) noexcept {
+    constexpr partial_ordering operator<=>(nullptr_t, partial_ordering v) noexcept {
         return v < 0 ? partial_ordering::greater : v > 0 ? partial_ordering::less : v;
     }
 
@@ -115,65 +115,65 @@ namespace std {
                 : partial_ordering::greater;
         }
 
-        friend constexpr bool operator==(weak_ordering v, nullptr_t zero) noexcept;
+        friend constexpr bool operator==(weak_ordering v, nullptr_t) noexcept;
         friend constexpr bool operator==(weak_ordering v, weak_ordering w) noexcept = default;
-        friend constexpr bool operator<(weak_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator>(weak_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator<=(weak_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator>=(weak_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator<(nullptr_t zero, weak_ordering v) noexcept;
-        friend constexpr bool operator>(nullptr_t zero, weak_ordering v) noexcept;
-        friend constexpr bool operator<=(nullptr_t zero, weak_ordering v) noexcept;
-        friend constexpr bool operator>=(nullptr_t zero, weak_ordering v) noexcept;
-        friend constexpr weak_ordering operator<=>(weak_ordering v, nullptr_t zero) noexcept;
-        friend constexpr weak_ordering operator<=>(nullptr_t zero, weak_ordering v) noexcept;
+        friend constexpr bool operator<(weak_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator>(weak_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator<=(weak_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator>=(weak_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator<(nullptr_t, weak_ordering v) noexcept;
+        friend constexpr bool operator>(nullptr_t, weak_ordering v) noexcept;
+        friend constexpr bool operator<=(nullptr_t, weak_ordering v) noexcept;
+        friend constexpr bool operator>=(nullptr_t, weak_ordering v) noexcept;
+        friend constexpr weak_ordering operator<=>(weak_ordering v, nullptr_t) noexcept;
+        friend constexpr weak_ordering operator<=>(nullptr_t, weak_ordering v) noexcept;
     };
 
     inline constexpr weak_ordering weak_ordering::less(__internal::__ord::less);
     inline constexpr weak_ordering weak_ordering::equivalent(__internal::__ord::equivalent);
     inline constexpr weak_ordering weak_ordering::greater(__internal::__ord::greater);
 
-    constexpr bool operator==(weak_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator==(weak_ordering v, nullptr_t) noexcept {
         return v.value == 0;
     }
 
-    constexpr bool operator<(weak_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator<(weak_ordering v, nullptr_t) noexcept {
         return v.value < 0;
     }
 
-    constexpr bool operator>(weak_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator>(weak_ordering v, nullptr_t) noexcept {
         return v.value > 0;
     }
 
-    constexpr bool operator<=(weak_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator<=(weak_ordering v, nullptr_t) noexcept {
         return v.value <= 0;
     }
 
-    constexpr bool operator>=(weak_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator>=(weak_ordering v, nullptr_t) noexcept {
         return v.value >= 0;
     }
 
-    constexpr bool operator<(nullptr_t zero, weak_ordering v) noexcept {
+    constexpr bool operator<(nullptr_t, weak_ordering v) noexcept {
         return 0 < v.value;
     }
 
-    constexpr bool operator>(nullptr_t zero, weak_ordering v) noexcept {
+    constexpr bool operator>(nullptr_t, weak_ordering v) noexcept {
         return 0 > v.value;
     }
 
-    constexpr bool operator<=(nullptr_t zero, weak_ordering v) noexcept {
+    constexpr bool operator<=(nullptr_t, weak_ordering v) noexcept {
         return 0 <= v.value;
     }
 
-    constexpr bool operator>=(nullptr_t zero, weak_ordering v) noexcept {
+    constexpr bool operator>=(nullptr_t, weak_ordering v) noexcept {
         return 0 >= v.value;
     }
 
-    constexpr weak_ordering operator<=>(weak_ordering v, nullptr_t zero) noexcept {
+    constexpr weak_ordering operator<=>(weak_ordering v, nullptr_t) noexcept {
         return v;
     }
 
-    constexpr weak_ordering operator<=>(nullptr_t zero, weak_ordering v) noexcept {
+    constexpr weak_ordering operator<=>(nullptr_t, weak_ordering v) noexcept {
         return v < 0 ? weak_ordering::greater : v > 0 ? weak_ordering::less : v;
     }
 
@@ -199,18 +199,18 @@ namespace std {
                 : weak_ordering::greater;
         }
 
-        friend constexpr bool operator==(strong_ordering v, nullptr_t zero) noexcept;
+        friend constexpr bool operator==(strong_ordering v, nullptr_t) noexcept;
         friend constexpr bool operator==(strong_ordering v, strong_ordering w) noexcept = default;
-        friend constexpr bool operator<(strong_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator>(strong_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator<=(strong_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator>=(strong_ordering v, nullptr_t zero) noexcept;
-        friend constexpr bool operator<(nullptr_t zero, strong_ordering v) noexcept;
-        friend constexpr bool operator>(nullptr_t zero, strong_ordering v) noexcept;
-        friend constexpr bool operator<=(nullptr_t zero, strong_ordering v) noexcept;
-        friend constexpr bool operator>=(nullptr_t zero, strong_ordering v) noexcept;
-        friend constexpr strong_ordering operator<=>(strong_ordering v, nullptr_t zero) noexcept;
-        friend constexpr strong_ordering operator<=>(nullptr_t zero, strong_ordering v) noexcept;
+        friend constexpr bool operator<(strong_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator>(strong_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator<=(strong_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator>=(strong_ordering v, nullptr_t) noexcept;
+        friend constexpr bool operator<(nullptr_t, strong_ordering v) noexcept;
+        friend constexpr bool operator>(nullptr_t, strong_ordering v) noexcept;
+        friend constexpr bool operator<=(nullptr_t, strong_ordering v) noexcept;
+        friend constexpr bool operator>=(nullptr_t, strong_ordering v) noexcept;
+        friend constexpr strong_ordering operator<=>(strong_ordering v, nullptr_t) noexcept;
+        friend constexpr strong_ordering operator<=>(nullptr_t, strong_ordering v) noexcept;
     };
 
     inline constexpr strong_ordering strong_ordering::less(__internal::__ord::less);
@@ -218,47 +218,47 @@ namespace std {
     inline constexpr strong_ordering strong_ordering::equivalent(__internal::__ord::equivalent);
     inline constexpr strong_ordering strong_ordering::greater(__internal::__ord::greater);
 
-    constexpr bool operator==(strong_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator==(strong_ordering v, nullptr_t) noexcept {
         return v.value == 0;
     }
 
-    constexpr bool operator<(strong_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator<(strong_ordering v, nullptr_t) noexcept {
         return v.value < 0;
     }
 
-    constexpr bool operator>(strong_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator>(strong_ordering v, nullptr_t) noexcept {
         return v.value > 0;
     }
 
-    constexpr bool operator<=(strong_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator<=(strong_ordering v, nullptr_t) noexcept {
         return v.value <= 0;
     }
 
-    constexpr bool operator>=(strong_ordering v, nullptr_t zero) noexcept {
+    constexpr bool operator>=(strong_ordering v, nullptr_t) noexcept {
         return v.value >= 0;
     }
 
-    constexpr bool operator<(nullptr_t zero, strong_ordering v) noexcept {
+    constexpr bool operator<(nullptr_t, strong_ordering v) noexcept {
         return 0 < v.value;
     }
 
-    constexpr bool operator>(nullptr_t zero, strong_ordering v) noexcept {
+    constexpr bool operator>(nullptr_t, strong_ordering v) noexcept {
         return 0 > v.value;
     }
 
-    constexpr bool operator<=(nullptr_t zero, strong_ordering v) noexcept {
+    constexpr bool operator<=(nullptr_t, strong_ordering v) noexcept {
         return 0 <= v.value;
     }
 
-    constexpr bool operator>=(nullptr_t zero, strong_ordering v) noexcept {
+    constexpr bool operator>=(nullptr_t, strong_ordering v) noexcept {
         return 0 >= v.value;
     }
 
-    constexpr strong_ordering operator<=>(strong_ordering v, nullptr_t zero) noexcept {
+    constexpr strong_ordering operator<=>(strong_ordering v, nullptr_t) noexcept {
         return v;
     }
 
-    constexpr strong_ordering operator<=>(nullptr_t zero, strong_ordering v) noexcept {
+    constexpr strong_ordering operator<=>(nullptr_t, strong_ordering v) noexcept {
         return v < 0 ? strong_ordering::greater : v > 0 ? strong_ordering::less : v;
     }
 

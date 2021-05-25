@@ -6,9 +6,9 @@
 #include "stdatomic.h"
 
 namespace std {
-    void declare_reachable(void* p) {}
-    void declare_no_pointers(char* p, size_t n) {}
-    void undeclare_no_pointers(char* p, size_t n) {}
+    void declare_reachable(void*) {}
+    void declare_no_pointers(char*, size_t) {}
+    void undeclare_no_pointers(char*, size_t) {}
     pointer_safety get_pointer_safety() noexcept { return pointer_safety::relaxed; }
 
     void* align(size_t alignment, size_t size, void*& ptr, size_t& space) {
