@@ -77,11 +77,6 @@ namespace std::pmr {
         return __internal::default_memory_resource;
     }
 
-
-    size_t monotonic_buffer_resource::curr_buffer_size() const noexcept {
-        return *(reinterpret_cast<metadata_block_t*>(current_buffer) + 1);
-    }
-
     monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* upstream)
         : memory_resource(), upstream_rsrc(upstream), current_buffer(nullptr), next_buffer_size(default_buffer_size), unused_buffer_part(nullptr) {}
 
@@ -90,9 +85,8 @@ namespace std::pmr {
 
     monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, size_t buffer_size, memory_resource* upstream)
         : memory_resource(), upstream_rsrc(upstream), current_buffer(buffer), next_buffer_size(buffer_size * growth_factor), 
-            unused_buffer_part(reinterpret_cast<void*>(reinterpret_cast<metadata_block_t*>(buffer) + 2)) {
-        *reinterpret_cast<metadata_block_t*>(buffer) = 0;
-        *(reinterpret_cast<metadata_block_t*>(buffer) + 1) = buffer_size;
+            unused_buffer_part(static_cast<void*>(static_cast<metadata*>(buffer) + 1)) {
+        *static_cast<metadata*>(buffer) = { .prev_buffer = nullptr, .buffer_size = buffer_size };
     }
 
     monotonic_buffer_resource::monotonic_buffer_resource() : monotonic_buffer_resource(get_default_resource()) {}
@@ -103,9 +97,9 @@ namespace std::pmr {
 
     void monotonic_buffer_resource::release() {
         while (current_buffer) {
-            auto prev_addr = reinterpret_cast<void*>(*reinterpret_cast<metadata_block_t*>(current_buffer));
-            upstream_rsrc->deallocate(current_buffer, curr_buffer_size());
-            current_buffer = prev_addr;
+            const auto metadata = *static_cast<struct metadata*>(current_buffer);
+            upstream_rsrc->deallocate(current_buffer, metadata.buffer_size);
+            current_buffer = metadata.prev_buffer;
         }
     }
 
@@ -113,29 +107,27 @@ namespace std::pmr {
 
     void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t alignment) {
         if (current_buffer) {
-            size_t remaining_space = curr_buffer_size() - (reinterpret_cast<ptrdiff_t>(unused_buffer_part) - reinterpret_cast<ptrdiff_t>(current_buffer));
+            const auto metadata = *static_cast<struct metadata*>(current_buffer);
+            size_t remaining_space = metadata.buffer_size - (static_cast<char*>(unused_buffer_part) - static_cast<char*>(current_buffer));
             if (void* addr = align(alignment, bytes, unused_buffer_part, remaining_space); addr) {
-                unused_buffer_part = reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(unused_buffer_part) + bytes);
+                unused_buffer_part = static_cast<void*>(static_cast<char*>(unused_buffer_part) + bytes);
                 return addr;
             }
         }
 
         void* prev_buffer = current_buffer;
-        while (next_buffer_size < bytes + alignment + 2 * sizeof(metadata_block_t)) {
+        while (next_buffer_size < bytes + alignment + sizeof(metadata)) {
             next_buffer_size *= growth_factor;
         }
         current_buffer = upstream_rsrc->allocate(next_buffer_size);
         
-        metadata_block_t* metadata_ptr = static_cast<metadata_block_t*>(current_buffer);
-        *metadata_ptr = reinterpret_cast<metadata_block_t>(prev_buffer);
-        metadata_ptr++;
-        *metadata_ptr = static_cast<metadata_block_t>(next_buffer_size);
-        size_t remaining_space = next_buffer_size - 2 * sizeof(metadata_block_t);
+        *static_cast<metadata*>(current_buffer) = { .prev_buffer = prev_buffer, .buffer_size = next_buffer_size };
+        size_t remaining_space = next_buffer_size - sizeof(metadata);
         next_buffer_size *= growth_factor;
-        unused_buffer_part = metadata_ptr + 1;
+        unused_buffer_part = static_cast<void*>(static_cast<char*>(current_buffer) + sizeof(metadata));
 
         void* addr = align(alignment, bytes, unused_buffer_part, remaining_space);
-        unused_buffer_part = reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(unused_buffer_part) + bytes);
+        unused_buffer_part = static_cast<void*>(static_cast<char*>(unused_buffer_part) + bytes);
         return addr;
     }
 

@@ -132,25 +132,23 @@ namespace std::pmr {
 
     class monotonic_buffer_resource : public memory_resource {
     private:
+        struct metadata {
+            void* prev_buffer;
+            size_t buffer_size;
+        };
+
         memory_resource* upstream_rsrc;
         /* Pointer to the current buffer. Each buffer starts with sizeof(sunit_t) bytes storing the pointer to the previous buffer, or 0 for the first
-         * buffer, and another sizeof(sunit_t) bytes storing the size of the current buffer. 
-         */
+         * buffer, and another sizeof(sunit_t) bytes storing the size of the current buffer. */
         void* current_buffer;
         size_t next_buffer_size;
         /* Marks the beginning of the unused portion of the current buffer. For a newly-allocated buffer, this points to 2 * sizeof(sunit_t) bytes after
          * the beginning of the buffer. */
         void* unused_buffer_part;
 
-        /* A type representing the alignment/size requirement of a metadata block. Each buffer allocated in this resource starts with 2 metadata blocks, storing the
-         * address of the previous block and the size of the current block, respectively. */
-        using metadata_block_t = size_t;
-
         // These values are used by GCC's implementation.
         static constexpr size_t default_buffer_size = 128 * sizeof(void*);
         static constexpr float growth_factor = 1.5;
-
-        size_t curr_buffer_size() const noexcept;
 
     public:
         explicit monotonic_buffer_resource(memory_resource* upstream);
