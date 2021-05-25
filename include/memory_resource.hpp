@@ -6,6 +6,8 @@
 #include "utility.hpp"
 #include "memory.hpp"
 
+// TODO: Implement synchronized_pool_resource and unsynchronized_pool_resource.
+
 namespace std::pmr {
     /* 20.12.2 Class memory_resource */
     class memory_resource {
