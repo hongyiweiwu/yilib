@@ -76,6 +76,15 @@ namespace std {
     string error_code::message() const { return category().message(value()); }
     error_code::operator bool() const noexcept { return value() != 0; }
 
+    system_error::system_error(error_code ec, const string& what_arg) : runtime_error(what_arg), ec(ec) {}
+    system_error::system_error(error_code ec, const char* what_arg) : runtime_error(what_arg), ec(ec) {}
+    system_error::system_error(error_code ec) : runtime_error("std::system_error"), ec(ec) {}
+    system_error::system_error(int ev, const error_category& ecat, const string& what_arg) : runtime_error(what_arg), ec(error_code(ev, ecat)) {}
+    system_error::system_error(int ev, const error_category& ecat, const char* what_arg) : runtime_error(what_arg), ec(error_code(ev, ecat)) {}
+    system_error::system_error(int ev, const error_category& ecat) : runtime_error("std::system_error"), ec(error_code(ev, ecat)) {}
+    const error_code& system_error::code() const noexcept { return ec; }
+    const char* system_error::what() const noexcept { return runtime_error::what(); }
+
     error_code make_error_code(errc e) noexcept {
         return error_code(static_cast<int>(e), generic_category());
     }

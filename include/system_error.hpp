@@ -6,6 +6,7 @@
 #include "type_traits.hpp"
 #include "cstddef.hpp"
 #include "functional.hpp"
+#include "stdexcept.hpp"
 
 namespace std {
     // Forward declaration. Implementation given below.
@@ -94,7 +95,20 @@ namespace std {
         const error_category* cat;
     };
 
-    // TODO: Implement system_error.
+    class system_error : public runtime_error {
+    public:
+        system_error(error_code ec, const string& what_arg);
+        system_error(error_code ec, const char* what_arg);
+        system_error(error_code ec);
+        system_error(int ev, const error_category& ecat, const string& what_arg);
+        system_error(int ev, const error_category& ecat, const char* what_arg);
+        system_error(int ev, const error_category& ecat);
+        const error_code& code() const noexcept;
+        const char* what() const noexcept override;
+
+    private:
+        error_code ec;
+    };
 
     enum class errc {
         address_family_not_supported = EAFNOSUPPORT,
