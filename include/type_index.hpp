@@ -23,6 +23,6 @@ namespace std {
     };
 
     template<> struct hash<type_index> {
-        size_t operator()(const type_index& index);
+        size_t operator()(const type_index& index) const noexcept;
     };
 }
