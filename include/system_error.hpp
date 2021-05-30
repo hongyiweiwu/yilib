@@ -95,6 +95,7 @@ namespace std {
         const error_category* cat;
     };
 
+    /* 19.5.8 Class system_error */
     class system_error : public runtime_error {
     public:
         system_error(error_code ec, const string& what_arg);
