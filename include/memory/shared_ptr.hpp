@@ -1,7 +1,6 @@
 #pragma once
 
 #include "exception.hpp"
-#include "stdatomic.h"
 #include "cstddef.hpp"
 #include "functional.hpp"
 #include "util/always_false.hpp"
@@ -24,9 +23,9 @@ namespace std {
         struct __ctrl {
         protected:
             // Current number of weak_ptrs holding this block, plus 1 if there's any shared_ptr holding the block.
-            _Atomic long weak_count;
+            long weak_count;
             // Number of shared_ptrs holding this block.
-            _Atomic long shared_count;
+            long shared_count;
         public:
             // A block is always constructed by a shared_ptr, so we always initialize both counters by 1.
             __ctrl() noexcept;
@@ -116,27 +115,27 @@ namespace std {
             struct noop_t { explicit noop_t() = default; };
         private:
             aligned_storage_t<sizeof(T), alignof(T)> storage;
-            _Atomic bool is_freed;
+            bool is_freed;
         public:
             template<class ...Args>
             __ctrl_obj(Args&& ...args) noexcept : __ctrl(), storage() {
                 ::new (static_cast<void*>(&storage)) T(forward<Args>(args)...);
-                atomic_init(&is_freed, false);
+                __atomic_store_n(&is_freed, false, __ATOMIC_SEQ_CST);
             }
 
             /* Noop constructor that does not attempt to construct the storage in anyway. The caller needs to get a pointer to the storage by get_object_ptr()
              * and construct the object explicitly. */
             explicit __ctrl_obj(noop_t) noexcept : storage() {
-                atomic_init(&is_freed, false);
+                __atomic_store_n(&is_freed, false, __ATOMIC_SEQ_CST);
             }
 
             void delete_content() noexcept override {
-                atomic_store(&is_freed, true);
+                __atomic_store_n(&is_freed, true, __ATOMIC_SEQ_CST);
                 destroy_at(launder(reinterpret_cast<T*>(&storage)));
             }
 
             bool is_null() const noexcept override {
-                return atomic_load(&is_freed);
+                return __atomic_load_n(&is_freed, __ATOMIC_SEQ_CST);
             }
 
             remove_extent_t<T>* get_object_ptr() noexcept { 

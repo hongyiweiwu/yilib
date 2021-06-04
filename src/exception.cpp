@@ -1,8 +1,6 @@
 #include "exception.hpp"
 #include "cstdlib.hpp"
 
-#include <stdatomic.h>
-
 #include <cxxabi.h>
 
 namespace std {
@@ -11,14 +9,14 @@ namespace std {
 
     const char* bad_exception::what() const noexcept { return "std::bad_exception"; }
 
-    static constinit _Atomic(terminate_handler) __curr_terminate_handler;
+    static constinit terminate_handler __curr_terminate_handler;
 
     terminate_handler get_terminate() noexcept {
-        return atomic_load(&__curr_terminate_handler);
+        return __atomic_load_n(&__curr_terminate_handler, __ATOMIC_SEQ_CST);
     }
 
     terminate_handler set_terminate(terminate_handler f) noexcept {
-        return atomic_exchange(&__curr_terminate_handler, f);
+        return __atomic_exchange_n(&__curr_terminate_handler, f, __ATOMIC_SEQ_CST);
     }
 
     [[noreturn]] void terminate() noexcept {

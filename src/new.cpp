@@ -5,8 +5,6 @@
 // TODO: Replace with "cmath.hpp" once it's implemented.
 #include "math.h"
 
-#include <stdatomic.h>
-
 namespace std {
     const char* bad_alloc::what() const noexcept { return "std::bad_alloc"; }
 
@@ -14,14 +12,14 @@ namespace std {
 
     const nothrow_t nothrow{};
 
-    static constinit _Atomic(new_handler) __curr_new_handler;
+    static constinit new_handler __curr_new_handler;
 
     new_handler get_new_handler() noexcept {
-        return atomic_load(&__curr_new_handler);
+        return __atomic_load_n(&__curr_new_handler, __ATOMIC_SEQ_CST);
     }
 
     new_handler set_new_handler(new_handler new_p) noexcept {
-        return atomic_exchange(&__curr_new_handler, new_p);
+        return __atomic_exchange_n(&__curr_new_handler, new_p, __ATOMIC_SEQ_CST);
     }
 }
 
