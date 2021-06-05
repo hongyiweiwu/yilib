@@ -189,10 +189,10 @@ namespace std {
         static constexpr bool has_denorm_loss = false;
 
         static constexpr float infinity() noexcept { return HUGE_VALF; }
-#if __has_intrinsics_for(nanf)
+#if __has_intrinsics_for(builtin_nanf)
         static constexpr float quiet_NaN() noexcept { return __builtin_nanf(""); }
 #endif
-#if __has_intrinsics_for(nansf)
+#if __has_intrinsics_for(builtin_nansf)
         static constexpr float signaling_NaN() noexcept { return __builtin_nansf(""); }
 #endif
 
@@ -240,10 +240,10 @@ namespace std {
         static constexpr bool has_denorm_loss = false;
 
         static constexpr double infinity() noexcept { return HUGE_VAL; }
-#if __has_intrinsics_for(nan)
+#if __has_intrinsics_for(builtin_nan)
         static constexpr double quiet_NaN() noexcept { return __builtin_nan(""); }
 #endif
-#if __has_intrinsics_for(nans)
+#if __has_intrinsics_for(builtin_nans)
         static constexpr double signaling_NaN() noexcept { return __builtin_nans(""); }
 #endif
 
@@ -291,10 +291,10 @@ namespace std {
         static constexpr bool has_denorm_loss = false;
 
         static constexpr long double infinity() noexcept { return HUGE_VALL; }
-#if __has_intrinsics_for(nanl)
+#if __has_intrinsics_for(builtin_nanl)
         static constexpr double quiet_NaN() noexcept { return __builtin_nanl(""); }
 #endif
-#if __has_intrinsics_for(nansl)
+#if __has_intrinsics_for(builtin_nansl)
         static constexpr double signaling_NaN() noexcept { return __builtin_nansl(""); }
 #endif
 
