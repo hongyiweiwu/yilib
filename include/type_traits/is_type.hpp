@@ -7,7 +7,6 @@
 #include "type_traits/is_integral.hpp"
 #include "type_traits/array_manip.hpp"
 #include "util/macros.hpp"
-#include "utility/declval.hpp"
 
 namespace std::__internal {
     template<class T> struct is_complete : false_type {};
@@ -63,7 +62,7 @@ namespace std::__internal {
 #endif
 
     template<class T> struct __is_class_impl : false_type {};
-    template<class T> requires (!is_union<T>::value) && requires { declval<int T::*>(); }
+    template<class T> requires (!is_union<T>::value) && requires (int T::* a) { a; }
     struct __is_class_impl<T> : true_type {};
     template<class T> struct is_class : __is_class_impl<typename remove_cv<T>::type> {};
 

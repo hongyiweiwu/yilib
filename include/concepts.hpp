@@ -11,7 +11,7 @@ namespace std {
     template<class Derived, class Base> concept derived_from = is_base_of_v<Base, Derived> && is_convertible_v<const volatile Derived*, const volatile Base*>;
     template<class From, class To> concept convertible_to =
         is_convertible_v<From, To> &&
-        requires(add_rvalue_reference_t<From> (&f)()) {
+        requires (add_rvalue_reference_t<From> (&f)()) {
             static_cast<To>(f());
         };
     template<class T, class U> concept common_reference_with =

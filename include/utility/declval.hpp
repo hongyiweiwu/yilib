@@ -1,10 +1,8 @@
 #pragma once
 
+#include "type_traits/reference_manip.hpp"
+
 namespace std::__internal {
     template<class T>
-    auto __declval(int) -> T&&;
-    template<class T>
-    auto __declval(...) -> T;
-    template<class T>
-    decltype(__declval<T>(0)) declval() noexcept;
+    typename add_rvalue_reference<T>::type declval() noexcept;    
 }

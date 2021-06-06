@@ -32,7 +32,7 @@ namespace std::__internal {
     template<class B> auto __is_base_of_test(...) -> false_type;
 
     template<class Base, class Derived> struct __is_base_of_impl : true_type {};
-    template<class Base, class Derived> requires requires { __is_base_of_test<Base>(declval<Derived*>()); }
+    template<class Base, class Derived> requires requires (Derived* d) { __is_base_of_test<Base>(d); }
     struct __is_base_of_impl<Base, Derived> : decltype(__is_base_of_test<Base>(declval<Derived*>())) {};
 
     template<class Base, class Derived> 
