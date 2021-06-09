@@ -366,22 +366,22 @@ namespace std {
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...> 
     constexpr T& get(tuple<Types...>& t) noexcept {
-        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>.get();
+        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
     }
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...> 
     constexpr T&& get(tuple<Types...>&& t) noexcept {
-        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>.get();
+        return move(t).__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
     }
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...> 
     constexpr const T& get(const tuple<Types...>& t) noexcept {
-        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>.get();
+        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
     }
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...>
     constexpr const T&& get(const tuple<Types...>&& t) noexcept {
-        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>.get();
+        return move(t).__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
     }
 
     /* 20.5.8 Relational operators */

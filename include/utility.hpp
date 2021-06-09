@@ -260,14 +260,14 @@ public:
 
     template<size_t I, class T1, class T2> requires (I < 2)
     constexpr tuple_element_t<I, pair<T1, T2>>&& get(pair<T1, T2>&& p) noexcept {
-        if constexpr (I == 0) { return p.first; }
-        else { return p.second; }
+        if constexpr (I == 0) { return move(p).first; }
+        else { return move(p).second; }
     }
 
     template<size_t I, class T1, class T2> requires (I < 2)
     constexpr const tuple_element_t<I, pair<T1, T2>>&& get(const pair<T1, T2>&& p) noexcept {
-        if constexpr (I == 0) { return p.first; }
-        else { return p.second; }
+        if constexpr (I == 0) { return move(p).first; }
+        else { return move(p).second; }
     }
 
     template<class T1, class T2> requires (!is_same_v<T1, T2>)
@@ -282,12 +282,12 @@ public:
 
     template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr T1&& get(pair<T1, T2>&& p) noexcept {
-        return p.first;
+        return move(p).first;
     }
 
     template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr const T1&& get(const pair<T1, T2>&& p) noexcept {
-        return p.first;
+        return move(p).first;
     }
 
     template<class T1, class T2> requires (!is_same_v<T1, T2>)
@@ -302,12 +302,12 @@ public:
 
     template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr T2&& get(pair<T1, T2>&& p) noexcept {
-        return p.second;
+        return move(p).second;
     }
 
     template<class T1, class T2> requires (!is_same_v<T1, T2>)
     constexpr const T2&& get(const pair<T1, T2>&& p) noexcept {
-        return p.second;
+        return move(p).second;
     }
 
     struct in_place_t {

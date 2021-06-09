@@ -1,8 +1,16 @@
 #pragma once
 
+#include "cstddef.hpp"
+
 namespace std {
-    template<class CharT> class basic_string {
+    template<class charT> struct char_traits {};
+
+    template<class CharT, class = void, class = void> class basic_string {
     public:
+        using size_type = size_t;
+
+        static const size_type npos = -1;
+
         constexpr basic_string(const CharT*) {}
 
         constexpr const CharT* c_str() const noexcept {
