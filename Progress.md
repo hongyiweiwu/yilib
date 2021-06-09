@@ -80,7 +80,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `random` | | | | &check; | |
 | `numeric` | | | | &check; | |
 | `ratio` | | | | &check; | |
-| `cfenv` | | | | &check; | |
+| `cfenv` | &check; | | | | |
 | `bit` | &check; | | | | |
 | `numbers` | | | | &check; | |
 | `locale` | | | | &check; | |
