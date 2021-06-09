@@ -95,7 +95,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `syncstream` | | | | &check; | |
 | `iomanip` | | | | &check; | |
 | `streambuf` | | | | &check; | |
-| `cstdio` | | | | &check; | |
+| `cstdio` | &check; | | | | |
 | `filesystem` | | | | &check; | |
 | `regex` | | | | &check; | |
 | `atomic` | | | | &check; | |
