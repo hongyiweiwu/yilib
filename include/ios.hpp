@@ -180,7 +180,7 @@ namespace std {
                 throw failure("Error when calling clear() in basic_ios.");
         }
 
-        void setstate(iostate state) { clear(rdstate() | state); }
+        void setstate(iostate state) override { clear(rdstate() | state); }
         bool good() const { return rdstate() == goodbit; }
         bool eof() const { return (rdstate() & eofbit) != 0; }
         bool fail() const { return (rdstate() & (badbit | failbit)) != 0; };
