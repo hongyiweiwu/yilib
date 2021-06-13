@@ -9,6 +9,8 @@
 #include "iosfwd.hpp"
 #include "memory.hpp"
 #include "utility.hpp"
+#include "bit.hpp"
+#include "cstring.hpp"
 
 namespace std {
     /* 29.5.2 Types */
