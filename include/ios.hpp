@@ -226,8 +226,8 @@ namespace std {
             callback_count = rhs.callback_count;
             callbacks = new event_callback[callback_count];
             callback_indices = new int[callback_count];
-            memcpy(callbacks, rhs.callbacks, sizeof(event_callback) * callback_count);
-            memcpy(callback_indices, rhs.callback_indices, sizeof(int) * callback_count);
+            std::memcpy(callbacks, rhs.callbacks, sizeof(event_callback) * callback_count);
+            std::memcpy(callback_indices, rhs.callback_indices, sizeof(int) * callback_count);
 
             loc = rhs.getloc();
 
@@ -235,6 +235,19 @@ namespace std {
             delete[] parray;
             iarray_size = rhs.iarray_size;
             parray_size = rhs.parray_size;
+            if (rhs.iarray) {
+                iarray = new long[bit_ceil(iarray_size)];
+                std::memcpy(iarray, rhs.iarray, sizeof(long) * bit_ceil(iarray_size));
+            } else {
+                iarray = nullptr;
+            }
+
+            if (rhs.parray) {
+                parray = new void*[bit_ceil(parray_size)];
+                std::memcpy(parray, rhs.parray, sizeof(void*) * bit_ceil(parray_size));
+            } else {
+                parray = nullptr;
+            }
 
             tiestr = rhs.tie();
             fillch = rhs.fill();
