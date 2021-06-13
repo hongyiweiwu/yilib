@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cwchar.hpp"
+#include "type_traits.hpp"
 
 namespace std {
     template<class charT> struct char_traits;
@@ -72,7 +73,10 @@ namespace std {
     using wsyncbuf = basic_syncbuf<wchar_t>;
     using wosyncstream = basic_osyncstream<wchar_t>;
 
-    template<class state> class fpos;
+    template<class state> requires is_default_constructible_v<state>
+        && is_copy_constructible_v<state> && is_copy_assignable_v<state>
+        && is_nothrow_destructible_v<state>
+    class fpos;
     // All standard-defined specializations of char_traits has mbstate_t as its state_type. To avoid circular dependency,
     // we directly substitute mbstate_t here.
     using streampos = fpos<mbstate_t>;

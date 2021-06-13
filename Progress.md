@@ -84,9 +84,9 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `bit` | &check; | | | | |
 | `numbers` | | | | &check; | |
 | `locale` | | | | &check; | |
-| `clocale` | | | | &check; | |
+| `clocale` | &check; | | | | |
 | `iosfwd` | &check; | | | | |
-| `ios` | | | | &check; | |
+| `ios` | &check; | | | | |
 | `istream` | | | | &check; | |
 | `ostream` | | | | &check; | |
 | `iostream` | | | | &check; | |
