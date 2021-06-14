@@ -216,7 +216,7 @@ namespace std {
         basic_ios& copyfmt(const basic_ios& rhs) {
             if (this == addressof(rhs)) return;
 
-            for (size_t i = rhs.callback_count - 1; i >= 0; i--)
+            for (int i = rhs.callback_count - 1; i >= 0; i--)
                 (*rhs.callbacks[i])(erase_event, *this, rhs.callback_indices[i]);
 
             fmtfl = rhs.flags();
@@ -254,7 +254,7 @@ namespace std {
             tiestr = rhs.tie();
             fillch = rhs.fill();
 
-            for (size_t i = callback_count - 1; i >= 0; i--)
+            for (int i = callback_count - 1; i >= 0; i--)
                 (*callbacks[i])(copyfmt_event, *this, callback_indices[i]);
 
             exceptions(rhs.exceptions());
@@ -282,6 +282,7 @@ namespace std {
     protected:
         basic_ios() = default;
         void init(basic_streambuf<charT, traits>* sb) {
+            static locale default_locale;
             fmtfl = skipws | dec;
             prec = 6;
             wide = 0;
@@ -290,7 +291,6 @@ namespace std {
             callback_indices = new int[0];
             callback_count = 0;
 
-            static locale default_locale;
             loc = &default_locale;
 
             iarray = nullptr;

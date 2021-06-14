@@ -65,7 +65,7 @@ namespace std {
         locale old = getloc();
         *(this->loc) = loc;
 
-        for (size_t i = callback_count - 1; i >= 0; i--) 
+        for (int i = callback_count - 1; i >= 0; i--) 
             (*callbacks[i])(imbue_event, *this, callback_indices[i]);
         return old;
     }
@@ -126,10 +126,9 @@ namespace std {
     void ios_base::setstate(iostate) {}
 
     ios_base::~ios_base() {
-        for (size_t i = callback_count - 1; i >= 0; i--)
+        for (int i = callback_count - 1; i >= 0; i--)
             (*callbacks[i])(erase_event, *this, callback_indices[i]);
 
-        delete loc;
         delete[] callbacks;
         delete[] callback_indices;
         delete[] iarray;
