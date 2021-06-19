@@ -9,7 +9,9 @@ namespace std {
         using char_type = char;
         using int_type = int;
         using pos_type = streampos;
-        using off_type = long long; // Should be streamoff, defined in "ios.hpp". It is defined there as long long.
+        using off_type = streamoff;
+
+        static constexpr int_type eof() noexcept;
     };
 
     template<class CharT, class = void, class = void> class basic_string {

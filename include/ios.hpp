@@ -2,7 +2,6 @@
 
 #include "iosfwd.hpp"
 #include "string.hpp"
-#include "cstddef.hpp"
 #include "type_traits.hpp"
 #include "system_error.hpp"
 #include "locale.hpp"
@@ -13,10 +12,6 @@
 #include "cstring.hpp"
 
 namespace std {
-    /* 29.5.2 Types */
-    using streamoff = long long;
-    using streamsize = ptrdiff_t;
-
     /* 29.5.4 Class template fpos */
     template<class stateT> requires is_default_constructible_v<stateT>
         && is_copy_constructible_v<stateT> && is_copy_assignable_v<stateT>
@@ -282,7 +277,6 @@ namespace std {
     protected:
         basic_ios() = default;
         void init(basic_streambuf<charT, traits>* sb) {
-            static locale default_locale;
             fmtfl = skipws | dec;
             prec = 6;
             wide = 0;
@@ -291,7 +285,7 @@ namespace std {
             callback_indices = new int[0];
             callback_count = 0;
 
-            loc = &default_locale;
+            loc = nullptr;
 
             iarray = nullptr;
             iarray_size = 0;

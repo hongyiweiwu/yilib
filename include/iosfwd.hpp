@@ -2,6 +2,7 @@
 
 #include "cwchar.hpp"
 #include "type_traits.hpp"
+#include "cstddef.hpp"
 
 namespace std {
     template<class charT> struct char_traits;
@@ -84,4 +85,7 @@ namespace std {
     using u8streampos = fpos<mbstate_t>;
     using u16streampos = fpos<mbstate_t>;
     using u32streampos = fpos<mbstate_t>;
+
+    using streamoff = long long;
+    using streamsize = std::ptrdiff_t;
 }

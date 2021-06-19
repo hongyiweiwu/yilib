@@ -63,14 +63,20 @@ namespace std {
 
     locale ios_base::imbue(const locale& loc) {
         locale old = getloc();
-        *(this->loc) = loc;
+        if (!this->loc) {
+            this->loc = static_cast<locale*>(::operator new(sizeof(locale)));
+        } else {
+            this->loc->~locale();
+        }
+
+        new (this->loc) locale(loc);
 
         for (int i = callback_count - 1; i >= 0; i--) 
             (*callbacks[i])(imbue_event, *this, callback_indices[i]);
         return old;
     }
 
-    locale ios_base::getloc() const { return *loc; }
+    locale ios_base::getloc() const { return loc ? *loc : locale(); }
 
     constinit size_t ios_base::index = 0;
     int ios_base::xalloc() { return __atomic_fetch_add(&index, 1, __ATOMIC_SEQ_CST); }
@@ -129,6 +135,7 @@ namespace std {
         for (int i = callback_count - 1; i >= 0; i--)
             (*callbacks[i])(erase_event, *this, callback_indices[i]);
 
+        delete loc;
         delete[] callbacks;
         delete[] callback_indices;
         delete[] iarray;
