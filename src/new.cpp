@@ -10,7 +10,7 @@ namespace std {
 
     const char* bad_array_new_length::what() const noexcept { return "std::bad_array_new_length"; }
 
-    constexpr nothrow_t nothrow;
+    const nothrow_t nothrow;
 
     static constinit new_handler __curr_new_handler;
 

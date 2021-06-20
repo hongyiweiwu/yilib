@@ -54,9 +54,9 @@ namespace std::pmr {
             static constinit new_delete_memory_resource singleton;
         };
 
-        constinit null_memory_resource null_memory_resource::singleton;
-        constinit new_delete_memory_resource new_delete_memory_resource::singleton;
-        constinit memory_resource* default_memory_resource = nullptr;
+        static constinit null_memory_resource null_memory_resource::singleton;
+        static constinit new_delete_memory_resource new_delete_memory_resource::singleton;
+        static constinit memory_resource* default_memory_resource = nullptr;
     }
 
     memory_resource* new_delete_resource() noexcept {
