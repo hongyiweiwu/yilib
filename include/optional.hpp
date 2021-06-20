@@ -17,9 +17,9 @@ namespace std {
     /* 20.6.4 No-value state indicator */
     struct nullopt_t {
         // Makes nullopt_t a non-aggregate type containing no default constructors.
-        explicit constexpr nullopt_t(int) {}
+        explicit constexpr nullopt_t() {}
     };
-    inline constexpr nullopt_t nullopt{0};
+    inline constexpr nullopt_t nullopt;
 
     /* 20.6.5 Class bad_optional_access */
     class bad_optional_access : public exception {
@@ -34,7 +34,7 @@ namespace std {
                 explicit no_val_t() = default;
             };
 
-            static constexpr no_val_t no_val{};
+            static constexpr no_val_t no_val;
 
             bool has_value;
             union {

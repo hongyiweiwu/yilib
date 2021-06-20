@@ -212,7 +212,7 @@ namespace std {
         };
     }
 
-    inline constexpr __internal::ignore_t ignore{};
+    inline constexpr __internal::ignore_t ignore;
 
     template<class ...T> constexpr tuple<unwrap_ref_decay_t<T>...> make_tuple(T&& ...t) {
         return tuple<unwrap_ref_decay_t<T>...>(forward<T>(t)...);

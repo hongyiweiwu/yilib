@@ -67,7 +67,7 @@ namespace std {
 
             // Explicitly define the destructor to make the struct non-trivial, and hence preventing the
             // the __Storage union from automatically destructing this.
-            ~__stack_obj_storage() {};
+            ~__stack_obj_storage() {}
 
             template<class T>
             static void destroy(any& self) {
@@ -112,7 +112,7 @@ namespace std {
 
             // Explicitly define the destructor to make the struct non-trivial, and hence preventing the
             // the _Storage union from automatically destructing this.
-            ~__heap_obj_storage() {};
+            ~__heap_obj_storage() {}
 
             template<class T>
             static void destroy(any& self) {

@@ -20,7 +20,7 @@ namespace std {
             };
         }
 
-        inline constexpr __internal::__construct_at_fn construct_at{};
+        inline constexpr __internal::__construct_at_fn construct_at;
     }
 
     /* 25.11.9 destroy */
@@ -44,6 +44,6 @@ namespace std {
             };
         }
 
-        inline constexpr __internal::__destroy_at_fn destroy_at{};
+        inline constexpr __internal::__destroy_at_fn destroy_at;
     }
 }

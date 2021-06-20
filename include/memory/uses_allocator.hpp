@@ -9,7 +9,7 @@
 namespace std {
     /* 20.10.7 Allocator argument tag */
     struct allocator_arg_t { explicit allocator_arg_t() = default; };
-    inline constexpr allocator_arg_t allocator_arg{};
+    inline constexpr allocator_arg_t allocator_arg;
 
     /* 20.10.8 uses_allocator */
     template<class T, class Alloc> struct uses_allocator : false_type {};

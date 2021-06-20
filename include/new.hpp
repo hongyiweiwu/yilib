@@ -20,7 +20,7 @@ namespace std {
     struct destroying_delete_t {
         explicit destroying_delete_t() = default;
     };
-    inline constexpr destroying_delete_t destroying_delete{};
+    inline constexpr destroying_delete_t destroying_delete;
 
     enum class align_val_t : size_t {};
 

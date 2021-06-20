@@ -94,7 +94,7 @@ namespace std {
         }
 
         inline namespace __inline_swap {
-            inline constexpr auto swap = ::std::ranges::__swap_internal::__swap_fn{};
+            inline constexpr ::std::ranges::__swap_internal::__swap_fn swap;
         }
     }
 

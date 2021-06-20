@@ -38,7 +38,7 @@ namespace std {
     public:
         class reference {
             friend class bitset;
-            reference() noexcept : bitset(nullptr), index(0) {};
+            reference() noexcept : bitset(nullptr), index(0) {}
             reference(bitset<N>* bitset, size_t index) noexcept requires (index < N)
                 : bitset(bitset), index(index) {}
 

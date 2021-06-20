@@ -26,8 +26,8 @@ namespace std {
         int value;
         bool is_ordered;
 
-        constexpr explicit partial_ordering(__internal::__ord v) noexcept : value(int(v)), is_ordered(true) {};
-        constexpr explicit partial_ordering(__internal::__ncmp v) noexcept : value(int(v)), is_ordered(false) {};
+        constexpr explicit partial_ordering(__internal::__ord v) noexcept : value(int(v)), is_ordered(true) {}
+        constexpr explicit partial_ordering(__internal::__ncmp v) noexcept : value(int(v)), is_ordered(false) {}
 
     public:
         static const partial_ordering less;
@@ -395,7 +395,7 @@ namespace std {
     }
 
     inline namespace __inline_order {
-        inline constexpr __strong_order::__strong_order strong_order{};
+        inline constexpr __strong_order::__strong_order strong_order;
     }
 
     namespace __weak_order {
@@ -446,7 +446,7 @@ namespace std {
     }
 
     inline namespace __inline_order {
-        inline constexpr __weak_order::__weak_order weak_order{};
+        inline constexpr __weak_order::__weak_order weak_order;
     }
 
     namespace __partial_order {
@@ -491,7 +491,7 @@ namespace std {
     }
 
     inline namespace __inline_order {
-        inline constexpr __partial_order::__partial_order partial_order{};
+        inline constexpr __partial_order::__partial_order partial_order;
     }
 
     namespace __internal {
@@ -568,9 +568,9 @@ namespace std {
     }
 
     inline namespace __inline_order {
-        inline constexpr __internal::compare_strong_order_fallback compare_strong_order_fallback{};
-        inline constexpr __internal::compare_weak_order_fallback compare_weak_order_fallback{};
-        inline constexpr __internal::compare_partial_order_fallback compare_partial_order_fallback{};
+        inline constexpr __internal::compare_strong_order_fallback compare_strong_order_fallback;
+        inline constexpr __internal::compare_weak_order_fallback compare_weak_order_fallback;
+        inline constexpr __internal::compare_partial_order_fallback compare_partial_order_fallback;
     }
 
     namespace __internal {
