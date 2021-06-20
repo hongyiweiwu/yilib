@@ -10,7 +10,6 @@
 #include "limits.hpp"
 
 #include "__tuple.hpp"
-// #include "tuple.hpp"
 
 namespace std {
     /* 20.2.2 swap */
@@ -23,7 +22,7 @@ namespace std {
 
     template<class T, size_t N> requires is_swappable_v<T>
     constexpr void swap(T (&a)[N], T (&b)[N]) noexcept(is_nothrow_swappable_v<T>) {
-        for (auto i = 0; i < N; i++) {
+        for (size_t i = 0; i < N; i++) {
             swap(a[i], b[i]);
         }
     }

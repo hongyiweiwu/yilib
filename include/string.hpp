@@ -18,7 +18,7 @@ namespace std {
     public:
         using size_type = size_t;
 
-        static constinit size_type npos = -1;
+        static constexpr size_type npos = -1;
 
         constexpr basic_string(const CharT*) {}
 

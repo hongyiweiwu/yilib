@@ -37,7 +37,7 @@ namespace std {
         long __ctrl::decrement_shared_count() noexcept {
             if (is_null()) return 0;
 
-            const auto count = __atomic_sub_fetch(&shared_count, 1, __ATOMIC_SEQ_CST);
+            const long count = __atomic_sub_fetch(&shared_count, 1, __ATOMIC_SEQ_CST);
             if (!count) {
                 delete_content();
                 decrement_weak_count();
@@ -47,7 +47,7 @@ namespace std {
         }
 
         long __ctrl::decrement_weak_count() noexcept {
-            const auto count = __atomic_sub_fetch(&weak_count, 1, __ATOMIC_SEQ_CST);
+            const long count = __atomic_sub_fetch(&weak_count, 1, __ATOMIC_SEQ_CST);
             if (!count) delete_block();
 
             return count;

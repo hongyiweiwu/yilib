@@ -226,7 +226,7 @@ namespace std {
         /* 20.11.3.6 Observers */
         element_type* get() const noexcept { return ptr; }
 
-        auto operator*() const noexcept -> decltype(auto) { 
+        T& operator*() const noexcept { 
             if constexpr (is_void_v<T> || is_array_v<T>) {
                 static_assert(__internal::always_false<T>, "*shared_ptr<T> can only be called when T is not an array type or cv void.");
             } else {
@@ -234,7 +234,7 @@ namespace std {
             }
         }
 
-        auto operator->() const noexcept {
+        T* operator->() const noexcept {
             if constexpr (is_array_v<T>) {
                 static_assert(__internal::always_false<T>, "shared_ptr<T>-> can only be called when T is not an array type.");
             } else {
@@ -410,7 +410,7 @@ namespace std {
         /* Make a new shared_ptr by simply assigning its member variables with the provided ones. This is only used internally for implementing the
          * make_shared series of functions. */
         static shared_ptr<T> __make_shared(__internal::__ctrl_obj<T>* ctrl, bool enable_shared_from_this = false) {
-            auto result = shared_ptr<T>();
+            shared_ptr<T> result;
             result.ptr = ctrl->get_object_ptr();
             result.ctrl = ctrl;
 

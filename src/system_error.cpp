@@ -124,12 +124,12 @@ namespace std {
     }
 
     strong_ordering operator<=>(const error_code& lhs, const error_code& rhs) noexcept {
-        if (auto c = lhs.category() <=> rhs.category(); c != 0) return c;
+        if (strong_ordering c = lhs.category() <=> rhs.category(); c != 0) return c;
         return lhs.value() <=> rhs.value();
     }
 
     strong_ordering operator<=>(const error_condition& lhs, const error_condition& rhs) noexcept {
-        if (auto c = lhs.category() <=> rhs.category(); c != 0) return c;
+        if (strong_ordering c = lhs.category() <=> rhs.category(); c != 0) return c;
         return lhs.value() <=> rhs.value();
     }
 

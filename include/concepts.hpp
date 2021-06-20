@@ -78,7 +78,7 @@ namespace std {
                 requires __array_swappable<T(&)[N], U(&)[N]>
                 constexpr void operator()(T(&e1)[N], U(&e2)[N]) const noexcept(noexcept((*this)(*e1, *e2))) {
                     // ranges::swap_ranges spelled out
-                    for (auto i = 0; i < N; i++) {
+                    for (size_t i = 0; i < N; i++) {
                         (*this)(e1[i], e2[i]);
                     }
                 }

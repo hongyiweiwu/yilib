@@ -40,7 +40,7 @@ namespace std {
 
     void* ptr = nullptr;
     while ((ptr = std::aligned_alloc(static_cast<std::size_t>(alignment), size)) == nullptr) {
-        auto handler = std::get_new_handler();
+        std::new_handler handler = std::get_new_handler();
         if (handler == nullptr) {
             throw std::bad_alloc();
         } else {

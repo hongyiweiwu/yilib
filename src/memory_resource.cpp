@@ -54,9 +54,9 @@ namespace std::pmr {
             static constinit new_delete_memory_resource singleton;
         };
 
-        static constinit null_memory_resource null_memory_resource::singleton;
-        static constinit new_delete_memory_resource new_delete_memory_resource::singleton;
-        static constinit memory_resource* default_memory_resource = nullptr;
+        constinit null_memory_resource null_memory_resource::singleton;
+        constinit new_delete_memory_resource new_delete_memory_resource::singleton;
+        constinit memory_resource* default_memory_resource = nullptr;
     }
 
     memory_resource* new_delete_resource() noexcept {
@@ -68,7 +68,7 @@ namespace std::pmr {
     }
 
     memory_resource* set_default_resource(memory_resource* r) noexcept {
-        auto old = __internal::default_memory_resource;
+        memory_resource* old = __internal::default_memory_resource;
         __internal::default_memory_resource = r ? r : new_delete_resource();
         return old;
     }
@@ -97,7 +97,7 @@ namespace std::pmr {
 
     void monotonic_buffer_resource::release() {
         while (current_buffer) {
-            const auto metadata = *static_cast<struct metadata*>(current_buffer);
+            const struct metadata& metadata = *static_cast<struct metadata*>(current_buffer);
             upstream_rsrc->deallocate(current_buffer, metadata.buffer_size);
             current_buffer = metadata.prev_buffer;
         }
@@ -107,7 +107,7 @@ namespace std::pmr {
 
     void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t alignment) {
         if (current_buffer) {
-            const auto metadata = *static_cast<struct metadata*>(current_buffer);
+            const struct metadata& metadata = *static_cast<struct metadata*>(current_buffer);
             size_t remaining_space = metadata.buffer_size - (static_cast<char*>(unused_buffer_part) - static_cast<char*>(current_buffer));
             if (void* addr = align(alignment, bytes, unused_buffer_part, remaining_space); addr) {
                 unused_buffer_part = static_cast<void*>(static_cast<char*>(unused_buffer_part) + bytes);

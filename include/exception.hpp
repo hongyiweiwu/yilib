@@ -99,7 +99,7 @@ namespace std {
 
     template<class E> void rethrow_if_nested(const E& e) {
         if constexpr (is_polymorphic_v<E> && (!is_base_of_v<nested_exception, E> || is_convertible_v<E*, nested_exception*>)) {
-            if (auto p = dynamic_cast<const nested_exception*>(addressof(e))) {
+            if (const nested_exception* p = dynamic_cast<const nested_exception*>(addressof(e))) {
                 p->rethrow_nested();
             }
         }

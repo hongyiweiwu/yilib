@@ -121,7 +121,7 @@ namespace std {
         }
 
         bitset<N>& set() noexcept {
-            for (auto& i : storage) i = UINTMAX_MAX;
+            for (uintmax_t& i : storage) i = UINTMAX_MAX;
             return *this;
         }
 
@@ -138,7 +138,7 @@ namespace std {
         }
 
         bitset<N>& reset() {
-            for (auto& i : storage) i = 0;
+            for (uintmax_t& i : storage) i = 0;
             return *this;
         }
 
@@ -196,7 +196,7 @@ namespace std {
 
         size_t count() const noexcept {
             size_t c = 0;
-            for (auto num : storage) {
+            for (uintmax_t num : storage) {
                 c += popcount(num);
             }
 

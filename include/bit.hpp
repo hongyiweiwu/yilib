@@ -90,7 +90,7 @@ namespace std {
         && (!same_as<T, char8_t>) && (!same_as<T, char16_t>)
         && (!same_as<T, char32_t>) && (!same_as<T, wchar_t>) 
     [[nodiscard]] constexpr T rotl(T x, int s) noexcept {
-        auto r = s % numeric_limits<T>::digits;
+        const int r = s % numeric_limits<T>::digits;
         if (r == 0) return x;
         else if (r > 0) return (x << r) | (x >> (numeric_limits<T>::digits - r));
         else return (x >> -r) | (x << (numeric_limits<T>::digits + r));
@@ -100,7 +100,7 @@ namespace std {
         && (!same_as<T, char8_t>) && (!same_as<T, char16_t>)
         && (!same_as<T, char32_t>) && (!same_as<T, wchar_t>) 
     [[nodiscard]] constexpr T rotr(T x, int s) noexcept {
-        auto r = s % numeric_limits<T>::digits;
+        const int r = s % numeric_limits<T>::digits;
         if (r == 0) return x;
         else if (r > 0) return (x >> r) | (x << (numeric_limits<T>::digits - r));
         else return (x << -r) | (x >> (numeric_limits<T>::digits + r));
