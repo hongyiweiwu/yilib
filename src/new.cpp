@@ -12,7 +12,7 @@ namespace std {
 
     const nothrow_t nothrow;
 
-    static constinit new_handler __curr_new_handler;
+    static constinit new_handler __curr_new_handler = nullptr;
 
     new_handler get_new_handler() noexcept {
         return __atomic_load_n(&__curr_new_handler, __ATOMIC_SEQ_CST);
