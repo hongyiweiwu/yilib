@@ -39,6 +39,9 @@ namespace std::__internal {
 #if __has_intrinsics_for(is_trivially_destructible)
     template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
     struct is_trivially_destructible : bool_constant<__is_trivially_destructible(T)> {};
+#elif __has_intrinsics_for(has_trivial_destructor)
+    template<class T> requires is_complete<T>::value || is_void<T>::value || is_unbounded_array<T>::value
+    struct is_trivially_destructible : bool_constant<__has_trivial_destructor(T)> {};
 #endif
 
     template<class T, class U> struct __is_nothrow_swappable_with : false_type {};

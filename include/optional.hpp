@@ -42,10 +42,10 @@ namespace std {
                 T val;
             };
 
-            explicit constexpr __optional_storage(no_val_t) noexcept : dummy(), has_value(false) {};
+            explicit constexpr __optional_storage(no_val_t) noexcept : dummy(), has_value(false) {}
     
             template<class ...Args>
-            explicit constexpr __optional_storage(Args&& ...args) : val(forward<Args>(args)...), has_value(true) {};
+            explicit constexpr __optional_storage(Args&& ...args) : val(forward<Args>(args)...), has_value(true) {}
 
             void reset() {
                 if (has_value) val.~T();

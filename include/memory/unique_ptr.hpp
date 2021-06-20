@@ -4,6 +4,7 @@
 #include "compare.hpp"
 #include "utility.hpp"
 #include "cstddef.hpp"
+#include "functional.hpp"
 
 /* 20.11.1 Class template unique_ptr */
 namespace std {
@@ -12,7 +13,7 @@ namespace std {
         constexpr default_delete() noexcept = default;
 
         template<class U> requires is_convertible_v<U*, T*>
-        default_delete(const default_delete<U>&) noexcept : default_delete() {};
+        default_delete(const default_delete<U>&) noexcept : default_delete() {}
 
         void operator()(T* ptr) const requires __internal::is_complete<T>::value { delete ptr; }
     };
@@ -21,7 +22,7 @@ namespace std {
         constexpr default_delete() noexcept = default;
 
         template<class U> requires is_convertible_v<U*, T*>
-        default_delete(const default_delete<U[]>&) noexcept : default_delete() {};
+        default_delete(const default_delete<U[]>&) noexcept : default_delete() {}
 
         template<class U> requires __internal::is_complete<U>::value && is_convertible_v<U*, T*>
         void operator()(U* ptr) const { delete[] ptr; }

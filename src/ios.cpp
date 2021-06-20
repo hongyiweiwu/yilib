@@ -23,7 +23,7 @@ namespace std {
     }
 
     const error_category& iostream_category() noexcept {
-        static constexpr __internal::iostream_category category{};
+        static constinit const __internal::iostream_category category;
         return category;
     }
 

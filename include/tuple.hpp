@@ -78,7 +78,7 @@ namespace std {
         using __leaf_wrapper_t = __internal::__tuple_leaf_wrapper<make_index_sequence<sizeof...(T)>, T...>;
         template<size_t I> using __leaf_t = __internal::__tuple_leaf<I, typename __internal::pick_ith_type<I, T...>::type>;
     public:
-        constexpr explicit(((!requires (void (&fn)(T)) { fn({}); }) || ...))  // Checks that at least one T is not copy-list-initializable.
+        constexpr explicit((!__internal::__is_implicit_default_constructible<T> || ...))
             tuple() requires (is_default_constructible_v<T> && ...) = default;
 
         constexpr explicit(!conjunction_v<is_convertible<const T&, T>...>)
@@ -403,17 +403,17 @@ namespace std {
         }
 
         // This returns the three-way comparing result recursively assuming both tuples have the same length.
-        constexpr auto helper = [](size_t i, const tuple<T...>& t, const tuple<U...>& u, const auto& next) {
-            if constexpr (i == sizeof...(T)) {
+        constexpr auto helper = []<size_t I>(const tuple<T...>& t, const tuple<U...>& u, const auto& next) {
+            if constexpr (I == sizeof...(T)) {
                 return strong_ordering::equal;
-            } else if (auto c = __internal::synth_three_way(get<i>(t), get<i>(u)); c != 0) {
+            } else if (auto c = __internal::synth_three_way(get<I>(t), get<I>(u)); c != 0) {
                 return c;
             } else {
-                return next(i + 1, t, u, next);
+                return next<I + 1>(t, u, next);
             }
         };
 
-        return helper(0, t, u, helper);
+        return helper<0>(t, u, helper);
     }
 
     /* 20.5.9 Tuple traits */

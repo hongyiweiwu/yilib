@@ -6,6 +6,7 @@
 #include "limits.hpp"
 
 #include "utility/typecast.hpp"
+#include "utility/declval.hpp"
 #include "util/always_false.hpp"
 
 namespace std {
@@ -315,11 +316,15 @@ namespace std {
             { u <=> t } -> __internal::compares_as<Cat>;
         };
 
-    template<class T, class U, class __Void = void> requires is_void_v<__Void> struct __compare_three_way_result {};
-    template<class T, class U> struct __compare_three_way_result<T, U, void_t<decltype(declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>())>> {
-        using type = decltype(declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>());
-    };
-    template<class T, class U = T> struct compare_three_way_result : __compare_three_way_result<T, U> {};
+    namespace __internal {
+        template<class T, class U> struct __compare_three_way_result {};
+        template<class T, class U> requires requires { declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>(); }
+        struct __compare_three_way_result<T, U> {
+            using type = decltype(declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>());
+        };
+    }
+
+    template<class T, class U = T> struct compare_three_way_result : __internal::__compare_three_way_result<T, U> {};
     template<class T, class U = T> using compare_three_way_result_t = typename compare_three_way_result<T, U>::type;
 
     namespace __internal {

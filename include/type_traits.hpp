@@ -176,7 +176,7 @@ namespace std {
     template<class T> inline constexpr bool is_trivially_move_assignable_v = is_trivially_move_assignable<T>::value;
 #endif
 
-#if __has_intrinsics_for(is_trivially_destructible)
+#if __has_intrinsics_for(is_trivially_destructible) || __has_intrinsics_for(has_trivial_destructor)
     using __internal::is_trivially_destructible;
     template<class T> inline constexpr bool is_trivially_destructible_v = is_trivially_destructible<T>::value;
 #endif

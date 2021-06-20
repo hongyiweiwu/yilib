@@ -209,7 +209,7 @@ namespace std {
         }
 
         basic_ios& copyfmt(const basic_ios& rhs) {
-            if (this == addressof(rhs)) return;
+            if (this == addressof(rhs)) return *this;
 
             for (int i = rhs.callback_count - 1; i >= 0; i--)
                 (*rhs.callbacks[i])(erase_event, *this, rhs.callback_indices[i]);

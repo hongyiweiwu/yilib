@@ -72,7 +72,7 @@ namespace std {
             template<class T>
             static void destroy(any& self) {
                 destroy_at(reinterpret_cast<decay_t<T>*>(&self.storage.stack_obj.data));
-            };
+            }
         };
 
         /* Internal storage for objects of size larger than the stack object limit. */
