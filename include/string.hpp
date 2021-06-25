@@ -27,5 +27,15 @@ namespace std {
         }
     };
 
+    template<class charT, class traits, class Allocator>
+    constexpr bool operator==(const basic_string<charT, traits, Allocator>&, const basic_string<charT, traits, Allocator>&) {
+        return true;
+    }
+
+    template<class charT, class traits, class Allocator>
+    constexpr bool operator==(const basic_string<charT, traits, Allocator>&, const charT*) {
+        return true;
+    }
+
     using string = basic_string<char>;
 }

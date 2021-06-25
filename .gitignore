@@ -1,6 +1,7 @@
 **.gch
-.vscode
 obj
 .DS_Store
 output
 src/main.cpp
+.cache
+compile_commands.json

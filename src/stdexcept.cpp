@@ -3,10 +3,10 @@
 #include "exception.hpp"
 
 namespace std {
-    logic_error::logic_error(const string& what_arg) : exception(), what_str(what_arg.c_str()) {}
+    logic_error::logic_error(const string& what_arg) : exception(), what_str(what_arg) {}
     logic_error::logic_error(const char* what_arg) : exception(), what_str(what_arg) {}
 
-    const char* logic_error::what() const noexcept { return what_str; }
+    const char* logic_error::what() const noexcept { return what_str.c_str(); }
 
     domain_error::domain_error(const string& what_arg) : logic_error(what_arg) {}
     domain_error::domain_error(const char* what_arg) : logic_error(what_arg) {}
@@ -20,10 +20,10 @@ namespace std {
     out_of_range::out_of_range(const string& what_arg) : logic_error(what_arg) {}
     out_of_range::out_of_range(const char* what_arg) : logic_error(what_arg) {}
 
-    runtime_error::runtime_error(const string& what_arg) : exception(), what_str(what_arg.c_str()) {}
+    runtime_error::runtime_error(const string& what_arg) : exception(), what_str(what_arg) {}
     runtime_error::runtime_error(const char* what_arg) : exception(), what_str(what_arg) {}
 
-    const char* runtime_error::what() const noexcept { return what_str; }
+    const char* runtime_error::what() const noexcept { return what_str.c_str(); }
 
     range_error::range_error(const string& what_arg) : runtime_error(what_arg) {}
     range_error::range_error(const char* what_arg) : runtime_error(what_arg) {}

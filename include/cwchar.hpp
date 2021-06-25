@@ -2,7 +2,7 @@
 
 #include "wchar.h"
 
-namespace yilib {
+namespace std {
     using size_t = ::size_t;
     using mbstate_t = ::mbstate_t;
     using wint_t = ::wint_t;

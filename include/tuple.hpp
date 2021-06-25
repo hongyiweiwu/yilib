@@ -104,7 +104,7 @@ namespace std {
 
     private:
         template<class U1, class U2> 
-        static constexpr bool __is_pair_copy_constructor_explicit() {
+        static consteval bool __is_pair_copy_constructor_explicit() {
             if constexpr (sizeof...(T) == 2) {
                 return !is_convertible_v<const U1&, typename __internal::pick_ith_type<0, T...>::type> && !is_convertible_v<const U2&, typename __internal::pick_ith_type<1, T...>::type>;
             } else {
@@ -122,7 +122,7 @@ namespace std {
 
     private:
         template<class U1, class U2> 
-        static constexpr bool __is_pair_move_constructor_explicit() {
+        static consteval bool __is_pair_move_constructor_explicit() {
             if constexpr (sizeof...(T) == 2) {
                 return !is_convertible_v<U1, typename __internal::pick_ith_type<0, T...>::type> && !is_convertible_v<U2, typename __internal::pick_ith_type<1, T...>::type>;
             } else {

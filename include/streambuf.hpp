@@ -119,13 +119,13 @@ namespace std {
         }
 
         /* 29.6.3.5.1 Locales */
-        virtual void imbue(const locale& loc) {}
+        virtual void imbue(const locale&) {}
 
         /* 29.6.3.5.2 Buffer management and positioning */
-        virtual basic_streambuf* setbuf(char_type* s, streamsize n) { return this; }
-        virtual pos_type seekoff(off_type off, ios_base::seekdir way, 
-                                 ios_base::openmode which = ios_base::in | ios_base::out) { return pos_type(off_type(-1)); }
-        virtual pos_type seekpos(pos_type sp, ios_base::openmode which = ios_base::in | ios_base::out) { return pos_type(off_type(-1)); }
+        virtual basic_streambuf* setbuf(char_type*, streamsize) { return this; }
+        virtual pos_type seekoff(off_type, ios_base::seekdir, 
+                                 ios_base::openmode = ios_base::in | ios_base::out) { return pos_type(off_type(-1)); }
+        virtual pos_type seekpos(pos_type, ios_base::openmode = ios_base::in | ios_base::out) { return pos_type(off_type(-1)); }
         virtual int sync() { return 0; }
 
         /* 29.6.3.5.3 Get area */
@@ -151,7 +151,7 @@ namespace std {
         }
 
         /* 29.6.3.5.4 Putback */
-        virtual int_type pbackfail(int_type c = traits::eof()) { return traits::eof(); }
+        virtual int_type pbackfail(int_type = traits::eof()) { return traits::eof(); }
 
         /* 29.6.3.5.5 Put area */
         virtual streamsize xsputn(const char_type* s, streamsize n) {
@@ -161,6 +161,6 @@ namespace std {
             }
             return n;
         }
-        virtual int_type overflow(int_type c = traits::eof()) { return traits::eof(); }
+        virtual int_type overflow(int_type = traits::eof()) { return traits::eof(); }
     };
 }
