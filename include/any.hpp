@@ -7,7 +7,7 @@
 #include "cstddef.hpp"
 #include "cstdlib.hpp"
 #include "memory.hpp"
-#include "util/always_false.hpp"
+#include "util/utility_traits.hpp"
 
 namespace std {
     /* 20.8.3 Class bad_any_cast */
@@ -22,10 +22,6 @@ namespace std {
         false_type __is_specialization_of_in_place_type_t_test(...);
         /* Returns whether a given type is a specialization of in_place_type_t. */
         template<class T> struct __is_specialization_of_in_place_type_t : decltype(__is_specialization_of_in_place_type_t_test(declval<T>())) {};
-
-        /* An empty struct that takes a type argument. This is used as an argument to special member functions (specifically, constructors) that cannot take explicit template arguments,
-         * so the needed template argument can be inferred by the compiler. */
-        template<class T> struct type_hint {};
     }
 
     class any {
@@ -53,7 +49,7 @@ namespace std {
             aligned_storage_t<__stack_object_size_limit> data;
 
             template<class T, class ...Args>
-            __stack_obj_storage(__internal::type_hint<T>, Args&& ...args) : copy_constructor(&copy_construct<T>), move_constructor(&move_construct<T>) {
+            __stack_obj_storage(__internal::type_list<T>, Args&& ...args) : copy_constructor(&copy_construct<T>), move_constructor(&move_construct<T>) {
                 construct_at(reinterpret_cast<decay_t<T>*>(&data), forward<Args>(args)...);
             }
 
@@ -97,7 +93,7 @@ namespace std {
             void* data = nullptr;
 
             template<class T, class ...Args>
-            __heap_obj_storage(__internal::type_hint<T>, Args&& ...args) : copy_constructor(&copy_construct<T>), move_constructor(&move_construct<T>),
+            __heap_obj_storage(__internal::type_list<T>, Args&& ...args) : copy_constructor(&copy_construct<T>), move_constructor(&move_construct<T>),
                 data(operator new(sizeof(decay_t<T>), align_val_t(alignof(decay_t<T>)))) {
                 construct_at(reinterpret_cast<decay_t<T>*>(data), forward<Args>(args)...);
             }
@@ -154,12 +150,12 @@ namespace std {
         explicit any(in_place_type_t<T>, Args&& ...args) : typeinfo(&typeid(decay_t<T>)) {
             if constexpr (sizeof(decay_t<T>) <= __stack_object_size_limit && is_nothrow_move_constructible_v<decay_t<T>>) {
                 // Use stack for storage.
-                new (&storage.stack_obj) __stack_obj_storage(__internal::type_hint<T>{}, forward<Args>(args)...);
+                new (&storage.stack_obj) __stack_obj_storage(__internal::type_list<T>{}, forward<Args>(args)...);
                 state = __State::STACK;
                 destroyer = &__stack_obj_storage::destroy<T>;
             } else {
                 // Use heap for storage.
-                new (&storage.heap_obj) __heap_obj_storage(__internal::type_hint<T>{}, forward<Args>(args)...);
+                new (&storage.heap_obj) __heap_obj_storage(__internal::type_list<T>{}, forward<Args>(args)...);
                 state = __State::HEAP;
                 destroyer = &__heap_obj_storage::destroy<T>;
             }
@@ -184,12 +180,12 @@ namespace std {
             reset();
             if constexpr (sizeof(decay_t<T>) <= __stack_object_size_limit && is_nothrow_move_constructible_v<decay_t<T>>) {
                 // Use stack for storage.
-                new (&storage.stack_obj) __stack_obj_storage(__internal::type_hint<T>{}, forward<Args>(args)...);
+                new (&storage.stack_obj) __stack_obj_storage(__internal::type_list<T>{}, forward<Args>(args)...);
                 state = __State::STACK;
                 destroyer = &__stack_obj_storage::destroy<T>;
             } else {
                 // Use heap for storage.
-                new (&storage.heap_obj) __heap_obj_storage(__internal::type_hint<T>{}, forward<Args>(args)...);
+                new (&storage.heap_obj) __heap_obj_storage(__internal::type_list<T>{}, forward<Args>(args)...);
                 state = __State::HEAP;
                 destroyer = &__heap_obj_storage::destroy<T>;
             }

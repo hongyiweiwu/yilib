@@ -11,7 +11,7 @@
 #include "climits.hpp"
 #include "cstring.hpp"
 #include "type_traits.hpp"
-#include "util/always_false.hpp"
+#include "util/utility_traits.hpp"
 #include "stdexcept.hpp"
 
 namespace std {
@@ -359,28 +359,28 @@ namespace std {
 
     // __internal::locale_container
 #if YILIB_HAS_XLOCALE
-    __internal::locale_container<true>::locale_container(const char* loc, int category)
+    __internal::__locale_container<true>::__locale_container(const char* loc, int category)
         : loc(::newlocale(category, loc, static_cast<locale_t>(0))) {}
 
-    __internal::locale_container<true>::~locale_container<true>() {
+    __internal::__locale_container<true>::~__locale_container<true>() {
         ::freelocale(loc);
     }
 
-    locale_t __internal::locale_container<true>::get_locale() const noexcept { return loc; }
+    locale_t __internal::__locale_container<true>::get_locale() const noexcept { return loc; }
 #else
-    __internal::locale_container<false>::locale_container(const char* loc, int category) 
+    __internal::__locale_container<false>::__locale_container(const char* loc, int category) 
         : loc(loc), category(category) {}
 
-    __internal::locale_container<false>::global_locale_switch::global_locale_switch(const char* loc, int category)
+    __internal::__locale_container<false>::global_locale_switch::global_locale_switch(const char* loc, int category)
         : category(category), old_loc(std::setlocale(category, NULL)) {
             std::setlocale(category, loc);
         }
 
-    __internal::locale_container<false>::global_locale_switch::~global_locale_switch() {
+    __internal::__locale_container<false>::global_locale_switch::~global_locale_switch() {
         std::setlocale(category, old_loc);
     }
 
-    __internal::locale_container<false>::global_locale_switch __internal::locale_container<false>::get_locale() const {
+    __internal::__locale_container<false>::global_locale_switch __internal::__locale_container<false>::get_locale() const {
         return {loc, category};
     }
 #endif
@@ -603,11 +603,11 @@ namespace std {
     int codecvt<wchar_t, char, std::mbstate_t>::do_max_length() const noexcept { return MB_CUR_MAX; }
 
     codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const char* loc, size_t refs)
-        : codecvt<char, char, std::mbstate_t>(refs), __internal::locale_container<>(loc, LC_CTYPE) {}
+        : codecvt<char, char, std::mbstate_t>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
     codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const string& loc, size_t refs) : codecvt_byname(loc.c_str(), refs) {}
 
     codecvt_byname<wchar_t, char, std::mbstate_t>::codecvt_byname(const char* loc, size_t refs)
-        : codecvt<wchar_t, char, std::mbstate_t>(refs), __internal::locale_container<>(loc, LC_CTYPE) {}
+        : codecvt<wchar_t, char, std::mbstate_t>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
     codecvt_byname<wchar_t, char, std::mbstate_t>::codecvt_byname(const string& loc, size_t refs) : codecvt_byname(loc.c_str(), refs) {}
 
     codecvt_base::result codecvt_byname<wchar_t, char, std::mbstate_t>::do_out(std::mbstate_t& state, const wchar_t* from, const wchar_t* from_end, 

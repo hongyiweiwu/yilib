@@ -83,7 +83,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `cfenv` | &check; | | | | |
 | `bit` | &check; | | | | |
 | `numbers` | | | | &check; | |
-| `locale` | | | | &check; | |
+| `locale` | | | &check; |  | |
 | `clocale` | &check; | | | | |
 | `iosfwd` | &check; | | | | |
 | `ios` | &check; | | | | |

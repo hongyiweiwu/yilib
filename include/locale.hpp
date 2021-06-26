@@ -277,16 +277,16 @@ namespace std {
          * The behavior is undefined if the supplied loc name doesn't correspond to an actual locale.
          */
         template<bool HasXLocale = YILIB_HAS_XLOCALE>
-        class locale_container {};
+        class __locale_container {};
 
 #if YILIB_HAS_XLOCALE
-        template<> class locale_container<true> {
+        template<> class __locale_container<true> {
         protected:
             mutable locale_t loc;
 
         public:
-            locale_container(const char* loc, int category);
-            virtual ~locale_container();
+            __locale_container(const char* loc, int category);
+            virtual ~__locale_container();
 
             [[nodiscard]] locale_t get_locale() const noexcept;
         };
@@ -316,22 +316,22 @@ namespace std {
     }
 
     template<class charT>
-    class ctype_byname : public ctype<charT>, public __internal::locale_container<> {
+    class ctype_byname : public ctype<charT>, public __internal::__locale_container<> {
     public:
         using mask = typename ctype<charT>::mask;
         explicit ctype_byname(const char* loc, size_t refs = 0)
-            : ctype<charT>(refs), __internal::locale_container<>(loc, LC_CTYPE) {}
+            : ctype<charT>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
             
         explicit ctype_byname(const string& loc, size_t refs = 0) : ctype_byname(loc.c_str(), refs) {}
     protected:
         ~ctype_byname() = default;
     };
 
-    template<> class ctype_byname<wchar_t> : public ctype<wchar_t>, public __internal::locale_container<> {
+    template<> class ctype_byname<wchar_t> : public ctype<wchar_t>, public __internal::__locale_container<> {
     public:
         using mask = typename ctype<wchar_t>::mask;
         explicit ctype_byname(const char* loc, size_t refs = 0)
-            : ctype<wchar_t>(refs), __internal::locale_container<>(loc, LC_CTYPE) {}
+            : ctype<wchar_t>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
             
         explicit ctype_byname(const string& loc, size_t refs = 0) : ctype_byname(loc.c_str(), refs) {}
     protected:
@@ -346,11 +346,11 @@ namespace std {
         char do_narrow(wchar_t c, char dfault) const override;
     };
 
-    template<> class ctype_byname<char> : public ctype<char>, public __internal::locale_container<> {
+    template<> class ctype_byname<char> : public ctype<char>, public __internal::__locale_container<> {
     public:
         using mask = typename ctype<char>::mask;
         explicit ctype_byname(const char* loc, size_t refs = 0)
-            : ctype<char>(nullptr, false, refs), __internal::locale_container<>(loc, LC_CTYPE) {}
+            : ctype<char>(nullptr, false, refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
             
         explicit ctype_byname(const string& loc, size_t refs = 0) : ctype_byname(loc.c_str(), refs) {}
     protected:
@@ -478,10 +478,10 @@ namespace std {
     };
 
     template<class internT, class externT, class stateT>
-    class codecvt_byname : public codecvt<internT, externT, stateT>, public __internal::locale_container<> {
+    class codecvt_byname : public codecvt<internT, externT, stateT>, public __internal::__locale_container<> {
     public:
         explicit codecvt_byname(const char* loc, size_t refs = 0)
-            : codecvt<internT, externT, stateT>(refs), __internal::locale_container<>(loc, LC_CTYPE) {}
+            : codecvt<internT, externT, stateT>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
         explicit codecvt_byname(const string& loc, size_t refs = 0) : codecvt_byname(loc.c_str(), refs) {}
 
     protected:
@@ -489,7 +489,7 @@ namespace std {
     };
 
     template<> 
-    class codecvt_byname<char, char, std::mbstate_t> : public codecvt<char, char, std::mbstate_t>, public __internal::locale_container<> {
+    class codecvt_byname<char, char, std::mbstate_t> : public codecvt<char, char, std::mbstate_t>, public __internal::__locale_container<> {
     public:
         explicit codecvt_byname(const char* loc, size_t refs = 0);
         explicit codecvt_byname(const string& loc, size_t refs = 0);
@@ -499,7 +499,7 @@ namespace std {
     };
 
     template<> 
-    class codecvt_byname<wchar_t, char, std::mbstate_t> : public codecvt<wchar_t, char, std::mbstate_t>, public __internal::locale_container<> {
+    class codecvt_byname<wchar_t, char, std::mbstate_t> : public codecvt<wchar_t, char, std::mbstate_t>, public __internal::__locale_container<> {
     public:
         explicit codecvt_byname(const char* loc, size_t refs = 0);
         explicit codecvt_byname(const string& loc, size_t refs = 0);
