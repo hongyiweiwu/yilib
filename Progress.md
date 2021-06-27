@@ -82,7 +82,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `ratio` | | | | &check; | |
 | `cfenv` | &check; | | | | |
 | `bit` | &check; | | | | |
-| `numbers` | | | | &check; | |
+| `numbers` | &check; | | | | |
 | `locale` | | | &check; |  | |
 | `clocale` | &check; | | | | |
 | `iosfwd` | &check; | | | | |
@@ -101,8 +101,8 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `atomic` | | | | &check; | |
 | `thread` | | | | &check; | |
 | `stop_token` | | | | &check; | |
-| `mutex` | | | | &check; | |
-| `shared_mutex` | | | | &check; | |
+| `mutex` | | &check; | | | Blocked due to lack of MacOS native support for timed mutexs, and unimplemented `chrono` header, and also the unimplemented `lock` algorithm. |
+| `shared_mutex` | | &check; | | | Blocked due to lack of MacOS native support for timed mutexs, and unimplemented `chrono` header. |
 | `future` | | | | &check; | |
 | `condition_variable` | | | | &check; | |
 | `semaphore` | | | | &check; | |

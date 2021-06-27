@@ -8,7 +8,7 @@ namespace std {
     using wint_t = ::wint_t;
 
     // Forward declaration. Declared in "ctime.hpp".
-    struct tm;
+    using ::tm;
 
     using ::fwprintf;
     using ::fwscanf;
