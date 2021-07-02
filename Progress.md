@@ -101,10 +101,10 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `atomic` | | | | &check; | |
 | `thread` | | | | &check; | |
 | `stop_token` | | | | &check; | |
-| `mutex` | | &check; | | | Blocked due to lack of MacOS native support for timed mutexs, and unimplemented `chrono` header, and also the unimplemented `lock` algorithm. |
-| `shared_mutex` | | &check; | | | Blocked due to lack of MacOS native support for timed mutexs, and unimplemented `chrono` header. |
+| `mutex` | | &check; | | | Blocked due to the unimplemented `lock` algorithm. |
+| `shared_mutex` | &check; | | | | |
 | `future` | | | | &check; | |
 | `condition_variable` | | | | &check; | |
-| `semaphore` | | | | &check; | |
+| `semaphore` | &check; | | | | |
 | `latch` | | | | &check; | |
 | `barrier` | | | | &check; | |

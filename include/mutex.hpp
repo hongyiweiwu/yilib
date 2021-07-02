@@ -13,8 +13,8 @@
 #include "concepts.hpp"
 #include "type_traits.hpp"
 #include "functional.hpp"
+#include "cerrno.hpp"
 
-// TODO: Implement timed_mutex and timed_recursive_mutex.
 namespace std {
     class mutex {
     public:
@@ -63,6 +63,172 @@ namespace std {
 
         static attr mut_attr;
     };
+
+#if defined(__APPLE__)
+    class timed_mutex {
+    private:
+        pthread_cond_t condvar;
+        mutex mtx;
+        bool locked;
+    
+    public:
+        timed_mutex();
+        ~timed_mutex();
+
+        timed_mutex(const timed_mutex&) = delete;
+        timed_mutex& operator=(const timed_mutex&) = delete;
+
+        void lock();
+        bool try_lock();
+
+        template<class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time) {
+            return try_lock_until(chrono::steady_clock::now() + rel_time);
+        }
+
+        template<class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time) {
+            const chrono::time_point<Clock, chrono::seconds> secs = chrono::time_point_cast<chrono::seconds>(abs_time);
+            const chrono::time_point<Clock, chrono::nanoseconds> ns = chrono::time_point_cast<chrono::nanoseconds>(abs_time)
+                 - chrono::time_point_cast<chrono::nanoseconds>(secs);
+
+            const std::timespec abs_time_spec = { .tv_sec = secs.count(), .tv_nsec = ns.count() };
+
+            mtx.lock();
+            while (locked) {
+                const int ec = pthread_cond_timedwait(&condvar, mtx.native_handle(), &abs_time_spec);
+                if (ec == ETIMEDOUT) {
+                    mtx.unlock();
+                    return false;
+                } else if (ec != 0) {
+                    mtx.unlock();
+                    throw system_error(ec, system_category());
+                }
+            }
+
+            locked = true;
+            mtx.unlock();
+            return true;
+        }
+
+        void unlock() noexcept;
+    };
+#else
+    class timed_mutex : private mutex {
+    public:
+        timed_mutex() = default;
+        ~timed_mutex() = default;
+
+        timed_mutex(const timed_mutex&) = delete;
+        timed_mutex& operator=(const timed_mutex&) = delete;
+
+        void lock();
+        bool try_lock();
+
+        template<class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time) {
+            return try_lock_until(chrono::steady_clock::now() + rel_time);
+        }
+
+        template<class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time) {
+            const chrono::time_point<Clock, chrono::seconds> secs = chrono::time_point_cast<chrono::seconds>(abs_time);
+            const chrono::time_point<Clock, chrono::nanoseconds> ns = chrono::time_point_cast<chrono::nanoseconds>(abs_time)
+                 - chrono::time_point_cast<chrono::nanoseconds>(secs);
+
+            const std::timespec abs_time_spec = { .tv_sec = secs.count(), .tv_nsec = ns.count() };
+            return !pthread_mutex_timedlock(native_handle(), &abs_time_spec);
+        }
+
+        void unlock() noexcept;
+
+        using native_handle_type = mutex::native_handle_type;
+        native_handle_type native_handle();
+    };
+#endif
+
+#if defined(__APPLE__)
+    class recursive_timed_mutex {
+    private:
+        pthread_cond_t condvar;
+        recursive_mutex mtx;
+        bool locked;
+    
+    public:
+        recursive_timed_mutex();
+        ~recursive_timed_mutex();
+
+        recursive_timed_mutex(const recursive_timed_mutex&) = delete;
+        recursive_timed_mutex& operator=(const recursive_timed_mutex&) = delete;
+
+        void lock();
+        bool try_lock();
+
+        template<class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time) {
+            return try_lock_until(chrono::steady_clock::now() + rel_time);
+        }
+
+        template<class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time) {
+            const chrono::time_point<Clock, chrono::seconds> secs = chrono::time_point_cast<chrono::seconds>(abs_time);
+            const chrono::time_point<Clock, chrono::nanoseconds> ns = chrono::time_point_cast<chrono::nanoseconds>(abs_time)
+                 - chrono::time_point_cast<chrono::nanoseconds>(secs);
+
+            const std::timespec abs_time_spec = { .tv_sec = secs.count(), .tv_nsec = ns.count() };
+
+            mtx.lock();
+            while (locked) {
+                const int ec = pthread_cond_timedwait(&condvar, mtx.native_handle(), &abs_time_spec);
+                if (ec == ETIMEDOUT) {
+                    mtx.unlock();
+                    return false;
+                } else if (ec != 0) {
+                    mtx.unlock();
+                    throw system_error(ec, system_category());
+                }
+            }
+
+            locked = true;
+            mtx.unlock();
+            return true;
+        }
+
+        void unlock() noexcept;
+    };
+#else
+    class recursive_timed_mutex : private recursive_mutex {
+    public:
+        recursive_timed_mutex() = default;
+        ~recursive_timed_mutex() = default;
+
+        recursive_timed_mutex(const recursive_timed_mutex&) = delete;
+        recursive_timed_mutex& operator=(const recursive_timed_mutex&) = delete;
+
+        void lock();
+        bool try_lock();
+
+        template<class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time) {
+            return try_lock_until(chrono::steady_clock::now() + rel_time);
+        }
+
+        template<class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time) {
+            const chrono::time_point<Clock, chrono::seconds> secs = chrono::time_point_cast<chrono::seconds>(abs_time);
+            const chrono::time_point<Clock, chrono::nanoseconds> ns = chrono::time_point_cast<chrono::nanoseconds>(abs_time)
+                 - chrono::time_point_cast<chrono::nanoseconds>(secs);
+
+            const std::timespec abs_time_spec = { .tv_sec = secs.count(), .tv_nsec = ns.count() };
+            return !pthread_mutex_timedlock(native_handle(), &abs_time_spec);
+        }
+
+        void unlock() noexcept;
+
+        using native_handle_type = mutex::native_handle_type;
+        native_handle_type native_handle();
+    };
+#endif
 
     struct defer_lock_t { explicit defer_lock_t() = default; };
     struct try_to_lock_t { explicit try_to_lock_t() = default; };
@@ -201,7 +367,7 @@ namespace std {
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time) {
             if (!pm) throw system_error(make_error_code(errc::operation_not_permitted));
             else if (owns) throw system_error(make_error_code(errc::resource_deadlock_would_occur));
-            owns = pm->try_lock_for(abs_time);
+            owns = pm->try_lock_until(abs_time);
             return owns;
         }
 
