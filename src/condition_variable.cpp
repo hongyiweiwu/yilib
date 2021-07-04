@@ -6,11 +6,6 @@
 #include "pthread.h"
 
 namespace std {
-    condition_variable::condition_variable() {
-        const int ec = pthread_cond_init(&handle, nullptr);
-        if (ec) throw system_error(ec, system_category());
-    }
-
     condition_variable::~condition_variable() { pthread_cond_destroy(&handle); }
 
     void condition_variable::notify_one() noexcept { pthread_cond_signal(&handle); }

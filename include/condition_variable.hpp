@@ -16,7 +16,7 @@ namespace std {
     private:
         pthread_cond_t handle;
     public:
-        condition_variable();
+        constexpr condition_variable() : handle(PTHREAD_COND_INITIALIZER) {}
         ~condition_variable();
 
         condition_variable(const condition_variable&) = delete;
