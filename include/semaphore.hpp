@@ -5,12 +5,11 @@
 #include "limits.hpp"
 #include "system_error.hpp"
 #include "mutex.hpp"
-#include <pthread.h>
+#include "ctime.hpp"
 
 namespace std {
 #if !defined(__APPLE__)
     #include "semaphore.h"
-    #include "ctime.hpp"
 
     template<std::ptrdiff_t least_max_value = numeric_limits<std::ptrdiff_t>::max()>
     class counting_semaphore {
@@ -106,7 +105,6 @@ namespace std {
             return acquired;
         }
 
-        
         template<class Rep, class Period>
         bool try_acquire_for(const chrono::duration<Rep, Period>& rel_time) {
             return try_acquire_until(chrono::steady_clock::now() + rel_time);

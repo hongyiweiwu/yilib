@@ -42,10 +42,10 @@ namespace std {
                 T val;
             };
 
-            explicit constexpr __optional_storage(no_val_t) noexcept : dummy(), has_value(false) {}
+            explicit constexpr __optional_storage(no_val_t) noexcept : has_value(false), dummy() {}
     
             template<class ...Args>
-            explicit constexpr __optional_storage(Args&& ...args) : val(forward<Args>(args)...), has_value(true) {}
+            explicit constexpr __optional_storage(Args&& ...args) : has_value(true), val(forward<Args>(args)...) {}
 
             void reset() {
                 if (has_value) val.~T();
@@ -54,7 +54,7 @@ namespace std {
 
             template<class ...Args> constexpr void emplace(Args&& ...args) {
                 if (!has_value) has_value = true;
-                ::new (static_cast<void*>(val)) T(forward<Args>(args)...);
+                ::new (static_cast<void*>(&val)) T(forward<Args>(args)...);
             }
 
             __optional_storage() requires is_trivially_default_constructible_v<T> = default;
@@ -168,14 +168,14 @@ namespace std {
         T& emplace(Args&& ...args) {
             *this = nullopt;
             val.emplace(forward<Args>(args)...);
-            return *this;
+            return val.val;
         }
 
         template<class U, class ...Args> requires is_constructible_v<T, initializer_list<U>&, Args...>
         T& emplace(initializer_list<U>, Args&& ...args) {
             *this = nullopt;
             val.emplace(forward<Args>(args)...);
-            return *this;
+            return val.val;
         }
 
         void swap(optional& rhs) noexcept(noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_swappable_v<T>))
@@ -260,27 +260,27 @@ namespace std {
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {*x == v} -> convertible_to<bool>; }
     constexpr bool operator==(const optional<T>& x, const U& v) { return bool(x) ? *x == v : false; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {v == *x} -> convertible_to<bool>; }
-    constexpr bool operator==(const optional<T>& x, const U& v) { return bool(x) ? v == *x : false; }
+    constexpr bool operator==(const U& v, const optional<T>& x) { return bool(x) ? v == *x : false; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {*x != v} -> convertible_to<bool>; }
     constexpr bool operator!=(const optional<T>& x, const U& v) { return bool(x) ? *x != v : true; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {v != *x} -> convertible_to<bool>; }
-    constexpr bool operator!=(const optional<T>& x, const U& v) { return bool(x) ? v != *x : true; }
+    constexpr bool operator!=(const U& v, const optional<T>& x) { return bool(x) ? v != *x : true; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {*x < v} -> convertible_to<bool>; }
     constexpr bool operator<(const optional<T>& x, const U& v) { return bool(x) ? *x < v : true; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {v < *x} -> convertible_to<bool>; }
-    constexpr bool operator<(const optional<T>& x, const U& v) { return bool(x) ? v < *x : false; }
+    constexpr bool operator<(const U& v, const optional<T>& x) { return bool(x) ? v < *x : false; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {*x > v} -> convertible_to<bool>; }
     constexpr bool operator>(const optional<T>& x, const U& v) { return bool(x) ? *x > v : false; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {v > *x} -> convertible_to<bool>; }
-    constexpr bool operator>(const optional<T>& x, const U& v) { return bool(x) ? v > *x : true; }
+    constexpr bool operator>(const U& v, const optional<T>& x) { return bool(x) ? v > *x : true; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {*x <= v} -> convertible_to<bool>; }
     constexpr bool operator<=(const optional<T>& x, const U& v) { return bool(x) ? *x <= v : true; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {v <= *x} -> convertible_to<bool>; }
-    constexpr bool operator<=(const optional<T>& x, const U& v) { return bool(x) ? v <= *x : false; }
+    constexpr bool operator<=(const U& v, const optional<T>& x) { return bool(x) ? v <= *x : false; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {*x >= v} -> convertible_to<bool>; }
     constexpr bool operator>=(const optional<T>& x, const U& v) { return bool(x) ? *x >= v : false; }
     template<class T, class U> requires requires (const optional<T>& x, const U& v) { {v >= *x} -> convertible_to<bool>; }
-    constexpr bool operator>=(const optional<T>& x, const U& v) { return bool(x) ? v >= *x : true; }
+    constexpr bool operator>=(const U& v, const optional<T>& x) { return bool(x) ? v >= *x : true; }
 
     template<class T, three_way_comparable_with<T> U> constexpr compare_three_way_result_t<T, U> operator<=>(const optional<T>& x, const U& v) {
         return bool(x) ? *x <=> v : strong_ordering::less;
