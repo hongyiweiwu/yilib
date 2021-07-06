@@ -8,7 +8,6 @@
 #include "exception.hpp"
 #include "memory.hpp"
 #include "optional.hpp"
-#include "thread.hpp"
 #include "semaphore.hpp"
 
 #include "pthread.h"
@@ -61,7 +60,7 @@ namespace std {
             /* End sentinel of the callback list. */
             __stop_callback_list_entry callbacks_end;
             /* The thread that executes the callback. If the callbacks haven't been executed yet, this is empty. */
-            optional<thread::id> callback_executor;
+            optional<pthread_t> callback_executor;
 
             // Can only be called by stop_source.
             __stop_state();
@@ -188,7 +187,7 @@ namespace std {
                     unique_lock<std::mutex> lock(state->mtx);
                     if (callback_list_entry->destroyed) {
                         *callback_list_entry->destroyed = true;
-                        if (state->callback_executor != this_thread::get_id()) {
+                        if (state->callback_executor != pthread_self()) {
                             callback_list_entry->executed.acquire();
                         }
                     }

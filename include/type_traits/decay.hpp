@@ -4,6 +4,7 @@
 #include "type_traits/relations.hpp"
 #include "type_traits/pointer_manip.hpp"
 #include "type_traits/array_manip.hpp"
+#include "utility/typecast.hpp"
 
 namespace std::__internal {
     template<class T> requires is_array<T>::value 
@@ -14,5 +15,8 @@ namespace std::__internal {
 
     template<class T> struct decay {
         using type = decltype(__decay<typename remove_reference<T>::type>(0));
-    }; 
+    };
+
+    template<class T>
+    typename decay<T>::type decay_copy(T&& v) { return forward<T>(v); }
 }

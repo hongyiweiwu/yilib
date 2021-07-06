@@ -36,8 +36,8 @@ namespace std {
     }
 
     template<class T, class D = default_delete<T>> 
-        requires (is_function_v<D> || (!is_rvalue_reference_v<D> && is_object_v<remove_reference_t<D>> 
-            && requires { declval<D>()(declval<typename __internal::__unique_ptr_pointer_type<T, D>::type>()); } ))
+        requires (is_same_v<D, default_delete<T>> || is_function_v<D> || (!is_rvalue_reference_v<D> && is_object_v<remove_reference_t<D>> 
+            && requires (D d, typename __internal::__unique_ptr_pointer_type<T, D>::type p) { d(p); } ))
     class unique_ptr {
     public:
         using pointer = typename __internal::__unique_ptr_pointer_type<T, D>::type;
