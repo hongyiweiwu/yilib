@@ -20,10 +20,10 @@ namespace std {
             template<class U>
             constexpr __tuple_leaf(U&& u) : val(forward<U>(u)) {}
 
-            constexpr T& get() & noexcept { return val; }
-            constexpr T&& get() && noexcept { return move(val); }
-            constexpr const T& get() const& noexcept { return val; }
-            constexpr const T&& get() const&& noexcept { return move(val); }
+            constexpr T& get_val() & noexcept { return val; }
+            constexpr T&& get_val() && noexcept { return move(val); }
+            constexpr const T& get_val() const& noexcept { return val; }
+            constexpr const T&& get_val() const&& noexcept { return move(val); }
 
             constexpr void swap(__tuple_leaf& rhs) noexcept(is_nothrow_swappable_v<T>) {
                 val.swap(rhs.val);
@@ -141,7 +141,7 @@ namespace std {
         constexpr tuple& operator=(const tuple& tpl)
         requires (is_copy_assignable_v<T> && ...) {
             constexpr auto helper = []<size_t ...I>(tuple& self, const tuple& tpl) {
-                ((self.__leaf_t<I>::get() = tpl.__leaf_t<I>::get()), ...);
+                ((self.__leaf_t<I>::get_val() = tpl.__leaf_t<I>::get_val()), ...);
             };
 
             helper(*this, tpl);
@@ -152,7 +152,7 @@ namespace std {
         noexcept((is_nothrow_move_assignable_v<T> && ...))
         requires (is_move_assignable_v<T> && ...) {
             constexpr auto helper = []<size_t ...I>(tuple& self, tuple&& tpl) {
-                ((self.__leaf_t<I>::get() = forward<T>(tpl.__leaf_t<I>::get())), ...);
+                ((self.__leaf_t<I>::get_val() = forward<T>(tpl.__leaf_t<I>::get_val())), ...);
             };
 
             helper(*this, move(tpl));
@@ -162,7 +162,7 @@ namespace std {
         template<class ...U> requires (sizeof...(T) == sizeof...(U)) && (is_assignable_v<T&, const U&> && ...)
         constexpr tuple& operator=(const tuple<U...>& tpl) {
             constexpr auto helper = []<size_t ...I>(tuple& self, const tuple<U...>& tpl) {
-                ((self.__leaf_t<I>::get() = tpl.__leaf_t<I>::get()), ...);
+                ((self.__leaf_t<I>::get_val() = tpl.__leaf_t<I>::get_val()), ...);
             };
 
             helper(*this, tpl);
@@ -172,7 +172,7 @@ namespace std {
         template<class ...U> requires (sizeof...(T) == sizeof...(U)) && (is_assignable_v<T&, U> && ...)
         constexpr tuple& operator=(tuple<U...>&& tpl) {
             constexpr auto helper = []<size_t ...I>(tuple& self, tuple&& tpl) {
-                ((self.__leaf_t<I>::get() = forward<U>(tpl.__leaf_t<I>::get())), ...);
+                ((self.__leaf_t<I>::get_val() = forward<U>(tpl.__leaf_t<I>::get_val())), ...);
             };
 
             helper(*this, tpl);
@@ -183,8 +183,8 @@ namespace std {
             && requires { { bool_constant<is_assignable_v<typename __internal::pick_ith_type<0, T...>::type&, const U1&>>{} } -> same_as<true_type>; }
             && requires { { bool_constant<is_assignable_v<typename __internal::pick_ith_type<1, T...>::type&, const U2&>>{} } -> same_as<true_type>; }
         constexpr tuple& operator=(const pair<U1, U2>& p) {
-            __leaf_t<0>::get() = p.first;
-            __leaf_t<1>::get() = p.second;
+            __leaf_t<0>::get_val() = p.first;
+            __leaf_t<1>::get_val() = p.second;
             return *this;
         }
 
@@ -192,8 +192,8 @@ namespace std {
             && requires { { bool_constant<is_assignable_v<typename __internal::pick_ith_type<0, T...>::type&, U1>>{} } -> same_as<true_type>; }
             && requires { { bool_constant<is_assignable_v<typename __internal::pick_ith_type<1, T...>::type&, U2>>{} } -> same_as<true_type>; }
         constexpr tuple& operator=(pair<U1, U2>&& p) {
-            __leaf_t<0>::get() = forward<U1>(p.first);
-            __leaf_t<1>::get() = forward<U2>(p.second);
+            __leaf_t<0>::get_val() = forward<U1>(p.first);
+            __leaf_t<1>::get_val() = forward<U2>(p.second);
             return *this;
         }
 
@@ -257,23 +257,23 @@ namespace std {
         }
 
         template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
-        constexpr typename pick_ith_type<I, Types...>::type& get(tuple<Types...>& t) noexcept {
-            return t.__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get();
+        constexpr typename pick_ith_type<I, Types...>::type& __tuple_get(tuple<Types...>& t) noexcept {
+            return t.__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
 
         template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
-        constexpr typename pick_ith_type<I, Types...>::type&& get(tuple<Types...>&& t) noexcept {
-            return move(t).__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get();
+        constexpr typename pick_ith_type<I, Types...>::type&& __tuple_get(tuple<Types...>&& t) noexcept {
+            return move(t).__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
 
         template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
-        constexpr const typename pick_ith_type<I, Types...>::type& get(const tuple<Types...>& t) noexcept {
-            return t.__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get();
+        constexpr const typename pick_ith_type<I, Types...>::type& __tuple_get(const tuple<Types...>& t) noexcept {
+            return t.__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
 
         template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
-        constexpr const typename pick_ith_type<I, Types...>::type&& get(const tuple<Types...>&& t) noexcept {
-            return move(t).__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get();
+        constexpr const typename pick_ith_type<I, Types...>::type&& __tuple_get(const tuple<Types...>&& t) noexcept {
+            return move(t).__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
     }
 
@@ -299,7 +299,7 @@ namespace std {
             constexpr auto match_with_inner_outer_index = []<size_t ...Is, size_t ...Js>(index_sequence<Is...>, index_sequence<Js...>, Tuples&& ...tpls) {
                 // Here the expansion I, J will get the Jth element of the Ith tuple.
                 return make_tuple(
-                    __internal::get<Js>(
+                    __internal::__tuple_get<Js>(
                         __internal::__pick_ith_tuple<Is>(forward<Tuples>(tpls)...)
                     )...
                 );
@@ -314,7 +314,7 @@ namespace std {
     /* 20.5.5 Calling a function with a tuple of arguments */
     template<class F, class Tuple> constexpr decltype(auto) apply(F&& f, Tuple&& t) {
         constexpr auto apply_impl = []<size_t ...I>(F&& f, Tuple&& t, index_sequence<I...>) {
-            return __internal::__INVOKE(forward<F>(f), get<I>(forward<Tuple>(t))...);
+            return __internal::__INVOKE(forward<F>(f), __tuple_get<I>(forward<Tuple>(t))...);
         };
 
         return apply_impl(forward<F>(f), forward<Tuple>(t), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{});
@@ -322,7 +322,7 @@ namespace std {
 
     template<class T, class Tuple> constexpr T make_from_tuple(Tuple &&t) {
         constexpr auto make_from_tuple_impl = []<size_t ...I>(Tuple&& t, index_sequence<I...>) {
-            return T(get<I>(forward<Tuple>(t))...);
+            return T(__tuple_get<I>(forward<Tuple>(t))...);
         };
 
         return make_from_tuple_impl(forward<Tuple>(t), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{});
@@ -335,22 +335,22 @@ namespace std {
     /* 20.5.7 Element access */
     template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr tuple_element_t<I, tuple<Types...>>& get(tuple<Types...>& t) noexcept {
-        return __internal::get<I, Types...>(t);
+        return __internal::__tuple_get<I, Types...>(t);
     }
 
     template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr tuple_element_t<I, tuple<Types...>>&& get(tuple<Types...>&& t) noexcept {
-        return __internal::get<I, Types...>(move(t));
+        return __internal::__tuple_get<I, Types...>(move(t));
     }
 
     template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr const tuple_element_t<I, tuple<Types...>>& get(const tuple<Types...>& t) noexcept {
-        return __internal::get<I, Types...>(t);
+        return __internal::__tuple_get<I, Types...>(t);
     }
 
     template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr const tuple_element_t<I, tuple<Types...>>&& get(const tuple<Types...>&& t) noexcept {
-        return __internal::get<I, Types...>(move(t));
+        return __internal::__tuple_get<I, Types...>(move(t));
     }
 
     namespace __internal {
@@ -366,22 +366,22 @@ namespace std {
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...> 
     constexpr T& get(tuple<Types...>& t) noexcept {
-        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
+        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get_val();
     }
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...> 
     constexpr T&& get(tuple<Types...>&& t) noexcept {
-        return move(t).__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
+        return move(t).__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get_val();
     }
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...> 
     constexpr const T& get(const tuple<Types...>& t) noexcept {
-        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
+        return t.__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get_val();
     }
 
     template<class T, class ...Types> requires __internal::__appears_exactly_once<T, Types...>
     constexpr const T&& get(const tuple<Types...>&& t) noexcept {
-        return move(t).__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get();
+        return move(t).__internal::template __tuple_leaf<__internal::__get_index_of<0, T, Types...>::value, T>::get_val();
     }
 
     /* 20.5.8 Relational operators */

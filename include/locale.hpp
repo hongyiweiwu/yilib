@@ -7,6 +7,7 @@
 #include "cstring.hpp"
 #include "typeinfo.hpp"
 #include "stdexcept.hpp"
+#include "tuple.hpp"
 
 // For posix-specific extended locale APIs.
 #if defined(__APPLE__) || defined(_GNU_SOURCE)
@@ -138,7 +139,6 @@ namespace std {
     template<class charT> bool isblank(charT c, const locale& loc);
     template<class charT> charT toupper(charT c, const locale& loc);
     template<class charT> charT tolower(charT c, const locale& loc);
-
 
     /* 28.4.2 ctype */
     class ctype_base {
@@ -286,7 +286,7 @@ namespace std {
 
         public:
             __locale_container(const char* loc, int category);
-            virtual ~__locale_container();
+            ~__locale_container();
 
             [[nodiscard]] locale_t get_locale() const noexcept;
         };
@@ -299,7 +299,7 @@ namespace std {
             int category;
         public:
             locale_container(const char* loc, int category);
-            virtual ~locale_container() = default;
+            ~locale_container() = default;
 
             struct global_locale_switch {
             private:
@@ -446,7 +446,42 @@ namespace std {
 
         int do_encoding() const noexcept override;
         bool do_always_noconv() const noexcept override;
-        int do_length(std::mbstate_t&, const char* from, const char* end, size_t max) const override;
+        int do_length(std::mbstate_t&, const char* from, const char* end, std::size_t max) const override;
+        int do_max_length() const noexcept override;
+    };
+
+    template<>
+    class codecvt<char32_t, char8_t, std::mbstate_t> : public locale::facet, public __internal::__codecvt_impl<char32_t, char8_t, std::mbstate_t> {
+    public:
+        using intern_type = char32_t;
+        using extern_type = char8_t;
+        using state_type = std::mbstate_t;
+
+        explicit codecvt(size_t refs = 0);
+
+        static locale::id id;
+
+    protected:
+        /* Converts the given UTF-32 character to an array of UTF-8 characters. The array must be at least 4 entries long. Returns the number of entries
+         * actually taken. Returns 0 if the given character isn't a valid UTF-32 character. */
+        static constexpr std::ptrdiff_t utf32_to_utf8(char32_t c, char8_t* buf) noexcept;
+
+        /* Converts the first valid UTF-8 character in array [buf, buf + max) to the UTF-32 character it represents. Returns a tuple containing the conversion status,
+         * the converted character if successful, and the number of UTF-8 bytes that are consumed if successful. */
+        static constexpr tuple<codecvt_base::result, char32_t, std::size_t> utf8_to_utf32(const char8_t* buf, std::size_t max) noexcept;
+
+        ~codecvt() = default;
+        result do_out(std::mbstate_t&, const char32_t* from, const char32_t* from_end, const char32_t*& from_next,
+                   char8_t* to, char8_t* to_end, char8_t*& to_next) const override;
+
+        result do_unshift(std::mbstate_t&, char8_t* to, char8_t*, char8_t*& to_next) const override;
+
+        result do_in(std::mbstate_t&, const char8_t* from, const char8_t* from_end, const char8_t*& from_next,
+                   char32_t* to, char32_t* to_end, char32_t*& to_next) const override;
+
+        int do_encoding() const noexcept override;
+        bool do_always_noconv() const noexcept override;
+        int do_length(std::mbstate_t&, const char8_t* from, const char8_t* end, std::size_t max) const override;
         int do_max_length() const noexcept override;
     };
 
@@ -473,7 +508,7 @@ namespace std {
 
         int do_encoding() const noexcept override;
         bool do_always_noconv() const noexcept override;
-        int do_length(std::mbstate_t& state, const char* from, const char* end, size_t max) const override;
+        int do_length(std::mbstate_t& state, const char* from, const char* end, std::size_t max) const override;
         int do_max_length() const noexcept override;
     };
 
@@ -491,8 +526,18 @@ namespace std {
     template<> 
     class codecvt_byname<char, char, std::mbstate_t> : public codecvt<char, char, std::mbstate_t>, public __internal::__locale_container<> {
     public:
-        explicit codecvt_byname(const char* loc, size_t refs = 0);
-        explicit codecvt_byname(const string& loc, size_t refs = 0);
+        explicit codecvt_byname(const char* loc, std::size_t refs = 0);
+        explicit codecvt_byname(const string& loc, std::size_t refs = 0);
+
+    protected:
+        ~codecvt_byname() = default;
+    };
+
+    template<>
+    class codecvt_byname<char32_t, char8_t, std::mbstate_t> : public codecvt<char32_t, char8_t, std::mbstate_t> {
+    public:
+        explicit codecvt_byname(const char*, std::size_t refs = 0);
+        explicit codecvt_byname(const string& loc, std::size_t refs = 0);
 
     protected:
         ~codecvt_byname() = default;
@@ -519,6 +564,26 @@ namespace std {
 
     template<class charT>
     struct collate {};
-}
 
-#include "locale.tpp"
+    /* IMPLEMENTATION */
+    template<class charT, class traits, class Allocator>
+    bool locale::operator()(const basic_string<charT, traits, Allocator>& s1,
+                    const basic_string<charT, traits, Allocator>& s2) const {
+        return use_facet<std::collate<charT>>(*this).compare(s1.data(), s1.data() + s1.size(), s2.data(), s2.data() + s2.size()) < 0;
+    }
+
+    template<class charT> bool isspace(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::space, c); }
+    template<class charT> bool isprint(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::print, c); }
+    template<class charT> bool iscntrl(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::cntrl, c); }
+    template<class charT> bool isupper(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::upper, c); }
+    template<class charT> bool islower(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::lower, c); }
+    template<class charT> bool isalpha(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::alpha, c); }
+    template<class charT> bool isdigit(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::digit, c); }
+    template<class charT> bool ispunct(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::punct, c); }
+    template<class charT> bool isxdigit(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::xdigit, c); }
+    template<class charT> bool isalnum(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::alnum, c); }
+    template<class charT> bool isgraph(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::graph, c); }
+    template<class charT> bool isblank(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::blank, c); }
+    template<class charT> charT toupper(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).toupper(c); }
+    template<class charT> charT tolower(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).tolower(c); }
+}
