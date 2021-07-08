@@ -77,6 +77,8 @@ namespace std {
             replace_facet(facets, ctype_byname<char>::id.n, new ctype_byname<char>(std_name, 1));
             replace_facet(facets, ctype_byname<wchar_t>::id.n, new ctype_byname<wchar_t>(std_name, 1));
             replace_facet(facets, codecvt_byname<char, char, std::mbstate_t>::id.n, new codecvt_byname<char, char, std::mbstate_t>(std_name, 1));
+            replace_facet(facets, codecvt_byname<char16_t, char8_t, std::mbstate_t>::id.n, new codecvt_byname<char16_t, char8_t, std::mbstate_t>(std_name, 1));
+            replace_facet(facets, codecvt_byname<char32_t, char8_t, std::mbstate_t>::id.n, new codecvt_byname<char32_t, char8_t, std::mbstate_t>(std_name, 1));
             replace_facet(facets, codecvt_byname<wchar_t, char, std::mbstate_t>::id.n, new codecvt_byname<wchar_t, char, std::mbstate_t>(std_name, 1));
         }
 
@@ -102,6 +104,8 @@ namespace std {
             replace_facet(facets, ctype_byname<char>::id.n, one.facets[ctype_byname<char>::id.n]);
             replace_facet(facets, ctype_byname<wchar_t>::id.n, one.facets[ctype_byname<wchar_t>::id.n]);
             replace_facet(facets, codecvt_byname<char, char, std::mbstate_t>::id.n, one.facets[codecvt_byname<char, char, std::mbstate_t>::id.n]);
+            replace_facet(facets, codecvt_byname<char16_t, char8_t, std::mbstate_t>::id.n, one.facets[codecvt_byname<char16_t, char8_t, std::mbstate_t>::id.n]);
+            replace_facet(facets, codecvt_byname<char32_t, char8_t, std::mbstate_t>::id.n, one.facets[codecvt_byname<char32_t, char8_t, std::mbstate_t>::id.n]);
             replace_facet(facets, codecvt_byname<wchar_t, char, std::mbstate_t>::id.n, one.facets[codecvt_byname<wchar_t, char, std::mbstate_t>::id.n]);
         }
 
@@ -156,6 +160,8 @@ namespace std {
         facets[std::ctype<char>::id.n] = new std::ctype<char>(nullptr, false, 1);
         facets[std::ctype<wchar_t>::id.n] = new std::ctype<wchar_t>(1);
         facets[codecvt<char, char, std::mbstate_t>::id.n] = new codecvt<char, char, std::mbstate_t>(1);
+        facets[codecvt<char16_t, char8_t, std::mbstate_t>::id.n] = new codecvt<char16_t, char8_t, std::mbstate_t>(1);
+        facets[codecvt<char32_t, char8_t, std::mbstate_t>::id.n] = new codecvt<char32_t, char8_t, std::mbstate_t>(1);
         facets[codecvt<wchar_t, char, std::mbstate_t>::id.n] = new codecvt<wchar_t, char, std::mbstate_t>(1);
 
         static locale classic_locale = locale(facets, max_facet_id + 1);
@@ -262,7 +268,6 @@ namespace std {
         }
         return high;
     }
-
 
     // ctype<wchar_t>
     ctype<wchar_t>::ctype(size_t refs) : locale::facet(refs), __internal::__ctype_impl<wchar_t>() {}
@@ -509,33 +514,176 @@ namespace std {
         return min(max, static_cast<size_t>(end - from)); 
     }
     int codecvt<char, char, std::mbstate_t>::do_max_length() const noexcept { return 1; }
+    
+    // codecvt<char16_t, char8_t, std::mbstate_t>
+    codecvt<char16_t, char8_t, std::mbstate_t>::codecvt(std::size_t refs) : locale::facet(refs) {}
+
+    locale::id codecvt<char16_t, char8_t, std::mbstate_t>::id;
+
+    constexpr tuple<codecvt_base::result, char32_t, std::size_t> codecvt<char16_t, char8_t, std::mbstate_t>::utf16_to_utf32(const char16_t* buf, std::size_t max) noexcept {
+        if (max < 1) [[unlikely]] {
+            return {partial, 0, 0};
+        }
+
+        if (*buf <= 0xD7FF || (*buf >= 0xE000 && *buf <= 0xFFFF)) {
+            // BMP code points.
+            return {ok, *buf, 1};
+        }
+
+        if (max < 2) [[unlikely]] {
+            return {partial, 0, 0};
+        }
+
+        const char16_t high_surrogate = buf[0];
+        const char16_t low_surrogate = buf[1];
+
+        if ((high_surrogate >> 10) != 0b110110 || (low_surrogate >> 10) != 0b110111) [[unlikely]] {
+            return {error, 0, 0};
+        }
+
+        const char32_t code_point = ((high_surrogate & 0b1111111111) << 10) + (low_surrogate & 0b1111111111);
+
+        return {ok, code_point, 2};
+    }
+
+    constexpr tuple<codecvt_base::result, std::size_t> codecvt<char16_t, char8_t, std::mbstate_t>::utf32_to_utf16(char32_t c, char16_t* buf) noexcept {
+        if (c <= 0xD7FF || (c >= 0xE000 && c <= 0xFFFF)) {
+            // BMP code points.
+            *buf = static_cast<char16_t>(c);
+            return {ok, 1};
+        } else if (c >= 0x10000 && c <= 0x10FFFF) {
+            // Supplementary plane code points.
+            buf[0] = static_cast<char16_t>(((c - 0x10000) >> 10) + 0xD800);
+            buf[1] = static_cast<char16_t>(((c - 0x10000) & 0b1111111111) + 0xDC00);
+            return {ok, 2};
+        } else [[unlikely]] {
+            return {error, 0};
+        }
+    }
+
+    constexpr tuple<codecvt_base::result, std::size_t, std::size_t> codecvt<char16_t, char8_t, std::mbstate_t>::utf8_to_utf16(const char8_t* from_buf, std::size_t from_max, char16_t* buf) noexcept {
+        const auto [utf8_to_utf32_result, utf32_char, utf8_consumed] = codecvt<char32_t, char8_t, std::mbstate_t>::utf8_to_utf32(from_buf, from_max);
+        if (utf8_to_utf32_result != ok) [[unlikely]] {
+            return {utf8_to_utf32_result, 0, 0};
+        }
+
+        const auto [utf32_to_utf16_result, utf16_written] = utf32_to_utf16(utf32_char, buf);
+        if (utf32_to_utf16_result != ok) [[unlikely]] {
+            return {utf32_to_utf16_result, 0, 0};
+        } else {
+            return {ok, utf8_consumed, utf16_written};
+        }
+    }
+
+    constexpr tuple<codecvt_base::result, std::size_t, std::size_t> codecvt<char16_t, char8_t, std::mbstate_t>::utf16_to_utf8(const char16_t* from_buf, std::size_t from_max, char8_t* buf) noexcept {
+        const auto [utf16_to_utf32_result, utf32_char, utf16_consumed] = utf16_to_utf32(from_buf, from_max);
+        if (utf16_to_utf32_result != ok) [[unlikely]] {
+            return {utf16_to_utf32_result, 0, 0};
+        }
+
+        const auto [utf32_to_utf8_result, utf8_written] = codecvt<char32_t, char8_t, std::mbstate_t>::utf32_to_utf8(utf32_char, buf);
+        if (utf32_to_utf8_result != ok) [[unlikely]] {
+            return {utf32_to_utf8_result, 0, 0};
+        } else {
+            return {ok, utf16_consumed, utf8_written};
+        }
+    }
+
+    codecvt_base::result codecvt<char16_t, char8_t, std::mbstate_t>::do_out(std::mbstate_t&, const char16_t* from, const char16_t* from_end, const char16_t*& from_next,
+               char8_t* to, char8_t* to_end, char8_t*& to_next) const {
+        char8_t buf[4];
+        for (from_next = from, to_next = to; from_next != from_end && to_next != to_end;) {
+            const auto [result, utf16_consumed, utf8_produced] = utf16_to_utf8(from_next, from_end - from_next, buf);
+            if (result != ok) {
+                return result;
+            } else if (utf8_produced > static_cast<std::size_t>(to_end - to_next)) {
+                return partial;
+            } else {
+                from_next += utf16_consumed;
+                std::memcpy(to_next, buf, utf8_produced);
+                to_next += utf8_produced;
+            }
+        }
+
+        return ok;
+    }
+
+    codecvt_base::result codecvt<char16_t, char8_t, std::mbstate_t>::do_unshift(std::mbstate_t&, char8_t* to, char8_t*, char8_t*& to_next) const {
+        to_next = to;
+        return noconv;
+    }
+
+    codecvt_base::result codecvt<char16_t, char8_t, std::mbstate_t>::do_in(std::mbstate_t&, const char8_t* from, const char8_t* from_end, const char8_t*& from_next,
+               char16_t* to, char16_t* to_end, char16_t*& to_next) const {
+        char16_t buf[2];
+        for (from_next = from, to_next = to; from_next != from_end && to_next != to_end;) {
+            const auto [result, utf8_consumed, utf16_produced] = utf8_to_utf16(from_next, from_end - from_next, buf);
+            if (result != ok) {
+                return result;
+            } else if (utf16_produced > static_cast<std::size_t>(to_end - to_next)) {
+                return partial;
+            } else {
+                from_next += utf8_consumed;
+                std::memcpy(to_next, buf, utf16_produced);
+                to_next += utf16_produced;
+            }
+        }
+
+        return ok;
+    }
+
+    int codecvt<char16_t, char8_t, std::mbstate_t>::do_encoding() const noexcept { return 0; }
+    bool codecvt<char16_t, char8_t, std::mbstate_t>::do_always_noconv() const noexcept { return false; }
+    int codecvt<char16_t, char8_t, std::mbstate_t>::do_length(std::mbstate_t&, const char8_t* from, const char8_t* end, std::size_t max) const {
+        // This array will have many race conditions, but we don't really care the content inside. It's simply used to be passed into utf8_to_utf16.
+        static char16_t buf[2];
+        size_t from_converted = 0, to_converted = 0;
+        while (to_converted < max) {
+            const auto [result, utf8_consumed, utf16_written] = utf8_to_utf16(from, static_cast<std::size_t>(end - from), buf);
+            if (result != ok) {
+                return from_converted;
+            }
+
+            from_converted += utf8_consumed;
+            from += utf8_consumed;
+            if (to_converted + utf16_written > max) {
+                return from_converted;
+            } else {
+                to_converted += utf16_written;
+            }
+        }
+
+        return from_converted;
+    }
+    
+    int codecvt<char16_t, char8_t, std::mbstate_t>::do_max_length() const noexcept { return 4; }
 
     // codecvt<char32_t, char8_t, std::mbstate_t>
     codecvt<char32_t, char8_t, std::mbstate_t>::codecvt(std::size_t refs) : locale::facet(refs) {}
 
     locale::id codecvt<char32_t, char8_t, std::mbstate_t>::id;
 
-    constexpr std::ptrdiff_t codecvt<char32_t, char8_t, std::mbstate_t>::utf32_to_utf8(char32_t c, char8_t* buf) noexcept {
+    constexpr tuple<codecvt_base::result, std::size_t> codecvt<char32_t, char8_t, std::mbstate_t>::utf32_to_utf8(char32_t c, char8_t* buf) noexcept {
         if (c < 0x80) {
             buf[0] = 0x80;
-            return 1;
+            return {ok, 1};
         } else if (c < 0x800) {
             buf[0] = 0b11000000ull | (c >> 6);
             buf[1] = 0b10000000ull | (c & 0b111111ull);
-            return 2;
+            return {ok, 2};
         } else if (c <= 0xFFFF) {
             buf[0] = 0b11100000ull | (c >> 12);
             buf[1] = 0b10000000ull | ((c >> 6) & 0b111111ull);
             buf[2] = 0b10000000ull | (c & 0b111111ull);
-            return 3;
+            return {ok, 3};
         } else if (c >= 0x10000 && c <= 0x10FFFF) {
             buf[0] = 0b11110000ull | (c >> 18);
             buf[1] = 0b10000000ull | ((c >> 12) & 0b111111ull);
             buf[2] = 0b10000000ull | ((c >> 6) & 0b111111ull);
             buf[3] = 0b10000000ull | (c & 0b111111ull);
-            return 4;
+            return {ok, 4};
         } else {
-            return 0;
+            return {error, 0};
         }
     }
 
@@ -548,7 +696,7 @@ namespace std {
         }
 
         const std::size_t leading_ones = countl_one(static_cast<std::uint8_t>(*buf));
-        if (leading_ones > 4 || leading_ones == 1) {
+        if (leading_ones > 4 || leading_ones == 1) [[unlikely]] {
             return error_return;
         }
         const std::size_t expected_bytes = leading_ones == 0 ? 1 : leading_ones;
@@ -558,7 +706,7 @@ namespace std {
         }
 
         for (std::size_t i = 2; i <= expected_bytes; i++) {
-            if ((buf[i - 1] & 0b11000000) != 0b10000000) {
+            if ((buf[i - 1] & 0b11000000) != 0b10000000) [[unlikely]] {
                 return error_return;
             }
         }
@@ -570,25 +718,25 @@ namespace std {
             case 2:
                 if (const char32_t c = ((*buf & 0b11111) << 6) + (buf[1] & 0b111111); c >= 0x80) {
                     return { ok, c, 2 };
-                } else {
+                } else [[unlikely]] {
                     return error_return;
                 }
 
             case 3:
                 if (const char32_t c = ((*buf & 0b11111) << 12) + ((buf[1] & 0b111111) << 6) + (buf[2] & 0b111111); c >= 0x800) {
                     return { ok, c, 3 };
-                } else {
+                } else [[unlikely]] {
                     return error_return;
                 }
 
             case 4:
                 if (const char32_t c = ((*buf & 0b11111) << 18) + ((buf[1] & 0b111111) << 12) + ((buf[2] & 0b111111) << 6) + (buf[3] & 0b111111); c >= 0x10000 && c <= 0x10FFFF) {
                     return { ok, c, 4 };
-                } else {
+                } else [[unlikely]] {
                     return error_return;
                 }
 
-            default:
+            default: [[unlikely]]
                 return error_return;
         }
     }
@@ -600,10 +748,10 @@ namespace std {
         to_next = to;
 
         for (; from_next != from_end; from++) {
-            const std::ptrdiff_t utf8_bytes = utf32_to_utf8(*from_next, buf);
-            if (utf8_bytes == 0) {
-                return error;
-            } else if (to_end - to_next < utf8_bytes) {
+            const auto [result, utf8_bytes] = utf32_to_utf8(*from_next, buf);
+            if (result != ok) {
+                return result;
+            } else if (static_cast<std::size_t>(to_end - to_next) < utf8_bytes) {
                 return partial;
             } else {
                 std::memcpy(to_next, buf, sizeof(char8_t) * utf8_bytes);   
@@ -654,7 +802,7 @@ namespace std {
 
         return utf8_count;
     }
-    int codecvt<char32_t, char8_t, std::mbstate_t>::do_max_length() const noexcept { return sizeof(char32_t); }
+    int codecvt<char32_t, char8_t, std::mbstate_t>::do_max_length() const noexcept { return 4; }
 
     // codecvt<wchar_t, char, std::mbstate_t>
     codecvt<wchar_t, char, std::mbstate_t>::codecvt(size_t refs) : locale::facet(refs) {}
@@ -754,6 +902,9 @@ namespace std {
     codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const char* loc, size_t refs)
         : codecvt(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
     codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const string& loc, size_t refs) : codecvt_byname(loc.c_str(), refs) {}
+
+    codecvt_byname<char16_t, char8_t, std::mbstate_t>::codecvt_byname(const char*, std::size_t refs) : codecvt(refs) {}
+    codecvt_byname<char16_t, char8_t, std::mbstate_t>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}
 
     codecvt_byname<char32_t, char8_t, std::mbstate_t>::codecvt_byname(const char*, std::size_t refs) : codecvt(refs) {}
     codecvt_byname<char32_t, char8_t, std::mbstate_t>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}

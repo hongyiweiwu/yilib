@@ -451,6 +451,48 @@ namespace std {
     };
 
     template<>
+    class codecvt<char16_t, char8_t, std::mbstate_t> : public locale::facet, public __internal::__codecvt_impl<char16_t, char8_t, std::mbstate_t> {
+    public:
+        using intern_type = char16_t;
+        using extern_type = char8_t;
+        using state_type = std::mbstate_t;
+
+        explicit codecvt(std::size_t refs = 0);
+
+        static locale::id id;
+
+        /* Converts the first valid UTF-16 character in the array [buf, buf + max) into its UTF-32 representation. Returns a tuple containing the conversion
+         * result, the converted character if successful, and the number of UTF-16 entries consumed if successful. */
+        static constexpr tuple<result, char32_t, std::size_t> utf16_to_utf32(const char16_t* buf, std::size_t max) noexcept;
+        /* Converts the given UTF-32 character into its UTF-16 representation, writing into buf. buf must have at least 2 entries. Returns a tuple containing
+         * the result of the conversion and how many entries in buf was used. */
+        static constexpr tuple<result, std::size_t> utf32_to_utf16(char32_t c, char16_t* buf) noexcept;
+        /* Converts the first valid UTF-8 character in the array [from_buf, from_buf + from_max) into its UTF-16 representation, writing into buf. buf must
+         * have at least 2 entries. Returns a tuple containing the result of the conversion, the number of entries consumed from from_buf, and the number of 
+         * entries used in buf. */
+        static constexpr tuple<result, std::size_t, std::size_t> utf8_to_utf16(const char8_t* from_buf, std::size_t from_max, char16_t* buf) noexcept;
+        /* Converts the first valid UTF-16 character in the array [from_buf, from_buf + from_max) into its UTF-8 representation, writing into buf. buf must
+         * have at least 4 entries. Returns a tuple containing the result of the conversion, the number of entries consumed from from_buf, and the number of 
+         * entries used in buf. */
+        static constexpr tuple<result, std::size_t, std::size_t> utf16_to_utf8(const char16_t* from_buf, std::size_t from_max, char8_t* buf) noexcept;
+
+    protected:
+        ~codecvt() = default;
+        result do_out(std::mbstate_t&, const char16_t* from, const char16_t* from_end, const char16_t*& from_next,
+                   char8_t* to, char8_t* to_end, char8_t*& to_next) const override;
+
+        result do_unshift(std::mbstate_t&, char8_t* to, char8_t*, char8_t*& to_next) const override;
+
+        result do_in(std::mbstate_t&, const char8_t* from, const char8_t* from_end, const char8_t*& from_next,
+                   char16_t* to, char16_t* to_end, char16_t*& to_next) const override;
+
+        int do_encoding() const noexcept override;
+        bool do_always_noconv() const noexcept override;
+        int do_length(std::mbstate_t&, const char8_t* from, const char8_t* end, std::size_t max) const override;
+        int do_max_length() const noexcept override;
+    };
+
+    template<>
     class codecvt<char32_t, char8_t, std::mbstate_t> : public locale::facet, public __internal::__codecvt_impl<char32_t, char8_t, std::mbstate_t> {
     public:
         using intern_type = char32_t;
@@ -461,15 +503,15 @@ namespace std {
 
         static locale::id id;
 
-    protected:
-        /* Converts the given UTF-32 character to an array of UTF-8 characters. The array must be at least 4 entries long. Returns the number of entries
-         * actually taken. Returns 0 if the given character isn't a valid UTF-32 character. */
-        static constexpr std::ptrdiff_t utf32_to_utf8(char32_t c, char8_t* buf) noexcept;
+        /* Converts the given UTF-32 character to an array of UTF-8 characters. The array must be at least 4 entries long. Returns a tuple containing the conversion
+         * result and the number of UTF-8 entries actually taken. */
+        static constexpr tuple<result, std::size_t> utf32_to_utf8(char32_t c, char8_t* buf) noexcept;
 
         /* Converts the first valid UTF-8 character in array [buf, buf + max) to the UTF-32 character it represents. Returns a tuple containing the conversion status,
          * the converted character if successful, and the number of UTF-8 bytes that are consumed if successful. */
-        static constexpr tuple<codecvt_base::result, char32_t, std::size_t> utf8_to_utf32(const char8_t* buf, std::size_t max) noexcept;
+        static constexpr tuple<result, char32_t, std::size_t> utf8_to_utf32(const char8_t* buf, std::size_t max) noexcept;
 
+    protected:
         ~codecvt() = default;
         result do_out(std::mbstate_t&, const char32_t* from, const char32_t* from_end, const char32_t*& from_next,
                    char8_t* to, char8_t* to_end, char8_t*& to_next) const override;
@@ -527,6 +569,16 @@ namespace std {
     class codecvt_byname<char, char, std::mbstate_t> : public codecvt<char, char, std::mbstate_t>, public __internal::__locale_container<> {
     public:
         explicit codecvt_byname(const char* loc, std::size_t refs = 0);
+        explicit codecvt_byname(const string& loc, std::size_t refs = 0);
+
+    protected:
+        ~codecvt_byname() = default;
+    };
+
+    template<>
+    class codecvt_byname<char16_t, char8_t, std::mbstate_t> : public codecvt<char16_t, char8_t, std::mbstate_t> {
+    public:
+        explicit codecvt_byname(const char*, std::size_t refs = 0);
         explicit codecvt_byname(const string& loc, std::size_t refs = 0);
 
     protected:
