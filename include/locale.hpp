@@ -289,6 +289,7 @@ namespace std {
             ~__locale_container();
 
             [[nodiscard]] locale_t get_locale() const noexcept;
+            [[nodiscard]] std::lconv* get_lconv() const noexcept;
         };
 
 #else
@@ -311,6 +312,7 @@ namespace std {
             };
 
             [[nodiscard]] global_locale_switch get_locale() const;
+            [[nodiscard]] std::lconv* get_lconv() const noexcept;
         };
 #endif 
     }
@@ -612,6 +614,149 @@ namespace std {
         int do_encoding() const noexcept override;
         int do_length(std::mbstate_t& state, const char* from, const char* end, size_t max) const override;
         int do_max_length() const noexcept override;
+    };
+
+    namespace __internal {
+        /* Base class for all numpunct classes. Provides implementation for all public methods in the class, which simply calls do_xxx version of 
+         * themselves. */
+        template<class charT>
+        struct __numpunct_impl {
+        public:
+            using char_type = charT;
+            using string_type = basic_string<charT>;
+
+            char_type decimal_point() const {
+                return do_decimal_point();
+            }
+
+            char_type thousands_sep() const {
+                return do_thousands_sep();
+            }
+
+            string grouping() const {
+                return do_grouping();
+            }
+
+            string_type truename() const {
+                return do_truename();
+            }
+
+            string_type falsename() const {
+                return do_falsename();
+            }
+
+        protected:
+            virtual char_type do_decimal_point() const = 0;
+            virtual char_type do_thousands_sep() const = 0;
+            virtual string do_grouping() const = 0;
+            virtual string_type do_truename() const = 0;
+            virtual string_type do_falsename() const = 0;
+        };
+    }
+
+    /* 28.4.4 The numeric punctuation facet */
+    template<class charT>
+    class numpunct : public locale::facet, public __internal::__numpunct_impl<charT> {
+    public:
+        using char_type = typename __internal::__numpunct_impl<charT>::char_type;
+        using string_type = typename __internal::__numpunct_impl<charT>::string_type;
+        explicit numpunct(std::size_t refs = 0) : locale::facet(refs), __internal::__numpunct_impl<charT>() {}
+
+        static locale::id id;
+
+    protected:
+        ~numpunct() = default;
+        char_type do_decimal_point() const override { return 0; }
+        char_type do_thousands_sep() const override { return 0; }
+        string do_grouping() const override { return ""; }
+        string_type do_truename() const override { return string_type(); }
+        string_type do_falsename() const override { return string_type(); }
+    };
+
+    template<>
+    class numpunct<char> : public locale::facet, public __internal::__numpunct_impl<char> {
+    public:
+        using char_type = typename __internal::__numpunct_impl<char>::char_type;
+        using string_type = typename __internal::__numpunct_impl<char>::string_type;
+        explicit numpunct(std::size_t refs = 0);
+
+        static locale::id id;
+
+    protected:
+        char_type do_decimal_point() const override;
+        char_type do_thousands_sep() const override;
+        string do_grouping() const override;
+        string_type do_truename() const override;
+        string_type do_falsename() const override;
+    };
+
+    template<>
+    class numpunct<wchar_t> : public locale::facet, public __internal::__numpunct_impl<wchar_t> {
+    public:
+        using char_type = typename __internal::__numpunct_impl<wchar_t>::char_type;
+        using string_type = typename __internal::__numpunct_impl<wchar_t>::string_type;
+        explicit numpunct(std::size_t refs = 0);
+
+        static locale::id id;
+
+    protected:
+        char_type do_decimal_point() const override;
+        char_type do_thousands_sep() const override;
+        string do_grouping() const override;
+        string_type do_truename() const override;
+        string_type do_falsename() const override;
+    };
+
+    template<class charT>
+    class numpunct_byname : public numpunct<charT>, public __internal::__locale_container<> {
+    public:
+        using char_type = typename numpunct<charT>::char_type;
+        using string_type = typename numpunct<charT>::string_type;
+
+        explicit numpunct_byname(const char* loc, std::size_t refs = 0) : numpunct<charT>(refs), 
+            __internal::__locale_container<>(loc, LC_NUMERIC) {}
+        explicit numpunct_byname(const string& loc, std::size_t refs = 0) : numpunct_byname(loc.c_str(), refs) {}
+
+    protected:
+        ~numpunct_byname() = default;
+    };
+
+    template<>
+    class numpunct_byname<char> : public numpunct<char>, public __internal::__locale_container<> {
+    public:
+        using char_type = typename numpunct<char>::char_type;
+        using string_type = typename numpunct<char>::string_type;
+
+        explicit numpunct_byname(const char* loc, std::size_t refs = 0);
+        explicit numpunct_byname(const string& loc, std::size_t refs = 0);
+
+    protected:
+        ~numpunct_byname() = default;
+
+        char_type do_decimal_point() const override;
+        char_type do_thousands_sep() const override;
+        string do_grouping() const override;
+        string_type do_truename() const override;
+        string_type do_falsename() const override;
+    };
+
+    template<>
+    class numpunct_byname<wchar_t> : public numpunct<wchar_t>, public __internal::__locale_container<> {
+    public:
+        using char_type = typename numpunct<wchar_t>::char_type;
+        using string_type = typename numpunct<wchar_t>::string_type;
+
+        explicit numpunct_byname(const char* loc, std::size_t refs = 0);
+        explicit numpunct_byname(const string& loc, std::size_t refs = 0);
+
+    protected:
+        ~numpunct_byname() = default;
+
+        char_type do_decimal_point() const override;
+        char_type do_thousands_sep() const override;
+        string do_grouping() const override;
+        string_type do_truename() const override;
+        string_type do_falsename() const override;
     };
 
     template<class charT>

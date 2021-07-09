@@ -54,7 +54,9 @@ namespace std {
 
         const auto [facets, facets_max_id] = make_facets_arr(std_name, __internal::type_list<
             ctype_byname<char>, ctype_byname<wchar_t>,
-            codecvt_byname<char, char, std::mbstate_t>, codecvt_byname<wchar_t, char, std::mbstate_t>
+            codecvt_byname<char, char, std::mbstate_t>, codecvt_byname<char16_t, char8_t, std::mbstate_t>,
+            codecvt_byname<char32_t, char8_t, std::mbstate_t>, codecvt_byname<wchar_t, char, std::mbstate_t>,
+            numpunct_byname<char>, numpunct_byname<wchar_t>
         >{});
 
         facets_arr_size = facets_max_id + 1;
@@ -83,7 +85,10 @@ namespace std {
         }
 
         if (c & monetary) {}
-        if (c & numeric) {}
+        if (c & numeric) {
+            replace_facet(facets, numpunct_byname<char>::id.n, new numpunct_byname<char>(std_name, 1));
+            replace_facet(facets, numpunct_byname<wchar_t>::id.n, new numpunct_byname<wchar_t>(std_name, 1));
+        }
         if (c & time) {}
         if (c & messages) {}
     }
@@ -110,7 +115,10 @@ namespace std {
         }
 
         if (c & monetary) {}
-        if (c & numeric) {}
+        if (c & numeric) {
+            replace_facet(facets, numpunct_byname<char>::id.n, one.facets[numpunct_byname<char>::id.n]);
+            replace_facet(facets, numpunct_byname<wchar_t>::id.n, one.facets[numpunct_byname<wchar_t>::id.n]);
+        }
         if (c & time) {}
         if (c & messages) {}
     }
@@ -163,6 +171,9 @@ namespace std {
         facets[codecvt<char16_t, char8_t, std::mbstate_t>::id.n] = new codecvt<char16_t, char8_t, std::mbstate_t>(1);
         facets[codecvt<char32_t, char8_t, std::mbstate_t>::id.n] = new codecvt<char32_t, char8_t, std::mbstate_t>(1);
         facets[codecvt<wchar_t, char, std::mbstate_t>::id.n] = new codecvt<wchar_t, char, std::mbstate_t>(1);
+
+        facets[numpunct<char>::id.n] = new numpunct<char>(1);
+        facets[numpunct<wchar_t>::id.n] = new numpunct<wchar_t>(1);
 
         static locale classic_locale = locale(facets, max_facet_id + 1);
 
@@ -374,7 +385,14 @@ namespace std {
         ::freelocale(loc);
     }
 
-    locale_t __internal::__locale_container<true>::get_locale() const noexcept { return loc; }
+    locale_t __internal::__locale_container<true>::get_locale() const noexcept { 
+        return loc; 
+    }
+
+    std::lconv* __internal::__locale_container<true>::get_lconv() const noexcept {
+        return ::localeconv_l(loc);
+    }
+
 #else
     __internal::__locale_container<false>::__locale_container(const char* loc, int category) 
         : loc(loc), category(category) {}
@@ -390,6 +408,11 @@ namespace std {
 
     __internal::__locale_container<false>::global_locale_switch __internal::__locale_container<false>::get_locale() const {
         return {loc, category};
+    }
+
+    std::lconv* __internal::__locale_container<false>::get_lconv() const noexcept {
+        const global_locale_switch switch = get_locale();
+        return std::localeconv();
     }
 #endif
 
@@ -1022,5 +1045,111 @@ namespace std {
 #else
         return MB_CUR_MAX;
 #endif
+    }
+
+    numpunct<char>::numpunct(std::size_t refs) : locale::facet(refs), __internal::__numpunct_impl<char>() {}
+
+    locale::id numpunct<char>::id;
+
+    numpunct<char>::char_type numpunct<char>::do_decimal_point() const {
+        return '.';
+    }
+
+    numpunct<char>::char_type numpunct<char>::do_thousands_sep() const {
+        return ',';
+    }
+
+    string numpunct<char>::do_grouping() const {
+        return "";
+    }
+
+    numpunct<char>::string_type numpunct<char>::do_truename() const {
+        return "true";
+    }
+
+    numpunct<char>::string_type numpunct<char>::do_falsename() const {
+        return "false";
+    }
+
+    numpunct<wchar_t>::numpunct(std::size_t refs) : locale::facet(refs), __internal::__numpunct_impl<wchar_t>() {}
+
+    locale::id numpunct<wchar_t>::id;
+
+    numpunct<wchar_t>::char_type numpunct<wchar_t>::do_decimal_point() const {
+        return L'.';
+    }
+
+    numpunct<wchar_t>::char_type numpunct<wchar_t>::do_thousands_sep() const {
+        return L',';
+    }
+
+    string numpunct<wchar_t>::do_grouping() const {
+        return "";
+    }
+
+    numpunct<wchar_t>::string_type numpunct<wchar_t>::do_truename() const {
+        return L"true";
+    }
+
+    numpunct<wchar_t>::string_type numpunct<wchar_t>::do_falsename() const {
+        return L"false";
+    }
+
+    numpunct_byname<char>::numpunct_byname(const char* loc, std::size_t refs) : numpunct(refs), __internal::__locale_container<>(loc, LC_NUMERIC) {}
+    numpunct_byname<char>::numpunct_byname(const string& loc, std::size_t refs) : numpunct_byname(loc.c_str(), refs) {}
+
+    numpunct_byname<char>::char_type numpunct_byname<char>::do_decimal_point() const {
+        return *get_lconv()->decimal_point;
+    }
+
+    numpunct_byname<char>::char_type numpunct_byname<char>::do_thousands_sep() const {
+        return *get_lconv()->thousands_sep;
+    }
+
+    string numpunct_byname<char>::do_grouping() const {
+        return get_lconv()->grouping;
+    }
+
+    numpunct_byname<char>::string_type numpunct_byname<char>::do_truename() const {
+        return "true";
+    }
+
+    numpunct_byname<char>::string_type numpunct_byname<char>::do_falsename() const {
+        return "false";
+    }
+
+    numpunct_byname<wchar_t>::numpunct_byname(const char* loc, std::size_t refs) : numpunct(refs), __internal::__locale_container<>(loc, LC_NUMERIC) {}
+    numpunct_byname<wchar_t>::numpunct_byname(const string& loc, std::size_t refs) : numpunct_byname(loc.c_str(), refs) {}
+
+    numpunct_byname<wchar_t>::char_type numpunct_byname<wchar_t>::do_decimal_point() const {
+        const char narrow_result = *get_lconv()->decimal_point;
+        auto locale = get_locale();
+#if YILIB_HAS_XLOCALE
+        return ::btowc_l(narrow_result, locale);
+#else
+        return std::btowc(narrow_result);
+#endif
+    }
+
+    numpunct_byname<wchar_t>::char_type numpunct_byname<wchar_t>::do_thousands_sep() const {
+        const char narrow_result = *get_lconv()->thousands_sep;
+        auto locale = get_locale();
+#if YILIB_HAS_XLOCALE
+        return ::btowc_l(narrow_result, locale);
+#else
+        return std::btowc(narrow_result);
+#endif
+    }
+
+    string numpunct_byname<wchar_t>::do_grouping() const {
+        return get_lconv()->grouping;
+    }
+
+    numpunct_byname<wchar_t>::string_type numpunct_byname<wchar_t>::do_truename() const {
+        return L"true";
+    }
+
+    numpunct_byname<wchar_t>::string_type numpunct_byname<wchar_t>::do_falsename() const {
+        return L"false";
     }
 }
