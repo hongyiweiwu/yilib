@@ -23,7 +23,11 @@ namespace std {
         constexpr basic_string(const CharT*) {}
 
         constexpr const CharT* c_str() const noexcept {
-            return "Unimplemeneted";
+            return nullptr;
+        }
+
+        constexpr size_type length() const noexcept {
+            return 0;
         }
     };
 
@@ -38,4 +42,5 @@ namespace std {
     }
 
     using string = basic_string<char>;
+    using wstring = basic_string<wchar_t>;
 }

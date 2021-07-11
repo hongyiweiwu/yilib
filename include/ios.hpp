@@ -4,12 +4,13 @@
 #include "string.hpp"
 #include "type_traits.hpp"
 #include "system_error.hpp"
-#include "locale.hpp"
-#include "iosfwd.hpp"
 #include "memory.hpp"
 #include "utility.hpp"
 #include "bit.hpp"
 #include "cstring.hpp"
+
+#include "locale/locale.hpp"
+#include "locale/ctype.hpp"
 
 namespace std {
     /* 29.5.4 Class template fpos */

@@ -16,6 +16,12 @@
 #include "bit.hpp"
 #include "tuple.hpp"
 #include "cstdint.hpp"
+#include "optional.hpp"
+#include "limits.hpp"
+#include "memory.hpp"
+#include "iterator.hpp"
+#include "cstdio.hpp"
+#include "ios.hpp"
 
 namespace std {
     // locale::facet
@@ -44,23 +50,24 @@ namespace std {
     locale::locale(const char* std_name) : n(string(std_name)) {
         if (!std_name) throw runtime_error("Invalid std_name in locale constructor.");
 
-        static constexpr auto make_facets_arr = []<class ...T>(const char* loc, __internal::type_list<T...>) {
-            static const size_t max_id = max({ T::id.n... });
-            locale::facet** res = new locale::facet*[max_id + 1]();
-            
-            ((res[T::id.n] = new T(loc, 1)), ...);
-            return pair(res, max_id);
-        };
+        static const std::size_t max_id = max({ std::ctype<char>::id.n, std::ctype<wchar_t>::id.n,
+            codecvt<char, char, std::mbstate_t>::id.n, codecvt<char16_t, char8_t, std::mbstate_t>::id.n,
+            codecvt<char32_t, char8_t, std::mbstate_t>::id.n, codecvt<wchar_t, char, std::mbstate_t>::id.n,
+            numpunct<char>::id.n, numpunct<wchar_t>::id.n, num_get<char>::id.n, num_get<wchar_t>::id.n });
 
-        const auto [facets, facets_max_id] = make_facets_arr(std_name, __internal::type_list<
-            ctype_byname<char>, ctype_byname<wchar_t>,
-            codecvt_byname<char, char, std::mbstate_t>, codecvt_byname<char16_t, char8_t, std::mbstate_t>,
-            codecvt_byname<char32_t, char8_t, std::mbstate_t>, codecvt_byname<wchar_t, char, std::mbstate_t>,
-            numpunct_byname<char>, numpunct_byname<wchar_t>
-        >{});
+        facets_arr_size = max_id + 1;
+        facets = new locale::facet*[max_id + 1]();
 
-        facets_arr_size = facets_max_id + 1;
-        this->facets = facets;
+        facets[std::ctype<char>::id.n] = new ctype_byname<char>(std_name, 1);
+        facets[std::ctype<wchar_t>::id.n] = new ctype_byname<wchar_t>(std_name, 1);
+        facets[codecvt<char, char, std::mbstate_t>::id.n] = new codecvt_byname<char, char, std::mbstate_t>(std_name, 1);
+        facets[codecvt<char16_t, char8_t, std::mbstate_t>::id.n] = new codecvt_byname<char16_t, char8_t, std::mbstate_t>(std_name, 1);
+        facets[codecvt<char32_t, char8_t, std::mbstate_t>::id.n] = new codecvt_byname<char32_t, char8_t, std::mbstate_t>(std_name, 1);
+        facets[codecvt<wchar_t, char, std::mbstate_t>::id.n] = new codecvt_byname<wchar_t, char, std::mbstate_t>(std_name, 1);
+        facets[numpunct<char>::id.n] = new numpunct_byname<char>(std_name, 1);
+        facets[numpunct<wchar_t>::id.n] = new numpunct_byname<wchar_t>(std_name, 1);
+        facets[num_get<char>::id.n] = new num_get<char>(1);
+        facets[num_get<wchar_t>::id.n] = new num_get<wchar_t>(1);
     }
 
     locale::locale(const string& std_name) : locale(std_name.c_str()) {}
@@ -76,18 +83,20 @@ namespace std {
         if (c & collate) {}
 
         if (c & ctype) {
-            replace_facet(facets, ctype_byname<char>::id.n, new ctype_byname<char>(std_name, 1));
-            replace_facet(facets, ctype_byname<wchar_t>::id.n, new ctype_byname<wchar_t>(std_name, 1));
-            replace_facet(facets, codecvt_byname<char, char, std::mbstate_t>::id.n, new codecvt_byname<char, char, std::mbstate_t>(std_name, 1));
-            replace_facet(facets, codecvt_byname<char16_t, char8_t, std::mbstate_t>::id.n, new codecvt_byname<char16_t, char8_t, std::mbstate_t>(std_name, 1));
-            replace_facet(facets, codecvt_byname<char32_t, char8_t, std::mbstate_t>::id.n, new codecvt_byname<char32_t, char8_t, std::mbstate_t>(std_name, 1));
-            replace_facet(facets, codecvt_byname<wchar_t, char, std::mbstate_t>::id.n, new codecvt_byname<wchar_t, char, std::mbstate_t>(std_name, 1));
+            replace_facet(facets, std::ctype<char>::id.n, new ctype_byname<char>(std_name, 1));
+            replace_facet(facets, std::ctype<wchar_t>::id.n, new ctype_byname<wchar_t>(std_name, 1));
+            replace_facet(facets, codecvt<char, char, std::mbstate_t>::id.n, new codecvt_byname<char, char, std::mbstate_t>(std_name, 1));
+            replace_facet(facets, codecvt<char16_t, char8_t, std::mbstate_t>::id.n, new codecvt_byname<char16_t, char8_t, std::mbstate_t>(std_name, 1));
+            replace_facet(facets, codecvt<char32_t, char8_t, std::mbstate_t>::id.n, new codecvt_byname<char32_t, char8_t, std::mbstate_t>(std_name, 1));
+            replace_facet(facets, codecvt<wchar_t, char, std::mbstate_t>::id.n, new codecvt_byname<wchar_t, char, std::mbstate_t>(std_name, 1));
         }
 
         if (c & monetary) {}
         if (c & numeric) {
-            replace_facet(facets, numpunct_byname<char>::id.n, new numpunct_byname<char>(std_name, 1));
-            replace_facet(facets, numpunct_byname<wchar_t>::id.n, new numpunct_byname<wchar_t>(std_name, 1));
+            replace_facet(facets, numpunct<char>::id.n, new numpunct_byname<char>(std_name, 1));
+            replace_facet(facets, numpunct<wchar_t>::id.n, new numpunct_byname<wchar_t>(std_name, 1));
+            replace_facet(facets, num_get<char>::id.n, new num_get<char>(1));
+            replace_facet(facets, num_get<wchar_t>::id.n, new num_get<wchar_t>(1));
         }
         if (c & time) {}
         if (c & messages) {}
@@ -106,18 +115,20 @@ namespace std {
         if (c & collate) {}
 
         if (c & ctype) {
-            replace_facet(facets, ctype_byname<char>::id.n, one.facets[ctype_byname<char>::id.n]);
-            replace_facet(facets, ctype_byname<wchar_t>::id.n, one.facets[ctype_byname<wchar_t>::id.n]);
-            replace_facet(facets, codecvt_byname<char, char, std::mbstate_t>::id.n, one.facets[codecvt_byname<char, char, std::mbstate_t>::id.n]);
-            replace_facet(facets, codecvt_byname<char16_t, char8_t, std::mbstate_t>::id.n, one.facets[codecvt_byname<char16_t, char8_t, std::mbstate_t>::id.n]);
-            replace_facet(facets, codecvt_byname<char32_t, char8_t, std::mbstate_t>::id.n, one.facets[codecvt_byname<char32_t, char8_t, std::mbstate_t>::id.n]);
-            replace_facet(facets, codecvt_byname<wchar_t, char, std::mbstate_t>::id.n, one.facets[codecvt_byname<wchar_t, char, std::mbstate_t>::id.n]);
+            replace_facet(facets, std::ctype<char>::id.n, one.facets[std::ctype<char>::id.n]);
+            replace_facet(facets, std::ctype<wchar_t>::id.n, one.facets[std::ctype<wchar_t>::id.n]);
+            replace_facet(facets, codecvt<char, char, std::mbstate_t>::id.n, one.facets[codecvt<char, char, std::mbstate_t>::id.n]);
+            replace_facet(facets, codecvt<char16_t, char8_t, std::mbstate_t>::id.n, one.facets[codecvt<char16_t, char8_t, std::mbstate_t>::id.n]);
+            replace_facet(facets, codecvt<char32_t, char8_t, std::mbstate_t>::id.n, one.facets[codecvt<char32_t, char8_t, std::mbstate_t>::id.n]);
+            replace_facet(facets, codecvt<wchar_t, char, std::mbstate_t>::id.n, one.facets[codecvt<wchar_t, char, std::mbstate_t>::id.n]);
         }
 
         if (c & monetary) {}
         if (c & numeric) {
-            replace_facet(facets, numpunct_byname<char>::id.n, one.facets[numpunct_byname<char>::id.n]);
-            replace_facet(facets, numpunct_byname<wchar_t>::id.n, one.facets[numpunct_byname<wchar_t>::id.n]);
+            replace_facet(facets, numpunct<char>::id.n, one.facets[numpunct<char>::id.n]);
+            replace_facet(facets, numpunct<wchar_t>::id.n, one.facets[numpunct<wchar_t>::id.n]);
+            replace_facet(facets, num_get<char>::id.n, one.facets[num_get<char>::id.n]);
+            replace_facet(facets, num_get<wchar_t>::id.n, one.facets[num_get<wchar_t>::id.n]);
         }
         if (c & time) {}
         if (c & messages) {}
@@ -160,7 +171,9 @@ namespace std {
     const locale& locale::classic() {
         static const size_t max_facet_id = max({
             std::ctype<char>::id.n, std::ctype<wchar_t>::id.n,
-            codecvt<char, char, std::mbstate_t>::id.n, codecvt<wchar_t, char, std::mbstate_t>::id.n
+            codecvt<char, char, std::mbstate_t>::id.n, codecvt<char16_t, char8_t, std::mbstate_t>::id.n,
+            codecvt<char32_t, char8_t, std::mbstate_t>::id.n, codecvt<wchar_t, char, std::mbstate_t>::id.n,
+            numpunct<char>::id.n, numpunct<wchar_t>::id.n, num_get<char>::id.n, num_get<wchar_t>::id.n
         });
 
         static facet** facets = new facet*[max_facet_id + 1]();
@@ -174,6 +187,8 @@ namespace std {
 
         facets[numpunct<char>::id.n] = new numpunct<char>(1);
         facets[numpunct<wchar_t>::id.n] = new numpunct<wchar_t>(1);
+        facets[num_get<char>::id.n] = new num_get<char>(1);
+        facets[num_get<wchar_t>::id.n] = new num_get<wchar_t>(1);
 
         static locale classic_locale = locale(facets, max_facet_id + 1);
 
@@ -1047,6 +1062,13 @@ namespace std {
 #endif
     }
 
+    // num_get<char>
+    template class num_get<char>;
+
+    // num_get<wchar_t>
+    template class num_get<wchar_t>;
+
+    // numpunct<char>
     numpunct<char>::numpunct(std::size_t refs) : locale::facet(refs), __internal::__numpunct_impl<char>() {}
 
     locale::id numpunct<char>::id;
@@ -1071,6 +1093,7 @@ namespace std {
         return "false";
     }
 
+    // numpunct<wchar_t>
     numpunct<wchar_t>::numpunct(std::size_t refs) : locale::facet(refs), __internal::__numpunct_impl<wchar_t>() {}
 
     locale::id numpunct<wchar_t>::id;
@@ -1095,6 +1118,7 @@ namespace std {
         return L"false";
     }
 
+    // numpunct_byname<char>
     numpunct_byname<char>::numpunct_byname(const char* loc, std::size_t refs) : numpunct(refs), __internal::__locale_container<>(loc, LC_NUMERIC) {}
     numpunct_byname<char>::numpunct_byname(const string& loc, std::size_t refs) : numpunct_byname(loc.c_str(), refs) {}
 
@@ -1118,6 +1142,7 @@ namespace std {
         return "false";
     }
 
+    // numpunct_byname<wchar_t>
     numpunct_byname<wchar_t>::numpunct_byname(const char* loc, std::size_t refs) : numpunct(refs), __internal::__locale_container<>(loc, LC_NUMERIC) {}
     numpunct_byname<wchar_t>::numpunct_byname(const string& loc, std::size_t refs) : numpunct_byname(loc.c_str(), refs) {}
 

@@ -71,8 +71,8 @@ namespace std {
         }
 
         void swap(unique_ptr& u) noexcept requires is_nothrow_swappable_v<decltype(get_deleter())> {
-            swap(get_deleter(), u.get_deleter());
-            swap(p, u.p);
+            std::swap(get_deleter(), u.get_deleter());
+            std::swap(p, u.p);
         }
 
         /* 20.11.1.3.2 Constructors */
@@ -172,8 +172,8 @@ namespace std {
         }
 
         void swap(unique_ptr& u) noexcept requires is_nothrow_swappable_v<decltype(get_deleter())> {
-            swap(get_deleter(), u.get_deleter());
-            swap(p, u.p);
+            std::swap(get_deleter(), u.get_deleter());
+            std::swap(p, u.p);
         }
 
         /* 20.11.1.4.2 Constructors */
@@ -181,18 +181,18 @@ namespace std {
 
         template<class U> requires (is_same_v<U, pointer> || (is_same_v<pointer, element_type*> && is_pointer_v<U> && is_convertible_v<U, element_type*>))
             && (!is_pointer_v<deleter_type>) && is_nothrow_default_constructible_v<deleter_type>
-        explicit unique_ptr(type_identity_t<U> p) noexcept : p(p), d() {} 
+        explicit unique_ptr(U p) noexcept : p(p), d() {} 
 
         template<class U> requires is_reference_v<D> && is_nothrow_copy_constructible_v<D>
             && (is_same_v<U, pointer> || is_null_pointer_v<U> || (is_same_v<pointer, element_type*> && is_pointer_v<U> && is_convertible_v<U, element_type*>))
-        unique_ptr(type_identity_t<U> p, const D& d) noexcept : p(p), d(d) {}
+        unique_ptr(U p, const D& d) noexcept : p(p), d(d) {}
 
         template<class U> requires is_reference_v<D>
-        unique_ptr(type_identity_t<U> p, remove_reference_t<D>&& d) = delete;
+        unique_ptr(U p, remove_reference_t<D>&& d) = delete;
 
         template<class U> requires (!is_reference_v<D>) && is_nothrow_move_constructible_v<D> 
             && (is_same_v<U, pointer> || is_null_pointer_v<U> || (is_same_v<pointer, element_type*> && is_pointer_v<U> && is_convertible_v<U, element_type*>))
-        unique_ptr(type_identity_t<U> p, D&& d) noexcept : p(p), d(move(d)) {}
+        unique_ptr(U p, D&& d) noexcept : p(p), d(move(d)) {}
 
         unique_ptr(unique_ptr&& u) noexcept requires is_move_constructible_v<D> && (is_reference_v<D> || is_nothrow_move_constructible_v<D>)
             : p(forward<pointer>(u.get())), d(forward<D>(u.get_deleter())) {

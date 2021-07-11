@@ -32,7 +32,7 @@ namespace std {
             static constexpr int digits = sizeof(T) * CHAR_BIT - is_signed_v<T>;
             static constexpr int digits10 = digits * 643L / 2136;    // 643L / 2136 is log10(2) approximated to 7 significant digits.
             static constexpr int max_digits10 = 0;
-            static constexpr T min() noexcept { is_signed_v<T> ? -max() - 1 : T(0); }
+            static constexpr T min() noexcept { return is_signed_v<T> ? -max() - 1 : T(0); }
             static constexpr T max() noexcept { return (((T(1) << (digits - 1)) - 1) << 1) + 1; }
             static constexpr T lowest() noexcept { return min(); }
 
