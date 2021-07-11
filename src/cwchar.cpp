@@ -35,11 +35,11 @@ namespace std {
         return ::wcsstr(s1, s2);
     }
 
-    const wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n) {
+    const wchar_t* wmemchr(const wchar_t* s, wchar_t c, std::size_t n) {
         return ::wmemchr(s, c, n);
     }
 
-    wchar_t* wmemchr(wchar_t* s, wchar_t c, size_t n) {
+    wchar_t* wmemchr(wchar_t* s, wchar_t c, std::size_t n) {
         return ::wmemchr(s, c, n);
     }
 }

@@ -153,7 +153,7 @@ namespace std {
         deleter_type& get_deleter() noexcept { return d; }
         const deleter_type& get_deleter() const noexcept { return d; }
         explicit operator bool() const noexcept { return get() != nullptr; }
-        T& operator[](size_t i) const { return get()[i]; };
+        T& operator[](std::size_t i) const { return get()[i]; };
 
         /* 20.11.1.4.5 Modifiers */
         pointer release() noexcept { 
@@ -249,7 +249,7 @@ namespace std {
     }
 
     template<class T, class ...Args> requires is_unbounded_array_v<T>
-    unique_ptr<T> make_unique(size_t n) {
+    unique_ptr<T> make_unique(std::size_t n) {
         return unique_ptr<T>(new remove_extent_t<T>[n]());
     }
 
@@ -260,7 +260,7 @@ namespace std {
     unique_ptr<T> make_unique_for_overwrite() { return unique_ptr<T>(new T); }
 
     template<class T, class ...Args> requires is_unbounded_array_v<T>
-    unique_ptr<T> make_unique_for_overwrite(size_t n) { return unique_ptr<T>(new remove_extent_t<T>[n]); }
+    unique_ptr<T> make_unique_for_overwrite(std::size_t n) { return unique_ptr<T>(new remove_extent_t<T>[n]); }
 
     template<class T, class ...Args> requires is_bounded_array_v<T>
     auto make_unique_for_overwrite(Args&&...) = delete;

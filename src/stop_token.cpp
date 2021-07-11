@@ -78,7 +78,7 @@ namespace std {
     }
 
     bool __internal::__stop_state::stop_possible() const noexcept {
-        const size_t stop_stat = __atomic_load_n(&this->stop_stat, __ATOMIC_SEQ_CST);
+        const std::size_t stop_stat = __atomic_load_n(&this->stop_stat, __ATOMIC_SEQ_CST);
         // The first condition makes sure stop has been requested; the second makes sure at least one stop_source owns it.
         return ((stop_stat & 1) != 0) && ((stop_stat | 1) != 1);
     }

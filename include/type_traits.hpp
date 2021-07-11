@@ -299,10 +299,10 @@ namespace std {
     using __internal::type_identity;
     template<class T> using type_identity_t = typename type_identity<T>::type;
     using __internal::aligned_storage;
-    template<size_t Len, size_t Align = __internal::__default_alignment<Len>()>
+    template<std::size_t Len, std::size_t Align = __internal::__default_alignment<Len>()>
     using aligned_storage_t = typename aligned_storage<Len, Align>::type;
     using __internal::aligned_union;
-    template<size_t Len, class ...Types> using aligned_union_t = typename aligned_union<Len, Types...>::type;
+    template<std::size_t Len, class ...Types> using aligned_union_t = typename aligned_union<Len, Types...>::type;
     using __internal::remove_cvref;
     template<class T> using remove_cvref_t = typename remove_cvref<T>::type;
     using __internal::decay;

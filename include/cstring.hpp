@@ -17,8 +17,8 @@ namespace std {
     using ::strncmp;
     using ::strxfrm;
     
-    const void* memchr(const void* s, int c, size_t n);
-    void* memchr(void* s, int c, size_t n);
+    const void* memchr(const void* s, int c, std::size_t n);
+    void* memchr(void* s, int c, std::size_t n);
     const char* strchr(const char* s, int c);
     char* strchr(char* s, int c);
 

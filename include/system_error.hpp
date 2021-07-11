@@ -215,10 +215,10 @@ namespace std {
 
     /* 19.5.7 Hash support */
     template<> struct hash<error_code> {
-        size_t operator()(const error_code& code) const noexcept;
+        std::size_t operator()(const error_code& code) const noexcept;
     };
 
     template<> struct hash<error_condition> {
-        size_t operator()(const error_condition& cond) const noexcept;
+        std::size_t operator()(const error_condition& cond) const noexcept;
     };
 }

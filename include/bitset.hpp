@@ -12,38 +12,38 @@
 #include "stdexcept.hpp"
 
 namespace std {
-    template<size_t N> class bitset {
+    template<std::size_t N> class bitset {
     private:
         /* The number of bits each element in the storage array can store. */
-        static constexpr size_t storage_block_size = sizeof(uintmax_t) * CHAR_BIT;
+        static constexpr std::size_t storage_block_size = sizeof(uintmax_t) * CHAR_BIT;
         /* The number of bits in the last element of the storage array that serve as paddings that don't store any bits. */
-        static constexpr size_t storage_padding = N % storage_block_size;
+        static constexpr std::size_t storage_padding = N % storage_block_size;
         /* The number of elements in the storage array needed to store all the bits in this bitset. */
-        static constexpr size_t storage_blocks = N / storage_block_size + bool(storage_padding);
+        static constexpr std::size_t storage_blocks = N / storage_block_size + bool(storage_padding);
         /* An array of type uintmax_t to store all the bits in this bitset. */
-        uintmax_t storage[storage_blocks];
+        std::uintmax_t storage[storage_blocks];
 
         /* Returns a pair consisted of which block and which index inside the block the indicated bit belongs to. */
-        static constexpr pair<size_t, size_t> bit_location(size_t pos) {
+        static constexpr pair<std::size_t, std::size_t> bit_location(std::size_t pos) {
             if (pos >= N) throw out_of_range("Invalid index.");
             return make_pair(pos / storage_block_size, pos % storage_block_size);
         }
 
         /* Produces a number with all bits except for the bit corresponding to set_index cleared. Index counts from the leftmost
          * bit. */
-        static constexpr uintmax_t test_bit(size_t set_index) {
-            return uintmax_t(1) << (sizeof(uintmax_t) * CHAR_BIT - set_index - 1);
+        static constexpr uintmax_t test_bit(std::size_t set_index) {
+            return std::uintmax_t(1) << (sizeof(std::uintmax_t) * CHAR_BIT - set_index - 1);
         }
 
     public:
         class reference {
             friend class bitset;
             reference() noexcept : bitset(nullptr), index(0) {}
-            reference(bitset<N>* bitset, size_t index) noexcept requires (index < N)
+            reference(bitset<N>* bitset, std::size_t index) noexcept requires (index < N)
                 : bitset(bitset), index(index) {}
 
             bitset* bitset;
-            size_t index;
+            std::size_t index;
 
         public:
             reference(const reference&) = default;
@@ -76,10 +76,10 @@ namespace std {
                         typename basic_string<charT, traits, Allocator>::size_type n = basic_string<charT, traits, Allocator>::npos,
                         charT zero = charT('0'),
                         charT one = charT('1')) : storage{} {
-            const size_t rlen = min(n, str.size() - pos);
+            const std::size_t rlen = min(n, str.size() - pos);
             if (rlen > N) throw out_of_range("Supplied string is larger than the capacity of the bitset.");
 
-            for (size_t i = 0, str_i = pos; i < rlen && i < N; i++, str_i++) {
+            for (std::size_t i = 0, str_i = pos; i < rlen && i < N; i++, str_i++) {
                 const auto [slot, offset] = bit_location(i);
                 if (traits::eq(str[pos], one)) storage[slot] |= test_bit(offset);
                 else if (!traits::eq(str[pos], zero)) throw invalid_argument("Found character equal to neither zero or one.");
@@ -96,36 +96,36 @@ namespace std {
 
         /* 20.9.2.3 Bitset operations */
         bitset<N>& operator&=(const bitset<N>& rhs) noexcept {
-            for (size_t i = 0; i < storage_block_size; i++) storage[i] &= rhs.storage[i];
+            for (std::size_t i = 0; i < storage_block_size; i++) storage[i] &= rhs.storage[i];
             return *this;
         }
 
         bitset<N>& operator!=(const bitset<N>& rhs) noexcept {
-            for (size_t i = 0; i < storage_block_size; i++) storage[i] |= rhs.storage[i];
+            for (std::size_t i = 0; i < storage_block_size; i++) storage[i] |= rhs.storage[i];
             return *this;
         }
 
         bitset<N>& operator^=(const bitset<N>& rhs) noexcept {
-            for (size_t i = 0; i < storage_block_size; i++) storage[i] ^= rhs.storage[i];
+            for (std::size_t i = 0; i < storage_block_size; i++) storage[i] ^= rhs.storage[i];
             return *this;
         }
 
         // TODO: Implement.
-        bitset<N>& operator<<=(size_t pos) noexcept {
+        bitset<N>& operator<<=(std::size_t) noexcept {
             
         }
 
         // TODO: Implement.
-        bitset<N>& operator>>=(size_t pos) noexcept {
+        bitset<N>& operator>>=(std::size_t) noexcept {
 
         }
 
         bitset<N>& set() noexcept {
-            for (uintmax_t& i : storage) i = UINTMAX_MAX;
+            for (std::uintmax_t& i : storage) i = UINTMAX_MAX;
             return *this;
         }
 
-        bitset<N>& set(size_t pos, bool val = true) {
+        bitset<N>& set(std::size_t pos, bool val = true) {
             const auto [slot, offset] = bit_location(pos);
 
             if (val) {
@@ -138,14 +138,14 @@ namespace std {
         }
 
         bitset<N>& reset() {
-            for (uintmax_t& i : storage) i = 0;
+            for (std::uintmax_t& i : storage) i = 0;
             return *this;
         }
 
-        bitset<N>& reset(size_t pos) { return set(pos, false); }
+        bitset<N>& reset(std::size_t pos) { return set(pos, false); }
         bitset<N> operator~() const noexcept {
             bitset<N> result;
-            for (size_t i = 0; i < storage_blocks - 1; i++) {
+            for (std::size_t i = 0; i < storage_blocks - 1; i++) {
                 result.storage[i] = ~storage[i];
             }
 
@@ -155,7 +155,7 @@ namespace std {
 
         bitset<N>& flip() noexcept {
             bitset<N> result;
-            for (size_t i = 0; i < storage_blocks - 1; i++) {
+            for (std::size_t i = 0; i < storage_blocks - 1; i++) {
                 storage[i] = ~storage[i];
             }
 
@@ -163,18 +163,18 @@ namespace std {
             return *this;
         }
 
-        bitset<N>& flip(size_t pos) {
+        bitset<N>& flip(std::size_t pos) {
             const auto [slot, offset] = bit_location(pos);
             storage[slot] ^= test_bit(offset);
             return *this;
         }
 
-        constexpr bool operator[](size_t pos) const {
+        constexpr bool operator[](std::size_t pos) const {
             const auto [slot, offset] = bit_location(pos);
             return storage[slot] & test_bit(offset);
         }
 
-        reference operator[](size_t pos) {
+        reference operator[](std::size_t pos) {
             if (pos >= N) throw out_of_range("Invalid index.");
             return reference(this, pos); 
         }
@@ -194,39 +194,39 @@ namespace std {
         template<class charT = char, class traits = char_traits<charT>, class Allocator = allocator<charT>>
         basic_string<charT, traits, Allocator> to_string(charT zero = charT('0'), charT one = charT('1')) const;
 
-        size_t count() const noexcept {
-            size_t c = 0;
-            for (uintmax_t num : storage) {
+        std::size_t count() const noexcept {
+            std::size_t c = 0;
+            for (std::uintmax_t num : storage) {
                 c += popcount(num);
             }
 
             return c;
         }
 
-        constexpr size_t size() const noexcept { return N; }
+        constexpr std::size_t size() const noexcept { return N; }
         bool operator==(const bitset<N>& rhs) const noexcept { 
-            for (size_t i = 0; i < storage_blocks; i++) {
+            for (std::size_t i = 0; i < storage_blocks; i++) {
                 if (storage[i] != rhs.storage[i]) return false;
             }
 
             return true;
         }
 
-        bool test(size_t pos) const { return this->operator[](pos); }
+        bool test(std::size_t pos) const { return this->operator[](pos); }
         bool all() const noexcept { return count() == size(); }
         bool any() const noexcept { return count() != 0; }
         bool none() const noexcept { return count() == 0; }
-        bitset<N> operator<<(size_t pos) const noexcept { return bitset<N>(*this) <<= pos; }
-        bitset<N> operator>>(size_t pos) const noexcept { return bitset<N>(*this) >>= pos; }
+        bitset<N> operator<<(std::size_t pos) const noexcept { return bitset<N>(*this) <<= pos; }
+        bitset<N> operator>>(std::size_t pos) const noexcept { return bitset<N>(*this) >>= pos; }
     };
 
-    template<size_t N> struct hash<bitset<N>> {
-        size_t operator()(const bitset<N>& key) const { return hash(key.to_string()); }
+    template<std::size_t N> struct hash<bitset<N>> {
+        std::size_t operator()(const bitset<N>& key) const { return hash(key.to_string()); }
     };
 
-    template<size_t N> bitset<N> operator&(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) &= rhs; }
-    template<size_t N> bitset<N> operator|(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) |= rhs; }
-    template<size_t N> bitset<N> operator^(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) ^= rhs; }
+    template<std::size_t N> bitset<N> operator&(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) &= rhs; }
+    template<std::size_t N> bitset<N> operator|(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) |= rhs; }
+    template<std::size_t N> bitset<N> operator^(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) ^= rhs; }
 
     // TODO: Implement after implementing iosfwd.
     /*

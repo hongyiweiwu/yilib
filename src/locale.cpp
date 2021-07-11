@@ -25,7 +25,7 @@
 
 namespace std {
     // locale::facet
-    locale::facet::facet(size_t refs) : refs(refs) {}
+    locale::facet::facet(std::size_t refs) : refs(refs) {}
 
     unsigned long locale::facet::increment_ref() noexcept {
         return __atomic_add_fetch(&refs, 1, __ATOMIC_SEQ_CST);
@@ -38,12 +38,12 @@ namespace std {
     }
 
     // locale::id
-    constinit size_t locale::id::last_assigned_n = 0;
+    constinit std::size_t locale::id::last_assigned_n = 0;
 
     // locale
     locale::locale() noexcept : locale(classic()) {}
     locale::locale(const locale& other) noexcept : n(other.n), facets(other.facets), facets_arr_size(other.facets_arr_size) {
-        for (size_t i = 0; i < facets_arr_size; i++)
+        for (std::size_t i = 0; i < facets_arr_size; i++)
             if (facets[i]) facets[i]->increment_ref();
     }
 
@@ -75,7 +75,7 @@ namespace std {
     locale::locale(const locale& other, const char* std_name, category c) : locale(other) {
         if (!std_name) throw runtime_error("Invalid std_name in constructor of locale.");
 
-        static constexpr auto replace_facet = [](locale::facet** facet_arr, size_t idx, locale::facet* replacement) {
+        static constexpr auto replace_facet = [](locale::facet** facet_arr, std::size_t idx, locale::facet* replacement) {
             if (facet_arr[idx]) facet_arr[idx]->decrement_ref();
             facet_arr[idx] = replacement;
         };
@@ -106,7 +106,7 @@ namespace std {
 
     locale::locale(const locale& other, const locale& one, category c) : locale(other) {
         if (other.name() == "*" && one.name() == "*") n = "*";
-        static constexpr auto replace_facet = [](locale::facet** facet_arr, size_t idx, locale::facet* replacement) {
+        static constexpr auto replace_facet = [](locale::facet** facet_arr, std::size_t idx, locale::facet* replacement) {
             if (facet_arr[idx]) facet_arr[idx]->decrement_ref();
             facet_arr[idx] = replacement;
             if (replacement) replacement->increment_ref();
@@ -135,7 +135,7 @@ namespace std {
     }
 
     locale::~locale() {
-        for (size_t i = 0; i < facets_arr_size; i++)
+        for (std::size_t i = 0; i < facets_arr_size; i++)
             if (facets[i]) facets[i]->decrement_ref();
 
         delete[] facets;
@@ -146,7 +146,7 @@ namespace std {
         facets = other.facets;
         facets_arr_size = other.facets_arr_size;
 
-        for (size_t i = 0; i < facets_arr_size; i++)
+        for (std::size_t i = 0; i < facets_arr_size; i++)
             if (facets[i]) facets[i]->increment_ref();
 
         return *this;
@@ -169,7 +169,7 @@ namespace std {
     }
 
     const locale& locale::classic() {
-        static const size_t max_facet_id = max({
+        static const std::size_t max_facet_id = max({
             std::ctype<char>::id.n, std::ctype<wchar_t>::id.n,
             codecvt<char, char, std::mbstate_t>::id.n, codecvt<char16_t, char8_t, std::mbstate_t>::id.n,
             codecvt<char32_t, char8_t, std::mbstate_t>::id.n, codecvt<wchar_t, char, std::mbstate_t>::id.n,
@@ -195,15 +195,15 @@ namespace std {
         return classic_locale;
     }
 
-    locale::locale(locale::facet** facets, size_t facets_arr_size, const char* name) 
+    locale::locale(locale::facet** facets, std::size_t facets_arr_size, const char* name) 
         : n(string(name)), facets(facets), facets_arr_size(facets_arr_size) {}
 
     // ctype<char>
-    ctype<char>::ctype(const mask* tab, bool del, size_t refs) : locale::facet(refs), __internal::__ctype_impl<char>(), tab(tab), del_tab(del) {}
+    ctype<char>::ctype(const mask* tab, bool del, std::size_t refs) : locale::facet(refs), __internal::__ctype_impl<char>(), tab(tab), del_tab(del) {}
     
     bool ctype<char>::is(mask m, char c) const { return tab[static_cast<unsigned char>(c)] & m; }
     const char* ctype<char>::is(const char* low, const char* high, mask* vec) const {
-        for (size_t i = 0; low != high; low++, i++) {
+        for (std::size_t i = 0; low != high; low++, i++) {
             vec[i] = tab[static_cast<unsigned char>(*low)];
         }
 
@@ -296,7 +296,7 @@ namespace std {
     }
 
     // ctype<wchar_t>
-    ctype<wchar_t>::ctype(size_t refs) : locale::facet(refs), __internal::__ctype_impl<wchar_t>() {}
+    ctype<wchar_t>::ctype(std::size_t refs) : locale::facet(refs), __internal::__ctype_impl<wchar_t>() {}
 
     locale::id ctype<wchar_t>::id;
 
@@ -322,7 +322,7 @@ namespace std {
 
         for (; low != high; vec++, low++) {
             *vec = 0;
-            for (size_t i = 0; i < 10; i++) {
+            for (std::size_t i = 0; i < 10; i++) {
                 if (tests[i](*low)) *vec |= masks[i];
             }
         }
@@ -450,7 +450,7 @@ namespace std {
 
         for (; low != high; vec++, low++) {
             *vec = 0;
-            for (size_t i = 0; i < 10; i++) {
+            for (std::size_t i = 0; i < 10; i++) {
                 if (tests[i](*low, loc)) *vec |= masks[i];
             }
         }
@@ -525,7 +525,7 @@ namespace std {
     }
 
     // codecvt<char, char, std::mbstate_t>
-    codecvt<char, char, std::mbstate_t>::codecvt(size_t refs) : locale::facet(refs) {}
+    codecvt<char, char, std::mbstate_t>::codecvt(std::size_t refs) : locale::facet(refs) {}
 
     locale::id codecvt<char, char, std::mbstate_t>::id;
 
@@ -548,7 +548,7 @@ namespace std {
 
     int codecvt<char, char, std::mbstate_t>::do_encoding() const noexcept { return 1; }
     bool codecvt<char, char, std::mbstate_t>::do_always_noconv() const noexcept { return true; }
-    int codecvt<char, char, std::mbstate_t>::do_length(std::mbstate_t&, const char* from, const char* end, size_t max) const { 
+    int codecvt<char, char, std::mbstate_t>::do_length(std::mbstate_t&, const char* from, const char* end, std::size_t max) const { 
         return min(max, static_cast<size_t>(end - from)); 
     }
     int codecvt<char, char, std::mbstate_t>::do_max_length() const noexcept { return 1; }
@@ -675,7 +675,7 @@ namespace std {
     int codecvt<char16_t, char8_t, std::mbstate_t>::do_length(std::mbstate_t&, const char8_t* from, const char8_t* end, std::size_t max) const {
         // This array will have many race conditions, but we don't really care the content inside. It's simply used to be passed into utf8_to_utf16.
         static char16_t buf[2];
-        size_t from_converted = 0, to_converted = 0;
+        std::size_t from_converted = 0, to_converted = 0;
         while (to_converted < max) {
             const auto [result, utf8_consumed, utf16_written] = utf8_to_utf16(from, static_cast<std::size_t>(end - from), buf);
             if (result != ok) {
@@ -843,7 +843,7 @@ namespace std {
     int codecvt<char32_t, char8_t, std::mbstate_t>::do_max_length() const noexcept { return 4; }
 
     // codecvt<wchar_t, char, std::mbstate_t>
-    codecvt<wchar_t, char, std::mbstate_t>::codecvt(size_t refs) : locale::facet(refs) {}
+    codecvt<wchar_t, char, std::mbstate_t>::codecvt(std::size_t refs) : locale::facet(refs) {}
 
     locale::id codecvt<wchar_t, char, std::mbstate_t>::id;
 
@@ -852,13 +852,13 @@ namespace std {
         /* Passed into wcrtomb to store the result of conversion. */
         char buf[MB_LEN_MAX];
         for (from_next = from, to_next = to; from_next != from_end && to_next != to_end;) {
-            const size_t to_bytes = std::wcrtomb(buf, *to_next, &state);
+            const std::size_t to_bytes = std::wcrtomb(buf, *to_next, &state);
             if (to_bytes == size_t(-1)) {
                 // Unrecognized wide character.
                 return error;
             }
 
-            const size_t copyable_bytes = std::min(size_t(to_end - to_next), to_bytes);
+            const std::size_t copyable_bytes = std::min(std::size_t(to_end - to_next), to_bytes);
             std::memcpy(to_next, buf, copyable_bytes);
             from_next++;
             to_next += copyable_bytes;
@@ -878,12 +878,12 @@ namespace std {
 
     codecvt_base::result codecvt<wchar_t, char, std::mbstate_t>::do_in(std::mbstate_t& state, const char* from, const char* from_end, const char*& from_next, wchar_t* to, wchar_t* to_end, wchar_t*& to_next) const { 
         for (from_next = from, to_next = to; from_next != from_end && to_next != to_end; ) {
-            const size_t from_bytes = std::mbrtowc(to_next, from_next, from_end - from_next, &state);
+            const std::size_t from_bytes = std::mbrtowc(to_next, from_next, from_end - from_next, &state);
             switch (from_bytes) {
-                case size_t(-1):
+                case std::size_t(-1):
                     return error;
 
-                case size_t(-2):
+                case std::size_t(-2):
                     return partial;
 
                 case 0:
@@ -913,14 +913,14 @@ namespace std {
 
     bool codecvt<wchar_t, char, std::mbstate_t>::do_always_noconv() const noexcept { return false; }
 
-    int codecvt<wchar_t, char, std::mbstate_t>::do_length(std::mbstate_t& state, const char* from, const char* end, size_t max) const { 
-        size_t n_intern = 0;
-        size_t n_extern = 0;
+    int codecvt<wchar_t, char, std::mbstate_t>::do_length(std::mbstate_t& state, const char* from, const char* end, std::size_t max) const { 
+        std::size_t n_intern = 0;
+        std::size_t n_extern = 0;
         for (; from < end && n_intern < max; n_intern++) {
-            const size_t n_converted = std::mbrlen(from, static_cast<size_t>(end - from), &state);
+            const std::size_t n_converted = std::mbrlen(from, static_cast<std::size_t>(end - from), &state);
             switch (n_converted) {
-                case size_t(-1):
-                case size_t(-2):
+                case std::size_t(-1):
+                case std::size_t(-2):
                     return n_extern;
 
                 case 0:
@@ -937,9 +937,9 @@ namespace std {
 
     int codecvt<wchar_t, char, std::mbstate_t>::do_max_length() const noexcept { return MB_CUR_MAX; }
 
-    codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const char* loc, size_t refs)
+    codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const char* loc, std::size_t refs)
         : codecvt(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
-    codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const string& loc, size_t refs) : codecvt_byname(loc.c_str(), refs) {}
+    codecvt_byname<char, char, std::mbstate_t>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}
 
     codecvt_byname<char16_t, char8_t, std::mbstate_t>::codecvt_byname(const char*, std::size_t refs) : codecvt(refs) {}
     codecvt_byname<char16_t, char8_t, std::mbstate_t>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}
@@ -947,9 +947,9 @@ namespace std {
     codecvt_byname<char32_t, char8_t, std::mbstate_t>::codecvt_byname(const char*, std::size_t refs) : codecvt(refs) {}
     codecvt_byname<char32_t, char8_t, std::mbstate_t>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}
     
-    codecvt_byname<wchar_t, char, std::mbstate_t>::codecvt_byname(const char* loc, size_t refs)
+    codecvt_byname<wchar_t, char, std::mbstate_t>::codecvt_byname(const char* loc, std::size_t refs)
         : codecvt<wchar_t, char, std::mbstate_t>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
-    codecvt_byname<wchar_t, char, std::mbstate_t>::codecvt_byname(const string& loc, size_t refs) : codecvt_byname(loc.c_str(), refs) {}
+    codecvt_byname<wchar_t, char, std::mbstate_t>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}
 
     codecvt_base::result codecvt_byname<wchar_t, char, std::mbstate_t>::do_out(std::mbstate_t& state, const wchar_t* from, const wchar_t* from_end, 
                                                                         const wchar_t*& from_next, char* to, char* to_end, char*& to_next) const {
@@ -958,16 +958,16 @@ namespace std {
         auto loc = get_locale();
         for (from_next = from, to_next = to; from_next != from_end && to_next != to_end;) {
 #if YILIB_HAS_XLOCALE
-            const size_t to_bytes = ::wcrtomb_l(buf, *to_next, &state, loc);
+            const std::size_t to_bytes = ::wcrtomb_l(buf, *to_next, &state, loc);
 #else
-            const size_t to_bytes = std::wcrtomb(buf, *to_next, &state);
+            const std::size_t to_bytes = std::wcrtomb(buf, *to_next, &state);
 #endif
-            if (to_bytes == size_t(-1)) {
+            if (to_bytes == std::size_t(-1)) {
                 // Unrecognized wide character.
                 return error;
             }
 
-            const size_t copyable_bytes = std::min(size_t(to_end - to_next), to_bytes);
+            const std::size_t copyable_bytes = std::min(std::size_t(to_end - to_next), to_bytes);
             std::memcpy(to_next, buf, copyable_bytes);
             from_next++;
             to_next += copyable_bytes;
@@ -983,15 +983,15 @@ namespace std {
         auto loc = get_locale();
         for (from_next = from, to_next = to; from_next != from_end && to_next != to_end; ) {
 #if YILIB_HAS_XLOCALE
-            const size_t from_bytes = ::mbrtowc_l(to_next, from_next, from_end - from_next, &state, loc);
+            const std::size_t from_bytes = ::mbrtowc_l(to_next, from_next, from_end - from_next, &state, loc);
 #else
-            const size_t from_bytes = std::mbrtowc(to_next, from_next, from_end - from_next, &state);
+            const std::size_t from_bytes = std::mbrtowc(to_next, from_next, from_end - from_next, &state);
 #endif
             switch (from_bytes) {
-                case size_t(-1):
+                case std::size_t(-1):
                     return error;
 
-                case size_t(-2):
+                case std::size_t(-2):
                     return partial;
 
                 case 0:
@@ -1025,19 +1025,19 @@ namespace std {
         }
     }
 
-    int codecvt_byname<wchar_t, char, std::mbstate_t>::do_length(std::mbstate_t& state, const char* from, const char* end, size_t max) const { 
-        size_t n_intern = 0;
-        size_t n_extern = 0;
+    int codecvt_byname<wchar_t, char, std::mbstate_t>::do_length(std::mbstate_t& state, const char* from, const char* end, std::size_t max) const { 
+        std::size_t n_intern = 0;
+        std::size_t n_extern = 0;
         auto loc = get_locale();
         for (; from < end && n_intern < max; n_intern++) {
 #if YILIB_HAS_XLOCALE
-            const size_t n_converted = ::mbrlen_l(from, static_cast<size_t>(end - from), &state, loc);
+            const std::size_t n_converted = ::mbrlen_l(from, static_cast<std::size_t>(end - from), &state, loc);
 #else
-            const size_t n_converted = std::mbrlen(from, static_cast<size_t>(end - from), &state);
+            const std::size_t n_converted = std::mbrlen(from, static_cast<std::size_t>(end - from), &state);
 #endif
             switch (n_converted) {
-                case size_t(-1):
-                case size_t(-2):
+                case std::size_t(-1):
+                case std::size_t(-2):
                     return n_extern;
 
                 case 0:

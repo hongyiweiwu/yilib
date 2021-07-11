@@ -74,11 +74,11 @@ namespace std {
                     swap(::std::__internal::forward<T>(e1), ::std::__internal::forward<U>(e2));
                 }
 
-                template<class T, class U, size_t N>
+                template<class T, class U, std::size_t N>
                 requires __array_swappable<T(&)[N], U(&)[N]>
                 constexpr void operator()(T(&e1)[N], U(&e2)[N]) const noexcept(noexcept((*this)(*e1, *e2))) {
                     // ranges::swap_ranges spelled out
-                    for (size_t i = 0; i < N; i++) {
+                    for (std::size_t i = 0; i < N; i++) {
                         (*this)(e1[i], e2[i]);
                     }
                 }

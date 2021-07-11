@@ -31,9 +31,9 @@ namespace std {
         };
 
         /* Returns the Ith type in the given list of types. */
-        template<size_t I, class ...Types> struct pick_ith_type;
+        template<std::size_t I, class ...Types> struct pick_ith_type;
 
-        template<size_t I, class Type, class ...Types> requires (I < sizeof...(Types) + 1)
+        template<std::size_t I, class Type, class ...Types> requires (I < sizeof...(Types) + 1)
         struct pick_ith_type<I, Type, Types...> { using type = typename pick_ith_type<I - 1, Types...>::type; };
 
         template<class Type, class ...Types>
@@ -42,7 +42,7 @@ namespace std {
         template<class IndexSeq, class ...T> class __tuple_leaf_wrapper; // This template should never be used -- only its specialization is valid.
         // This class is completely unguarded by concepts, and do not contain any explicit restrictions. All such guards/restrictions are implemented
         // in higher-up implementations (i.e. std::tuple).
-        template<size_t ...I, class ...T>
+        template<std::size_t ...I, class ...T>
         class __tuple_leaf_wrapper<index_sequence<I...>, T...>
             : public __tuple_leaf<I, T>... {
         public:
@@ -76,7 +76,7 @@ namespace std {
         : public __internal::__tuple_leaf_wrapper<make_index_sequence<sizeof...(T)>, T...> {
     private:
         using __leaf_wrapper_t = __internal::__tuple_leaf_wrapper<make_index_sequence<sizeof...(T)>, T...>;
-        template<size_t I> using __leaf_t = __internal::__tuple_leaf<I, typename __internal::pick_ith_type<I, T...>::type>;
+        template<std::size_t I> using __leaf_t = __internal::__tuple_leaf<I, typename __internal::pick_ith_type<I, T...>::type>;
     public:
         constexpr explicit((!__internal::__is_implicit_default_constructible<T> || ...))
             tuple() requires (is_default_constructible_v<T> && ...) = default;
@@ -140,7 +140,7 @@ namespace std {
     public:
         constexpr tuple& operator=(const tuple& tpl)
         requires (is_copy_assignable_v<T> && ...) {
-            constexpr auto helper = []<size_t ...I>(tuple& self, const tuple& tpl) {
+            constexpr auto helper = []<std::size_t ...I>(tuple& self, const tuple& tpl) {
                 ((self.__leaf_t<I>::get_val() = tpl.__leaf_t<I>::get_val()), ...);
             };
 
@@ -151,7 +151,7 @@ namespace std {
         constexpr tuple& operator=(tuple&& tpl)
         noexcept((is_nothrow_move_assignable_v<T> && ...))
         requires (is_move_assignable_v<T> && ...) {
-            constexpr auto helper = []<size_t ...I>(tuple& self, tuple&& tpl) {
+            constexpr auto helper = []<std::size_t ...I>(tuple& self, tuple&& tpl) {
                 ((self.__leaf_t<I>::get_val() = forward<T>(tpl.__leaf_t<I>::get_val())), ...);
             };
 
@@ -161,7 +161,7 @@ namespace std {
 
         template<class ...U> requires (sizeof...(T) == sizeof...(U)) && (is_assignable_v<T&, const U&> && ...)
         constexpr tuple& operator=(const tuple<U...>& tpl) {
-            constexpr auto helper = []<size_t ...I>(tuple& self, const tuple<U...>& tpl) {
+            constexpr auto helper = []<std::size_t ...I>(tuple& self, const tuple<U...>& tpl) {
                 ((self.__leaf_t<I>::get_val() = tpl.__leaf_t<I>::get_val()), ...);
             };
 
@@ -171,7 +171,7 @@ namespace std {
 
         template<class ...U> requires (sizeof...(T) == sizeof...(U)) && (is_assignable_v<T&, U> && ...)
         constexpr tuple& operator=(tuple<U...>&& tpl) {
-            constexpr auto helper = []<size_t ...I>(tuple& self, tuple&& tpl) {
+            constexpr auto helper = []<std::size_t ...I>(tuple& self, tuple&& tpl) {
                 ((self.__leaf_t<I>::get_val() = forward<U>(tpl.__leaf_t<I>::get_val())), ...);
             };
 
@@ -231,23 +231,23 @@ namespace std {
         template<class ...Sequences> struct __merge_index_sequences;
         // Here, Result is the flattened part of the index sequence, Next is the numbers inside the next index_sequence, and Sequences is the remaining
         // index sequences.
-        template<size_t ...Result, size_t ...Next, class ...Sequences> struct __merge_index_sequences<index_sequence<Result...>, index_sequence<Next...>, Sequences...> {
+        template<std::size_t ...Result, std::size_t ...Next, class ...Sequences> struct __merge_index_sequences<index_sequence<Result...>, index_sequence<Next...>, Sequences...> {
             using type = typename __merge_index_sequences<index_sequence<Result..., Next...>, Sequences...>::type;
         };
-        template<size_t ...Result, size_t ...Next> struct __merge_index_sequences<index_sequence<Result...>, index_sequence<Next...>> {
+        template<std::size_t ...Result, std::size_t ...Next> struct __merge_index_sequences<index_sequence<Result...>, index_sequence<Next...>> {
             using type = index_sequence<Result..., Next...>;
         };
 
         /* Generate an index sequence consisted of N values equal to C. */
-        template<size_t C, size_t N, class Sequence = index_sequence<>> struct __fill_index_sequence;
-        template<size_t C, size_t ...Seq> struct __fill_index_sequence<C, 0, index_sequence<Seq...>> {
+        template<std::size_t C, std::size_t N, class Sequence = index_sequence<>> struct __fill_index_sequence;
+        template<std::size_t C, std::size_t ...Seq> struct __fill_index_sequence<C, 0, index_sequence<Seq...>> {
             using type = index_sequence<Seq...>;
         };
-        template<size_t C, size_t N, size_t ...Seq> struct __fill_index_sequence<C, N, index_sequence<Seq...>> {
+        template<std::size_t C, std::size_t N, std::size_t ...Seq> struct __fill_index_sequence<C, N, index_sequence<Seq...>> {
             using type = typename __fill_index_sequence<C, N - 1, index_sequence<Seq..., C>>::type;
         };
 
-        template<size_t I, class Tuple, class ...Tuples>
+        template<std::size_t I, class Tuple, class ...Tuples>
         constexpr auto __pick_ith_tuple(Tuple&& tpl, Tuples&& ...tpls) noexcept -> decltype(auto) {
             if constexpr (I == 0) {
                 return forward<Tuple>(tpl);
@@ -256,22 +256,22 @@ namespace std {
             }
         }
 
-        template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+        template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
         constexpr typename pick_ith_type<I, Types...>::type& __tuple_get(tuple<Types...>& t) noexcept {
             return t.__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
 
-        template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+        template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
         constexpr typename pick_ith_type<I, Types...>::type&& __tuple_get(tuple<Types...>&& t) noexcept {
             return move(t).__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
 
-        template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+        template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
         constexpr const typename pick_ith_type<I, Types...>::type& __tuple_get(const tuple<Types...>& t) noexcept {
             return t.__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
 
-        template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+        template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
         constexpr const typename pick_ith_type<I, Types...>::type&& __tuple_get(const tuple<Types...>&& t) noexcept {
             return move(t).__tuple_leaf<I, typename pick_ith_type<I, Types...>::type>::get_val();
         }
@@ -290,13 +290,13 @@ namespace std {
     constexpr auto tuple_cat(Tuples&& ...tpls) {
         // This lambda enables us to get a variadic template parameter I. I has the same length as Tuples and corresponds to the length of each tuple
         // in Tuples.
-        constexpr auto match_with_tuple_size = []<size_t ...I>(index_sequence<I...>, Tuples&& ...tpls) {
+        constexpr auto match_with_tuple_size = []<std::size_t ...I>(index_sequence<I...>, Tuples&& ...tpls) {
             // An index sequence constructed by repeating the index of each tuple in Tuples for (size of that tuple) times.
             using Is = typename __internal::__merge_index_sequences<typename __internal::__fill_index_sequence<I, tuple_size_v<Tuples>>::type...>::type;
             // An index sequence constructed by concatenating an iota sequence with the size of the length of each tuple together.
             using Js = typename __internal::__merge_index_sequences<make_index_sequence<tuple_size_v<Tuples>>...>::type;
 
-            constexpr auto match_with_inner_outer_index = []<size_t ...Is, size_t ...Js>(index_sequence<Is...>, index_sequence<Js...>, Tuples&& ...tpls) {
+            constexpr auto match_with_inner_outer_index = []<std::size_t ...Is, std::size_t ...Js>(index_sequence<Is...>, index_sequence<Js...>, Tuples&& ...tpls) {
                 // Here the expansion I, J will get the Jth element of the Ith tuple.
                 return make_tuple(
                     __internal::__tuple_get<Js>(
@@ -313,7 +313,7 @@ namespace std {
 
     /* 20.5.5 Calling a function with a tuple of arguments */
     template<class F, class Tuple> constexpr decltype(auto) apply(F&& f, Tuple&& t) {
-        constexpr auto apply_impl = []<size_t ...I>(F&& f, Tuple&& t, index_sequence<I...>) {
+        constexpr auto apply_impl = []<std::size_t ...I>(F&& f, Tuple&& t, index_sequence<I...>) {
             return __internal::__INVOKE(forward<F>(f), __tuple_get<I>(forward<Tuple>(t))...);
         };
 
@@ -321,7 +321,7 @@ namespace std {
     }
 
     template<class T, class Tuple> constexpr T make_from_tuple(Tuple &&t) {
-        constexpr auto make_from_tuple_impl = []<size_t ...I>(Tuple&& t, index_sequence<I...>) {
+        constexpr auto make_from_tuple_impl = []<std::size_t ...I>(Tuple&& t, index_sequence<I...>) {
             return T(__tuple_get<I>(forward<Tuple>(t))...);
         };
 
@@ -329,26 +329,26 @@ namespace std {
     }
 
     /* 20.5.6 Tuple helper classes */
-    template<size_t I, class ...Types> requires (I < sizeof...(Types))
+    template<std::size_t I, class ...Types> requires (I < sizeof...(Types))
     struct tuple_element<I, tuple<Types...>> { using type = typename __internal::pick_ith_type<I, Types...>::type; };
 
     /* 20.5.7 Element access */
-    template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+    template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr tuple_element_t<I, tuple<Types...>>& get(tuple<Types...>& t) noexcept {
         return __internal::__tuple_get<I, Types...>(t);
     }
 
-    template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+    template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr tuple_element_t<I, tuple<Types...>>&& get(tuple<Types...>&& t) noexcept {
         return __internal::__tuple_get<I, Types...>(move(t));
     }
 
-    template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+    template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr const tuple_element_t<I, tuple<Types...>>& get(const tuple<Types...>& t) noexcept {
         return __internal::__tuple_get<I, Types...>(t);
     }
 
-    template<size_t I, class ...Types> requires (I < sizeof...(Types)) 
+    template<std::size_t I, class ...Types> requires (I < sizeof...(Types)) 
     constexpr const tuple_element_t<I, tuple<Types...>>&& get(const tuple<Types...>&& t) noexcept {
         return __internal::__tuple_get<I, Types...>(move(t));
     }
@@ -358,9 +358,9 @@ namespace std {
         template<class T, class ...Types>
         constexpr bool __appears_exactly_once = (is_same_v<T, Types> + ...) == 1;
 
-        template<size_t I, class T, class T1, class ...Types>
+        template<std::size_t I, class T, class T1, class ...Types>
         struct __get_index_of { static constexpr bool value = __get_index_of<I + 1, T, Types...>::value; };
-        template<size_t I, class T, class ...Types>
+        template<std::size_t I, class T, class ...Types>
         struct __get_index_of<I, T, T, Types...> { static constexpr bool value = I; };
     }
 
@@ -387,7 +387,7 @@ namespace std {
     /* 20.5.8 Relational operators */
     template<class ...T, class ...U> requires (sizeof...(T) == sizeof...(U))
     constexpr bool operator==(const tuple<T...>& t, const tuple<U...>& u) {
-        constexpr auto helper = []<size_t ...I>(const tuple<T...>& t, const tuple<U...>& u) -> bool {
+        constexpr auto helper = []<std::size_t ...I>(const tuple<T...>& t, const tuple<U...>& u) -> bool {
             static_assert(requires {{ ((get<I>(t) == get<I>(u)) && ...) } -> convertible_to<bool>; });
             return ((get<I>(t) == get<I>(u)) && ...);
         };
@@ -403,7 +403,7 @@ namespace std {
         }
 
         // This returns the three-way comparing result recursively assuming both tuples have the same length.
-        constexpr auto helper = []<size_t I>(const tuple<T...>& t, const tuple<U...>& u, const auto& next) {
+        constexpr auto helper = []<std::size_t I>(const tuple<T...>& t, const tuple<U...>& u, const auto& next) {
             if constexpr (I == sizeof...(T)) {
                 return strong_ordering::equal;
             } else if (auto c = __internal::synth_three_way(get<I>(t), get<I>(u)); c != 0) {

@@ -294,7 +294,7 @@ namespace std {
         explicit scoped_lock(adopt_lock_t, MutexTypes&... m) : pm(tie(m...)) {}
 
         ~scoped_lock() {
-            constexpr auto helper = []<size_t ...I>(index_sequence<I...>, tuple<MutexTypes&...>& tp) {
+            constexpr auto helper = []<std::size_t ...I>(index_sequence<I...>, tuple<MutexTypes&...>& tp) {
                 (std::get<I>(tp).unlock(), ...);
             };
 
@@ -405,7 +405,7 @@ namespace std {
     template<__internal::lockable L1, __internal::lockable L2, __internal::lockable... LN>
     int try_lock(L1& lock1, L2& lock2, LN&... lockn) {
         static constexpr auto helper = []<__internal::lockable Lock, __internal::lockable ...Locks>(const auto& next, Lock& lock, Locks&... locks) -> int {
-            static constexpr size_t curr_index = sizeof...(LN) + 1 - sizeof...(Locks);
+            static constexpr std::size_t curr_index = sizeof...(LN) + 1 - sizeof...(Locks);
             bool locked = false;
             try {
                 if ((locked = lock.try_lock())) {

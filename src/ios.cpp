@@ -78,7 +78,7 @@ namespace std {
 
     locale ios_base::getloc() const { return loc ? *loc : locale(); }
 
-    constinit size_t ios_base::index = 0;
+    constinit std::size_t ios_base::index = 0;
     int ios_base::xalloc() { return __atomic_fetch_add(&index, 1, __ATOMIC_SEQ_CST); }
 
     long& ios_base::iword(int idx) {
@@ -88,8 +88,8 @@ namespace std {
                 iarray_size = 1;
             }
 
-            if (static_cast<size_t>(idx) >= iarray_size) {
-                const size_t new_size = bit_ceil(static_cast<size_t>(idx) + 1);
+            if (static_cast<std::size_t>(idx) >= iarray_size) {
+                const std::size_t new_size = bit_ceil(static_cast<std::size_t>(idx) + 1);
                 long* new_ptr = new long[new_size]{0};
                 std::memcpy(new_ptr, iarray, sizeof(long) * iarray_size);
                 delete[] iarray;
@@ -113,7 +113,7 @@ namespace std {
             }
 
             if (static_cast<size_t>(idx) >= iarray_size) {
-                const size_t new_size = bit_ceil(static_cast<size_t>(idx) + 1);
+                const std::size_t new_size = bit_ceil(static_cast<std::size_t>(idx) + 1);
                 void** new_ptr = new void*[new_size]{nullptr};
                 std::memcpy(new_ptr, parray, sizeof(void*) * parray_size);
                 delete[] parray;
@@ -144,7 +144,7 @@ namespace std {
 
     void ios_base::register_callback(event_callback fn, int idx) {
         if (callback_count == 0 || has_single_bit(callback_count)) {
-            const size_t new_size = 1 << bit_width(callback_count);
+            const std::size_t new_size = 1 << bit_width(callback_count);
             event_callback* callbacks = new event_callback[new_size];
             int* callback_indices = new int[new_size];
             std::memcpy(callbacks, this->callbacks, sizeof(event_callback) * callback_count);

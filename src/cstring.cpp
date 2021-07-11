@@ -3,11 +3,11 @@
 #include "string.h"
 
 namespace std {
-const void* memchr(const void* s, int c, size_t n) {
+const void* memchr(const void* s, int c, std::size_t n) {
     return ::memchr(s, c, n);
 }
 
-void* memchr(void* s, int c, size_t n) {
+void* memchr(void* s, int c, std::size_t n) {
     return ::memchr(s, c, n);
 }
 

@@ -64,8 +64,8 @@ namespace std {
     wchar_t* wcsstr(wchar_t* s1, const wchar_t* s2);
 
     using ::wcstok;
-    const wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n);
-    wchar_t* wmemchr(wchar_t* s, wchar_t c, size_t n);
+    const wchar_t* wmemchr(const wchar_t* s, wchar_t c, std::size_t n);
+    wchar_t* wmemchr(wchar_t* s, wchar_t c, std::size_t n);
 
     using ::wcslen;
     using ::wmemset;

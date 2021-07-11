@@ -149,8 +149,8 @@ namespace std {
     template<class T> class allocator {
     public:
         using value_type = T;
-        using size_type = size_t;
-        using difference_type = ptrdiff_t;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
         using propagate_on_container_move_assignment = true_type;
         using is_always_equal = true_type;
 
@@ -160,15 +160,15 @@ namespace std {
         constexpr ~allocator() = default;
         constexpr allocator& operator=(const allocator&) = default;
 
-        [[nodiscard]] constexpr T* allocate(size_t n) requires __internal::is_complete<T>::value {
-            if (numeric_limits<size_t>::max() / sizeof(T) < n) {
+        [[nodiscard]] constexpr T* allocate(std::size_t n) requires __internal::is_complete<T>::value {
+            if (numeric_limits<std::size_t>::max() / sizeof(T) < n) {
                 throw bad_array_new_length();
             } else {
                 return ::operator new(n * sizeof(T));
             }
         }
 
-        constexpr void deallocate(T* p, size_t n) {
+        constexpr void deallocate(T* p, std::size_t n) {
             ::operator delete(p, n * sizeof(T));
         }
     };

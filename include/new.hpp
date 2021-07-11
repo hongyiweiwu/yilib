@@ -22,7 +22,7 @@ namespace std {
     };
     inline constexpr destroying_delete_t destroying_delete;
 
-    enum class align_val_t : size_t {};
+    enum class align_val_t : std::size_t {};
 
     struct nothrow_t { explicit nothrow_t() = default; };
     extern const nothrow_t nothrow;
@@ -41,11 +41,11 @@ namespace std {
 
     /* 17.6.6 Hardware interference size */
 #if __has_intrinsics_for(hardware_destructive_interference_size)
-    inline constexpr size_t hardware_destructive_interference_size = __hardware_destructive_interference_size();
+    inline constexpr std::size_t hardware_destructive_interference_size = __hardware_destructive_interference_size();
 #endif
 
 #if __has_intrinsics_for(hardware_constructive_interference_size)
-    inline constexpr size_t hardware_constructive_interference_size = __hardware_constructive_interference_size();
+    inline constexpr std::size_t hardware_constructive_interference_size = __hardware_constructive_interference_size();
 #endif
 }
 

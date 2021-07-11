@@ -47,11 +47,11 @@ namespace std {
 
         struct __stop_state {
         private:
-            size_t refcount;
+            std::size_t refcount;
             /* An unsigned number where the lowest bit represents whether a stop has been requested, and the remaining bits represents the number of
              * stop_sources that own it. 
              * This is designed so both states can be inquired atomically. */
-            size_t stop_stat;
+            std::size_t stop_stat;
 
             /* Controls access to the callback list. */
             std::mutex mtx;

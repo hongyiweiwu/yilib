@@ -15,7 +15,7 @@ namespace std {
             unsigned long refs;
 
         protected:
-            explicit facet(size_t refs = 0);
+            explicit facet(std::size_t refs = 0);
             virtual ~facet() = default;
             facet(const facet&) = delete;
             void operator=(const facet&) = delete;
@@ -27,8 +27,8 @@ namespace std {
 
         class id {
         public:
-            size_t n;
-            static size_t last_assigned_n;
+            std::size_t n;
+            static std::size_t last_assigned_n;
 
             id() : n(__atomic_fetch_add(&last_assigned_n, 1, __ATOMIC_SEQ_CST)) {}
             void operator=(const id&) = delete;
@@ -91,11 +91,11 @@ namespace std {
 
     private:
         /* Backdoor constructor for the classic locale. */
-        locale(locale::facet** facets, size_t facets_arr_size, const char* name = "C");
+        locale(locale::facet** facets, std::size_t facets_arr_size, const char* name = "C");
 
         string n;
         locale::facet** facets;
-        size_t facets_arr_size;
+        std::size_t facets_arr_size;
 
         template<class Facet> friend const Facet& use_facet(const locale&);
         template<class Facet> friend bool has_facet(const locale& loc) noexcept;

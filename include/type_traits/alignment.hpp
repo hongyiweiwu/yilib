@@ -7,11 +7,11 @@
 
 namespace std::__internal {
     template<class T> requires requires { alignof(T); }
-    struct alignment_of : integral_constant<size_t, alignof(T)> {};
+    struct alignment_of : integral_constant<std::size_t, alignof(T)> {};
 
-    template<size_t Len> requires (Len > 0) && (Len <= alignof(max_align_t))
-    consteval size_t __default_alignment() noexcept {
-        size_t alignment = 1;
+    template<std::size_t Len> requires (Len > 0) && (Len <= alignof(std::max_align_t))
+    consteval std::size_t __default_alignment() noexcept {
+        std::size_t alignment = 1;
         while (Len >= alignment) {
             alignment *= 2;
         }
@@ -19,9 +19,9 @@ namespace std::__internal {
         return alignment / 2;
     }
 
-    template<size_t Align> requires (Align >= 1) && (Align <= alignof(max_align_t))
+    template<std::size_t Align> requires (Align >= 1) && (Align <= alignof(std::max_align_t))
     consteval bool __is_alignment_of_some_type() noexcept {
-        for (size_t alignment = 1; alignment <= alignof(max_align_t); alignment *= 2) {
+        for (std::size_t alignment = 1; alignment <= alignof(std::max_align_t); alignment *= 2) {
             if (alignment == Align) {
                 return true;
             }
@@ -30,7 +30,7 @@ namespace std::__internal {
         return false;
     }
 
-    template<size_t Len, size_t Align = __default_alignment<Len>()> 
+    template<std::size_t Len, std::size_t Align = __default_alignment<Len>()> 
         requires (Len > 0) && (Align == __default_alignment<Len>() || __is_alignment_of_some_type<Align>())
     struct aligned_storage {
         struct type {
@@ -46,11 +46,11 @@ namespace std::__internal {
         return remaining_max > N1 ? remaining_max : N1;
     }
 
-    template<size_t Len, class ...Types> requires (sizeof...(Types) > 0) && (is_complete<Types>::value && ...) && (is_object<Types>::value && ...)
+    template<std::size_t Len, class ...Types> requires (sizeof...(Types) > 0) && (is_complete<Types>::value && ...) && (is_object<Types>::value && ...)
     struct aligned_union {
-        static constexpr size_t alignment_value = __max<size_t, (alignof(Types), ...)>();
+        static constexpr std::size_t alignment_value = __max<std::size_t, (alignof(Types), ...)>();
         struct type {
-            alignas(alignment_value) unsigned char value[__max<size_t, Len, (sizeof(Types), ...)>()];
+            alignas(alignment_value) unsigned char value[__max<std::size_t, Len, (sizeof(Types), ...)>()];
         };
     };
 }

@@ -27,7 +27,7 @@ namespace std {
     class any {
     private:
         /* The largest size for an object to be allocated on the stack. */
-        static constexpr size_t __stack_object_size_limit = 2 * sizeof(void*);
+        static constexpr std::size_t __stack_object_size_limit = 2 * sizeof(void*);
 
         /* Internal storage for objects of size smaller than the stack object limit. */
         struct __stack_obj_storage {

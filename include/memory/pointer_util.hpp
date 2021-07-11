@@ -81,13 +81,13 @@ namespace std {
     enum class pointer_safety { relaxed, preferred, strict };
     void declare_reachable(void* p);
     template<class T> T* undeclare_reachable(T* p) { return p; }
-    void declare_no_pointers(char* p, size_t n);
-    void undeclare_no_pointers(char* p, size_t n);
+    void declare_no_pointers(char* p, std::size_t n);
+    void undeclare_no_pointers(char* p, std::size_t n);
     pointer_safety get_pointer_safety() noexcept;
 
     /* 20.10.6 Pointer alignment */
-    void* align(size_t alignment, size_t size, void*& ptr, size_t& space);
+    void* align(std::size_t alignment, std::size_t size, void*& ptr, std::size_t& space);
 
-    template<size_t N, class T> requires (N != 0) && ((N & (N - 1)) == 0) // N is a power of two.
+    template<std::size_t N, class T> requires (N != 0) && ((N & (N - 1)) == 0) // N is a power of two.
     [[nodiscard]] constexpr T* assume_aligned(T* ptr) { return ptr; }
 }

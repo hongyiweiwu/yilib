@@ -7,9 +7,9 @@ namespace std {
     class initializer_list {
     private:
         const E* beg;
-        size_t s;
+        std::size_t s;
         
-        constexpr initializer_list(const E* begin, size_t size) noexcept : beg(begin), s(size) {}
+        constexpr initializer_list(const E* begin, std::size_t size) noexcept : beg(begin), s(size) {}
     public:
         using value_type = E;
         using reference = const E&;
@@ -19,7 +19,7 @@ namespace std {
         using const_iterator = const E*;
         
         constexpr initializer_list() noexcept : beg(nullptr), s(0) {}
-        constexpr size_t size() const noexcept { return s; }
+        constexpr std::size_t size() const noexcept { return s; }
         constexpr const E* begin() const noexcept { return beg; }
         constexpr const E* end() const noexcept { return begin() + size(); }
     };

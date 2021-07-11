@@ -20,9 +20,9 @@ namespace std {
         b = __internal::move(c);
     }
 
-    template<class T, size_t N> requires is_swappable_v<T>
+    template<class T, std::size_t N> requires is_swappable_v<T>
     constexpr void swap(T (&a)[N], T (&b)[N]) noexcept(is_nothrow_swappable_v<T>) {
-        for (size_t i = 0; i < N; i++) {
+        for (std::size_t i = 0; i < N; i++) {
             swap(a[i], b[i]);
         }
     }
@@ -101,10 +101,10 @@ namespace std {
     template<class T, T ...I> requires is_integral_v<T>
     struct integer_sequence {
         using value_type = T;
-        static constexpr size_t size() noexcept { return sizeof...(I); }
+        static constexpr std::size_t size() noexcept { return sizeof...(I); }
     };
 
-    template<size_t ...I> using index_sequence = integer_sequence<size_t, I...>;
+    template<std::size_t ...I> using index_sequence = integer_sequence<size_t, I...>;
 
     namespace __internal {
         template<class T, T N, T Curr, T ...Remaining> constexpr auto __make_integer_sequence_test() {
@@ -126,7 +126,7 @@ namespace std {
     template<class T, T N> requires is_integral_v<T> && (N >= 0)
     using make_integer_sequence = 
         typename __internal::__make_integer_sequence<T, integral_constant<T, N>>::type;
-    template<size_t N> using make_index_sequence = make_integer_sequence<size_t, N>;
+    template<std::size_t N> using make_index_sequence = make_integer_sequence<size_t, N>;
 
     template<class ...T> using index_sequence_for = make_index_sequence<sizeof...(T)>;
 
@@ -174,7 +174,7 @@ namespace std {
 
 private:
         // This is a helper constructor for the actual public constructor below.
-        template<class ...Args1, class ...Args2, size_t ...I1, size_t ...I2>
+        template<class ...Args1, class ...Args2, std::size_t ...I1, std::size_t ...I2>
         constexpr pair(piecewise_construct_t, index_sequence<I1...>, index_sequence<I2...>, tuple<Args1...>&& first_args, tuple<Args2...>&& second_args)
             : T1(forward<Args1>(get<I1>(first_args))...), T2(forward<Args2>(get<I2>(second_args))...) {}
 public:
@@ -240,30 +240,30 @@ public:
     }
 
     template<class T1, class T2> struct tuple_size<pair<T1, T2>> : integral_constant<size_t, 2> {};
-    template<size_t I, class T1, class T2> requires (I < 2)
+    template<std::size_t I, class T1, class T2> requires (I < 2)
     struct tuple_element<I, pair<T1, T2>> {
         using type = conditional_t<I == 0, T1, T2>;
     };
 
-    template<size_t I, class T1, class T2> requires (I < 2)
+    template<std::size_t I, class T1, class T2> requires (I < 2)
     constexpr tuple_element_t<I, pair<T1, T2>>& get(pair<T1, T2>& p) noexcept {
         if constexpr (I == 0) { return p.first; }
         else { return p.second; }
     }
 
-    template<size_t I, class T1, class T2> requires (I < 2)
+    template<std::size_t I, class T1, class T2> requires (I < 2)
     constexpr const tuple_element_t<I, pair<T1, T2>>& get(const pair<T1, T2>& p) noexcept {
         if constexpr (I == 0) { return p.first; }
         else { return p.second; }
     }
 
-    template<size_t I, class T1, class T2> requires (I < 2)
+    template<std::size_t I, class T1, class T2> requires (I < 2)
     constexpr tuple_element_t<I, pair<T1, T2>>&& get(pair<T1, T2>&& p) noexcept {
         if constexpr (I == 0) { return move(p).first; }
         else { return move(p).second; }
     }
 
-    template<size_t I, class T1, class T2> requires (I < 2)
+    template<std::size_t I, class T1, class T2> requires (I < 2)
     constexpr const tuple_element_t<I, pair<T1, T2>>&& get(const pair<T1, T2>&& p) noexcept {
         if constexpr (I == 0) { return move(p).first; }
         else { return move(p).second; }
@@ -319,8 +319,8 @@ public:
     };
     template<class T> inline constexpr in_place_type_t<T> in_place_type;
 
-    template<size_t I> struct in_place_index_t {
+    template<std::size_t I> struct in_place_index_t {
         explicit in_place_index_t() = default;
     };
-    template<size_t I> inline constexpr in_place_index_t<I> in_place_index;
+    template<std::size_t I> inline constexpr in_place_index_t<I> in_place_index;
 }

@@ -28,8 +28,8 @@ namespace std {
         else return strong_ordering::greater;
     }
 
-    size_t type_index::hash_code() const noexcept { return target->hash_code(); }
+    std::size_t type_index::hash_code() const noexcept { return target->hash_code(); }
     const char* type_index::name() const noexcept { return target->name(); }
 
-    size_t hash<type_index>::operator()(const type_index& index) const noexcept { return index.hash_code(); }
+    std::size_t hash<type_index>::operator()(const type_index& index) const noexcept { return index.hash_code(); }
 }

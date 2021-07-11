@@ -5,11 +5,11 @@
 #include "cstdint.hpp"
 
 namespace std::pmr {
-    void* memory_resource::allocate(size_t bytes, size_t alignment) {
+    void* memory_resource::allocate(std::size_t bytes, std::size_t alignment) {
         return do_allocate(bytes, alignment);
     }
 
-    void memory_resource::deallocate(void* p, size_t bytes, size_t alignment) {
+    void memory_resource::deallocate(void* p, std::size_t bytes, std::size_t alignment) {
         return do_deallocate(p, bytes, alignment);
     }
 
@@ -40,11 +40,11 @@ namespace std::pmr {
             constexpr new_delete_memory_resource() : memory_resource() {}
             new_delete_memory_resource(const new_delete_memory_resource&) = delete;
 
-            void* do_allocate(size_t bytes, size_t alignment) { 
+            void* do_allocate(std::size_t bytes, std::size_t alignment) { 
                 return ::operator new(bytes, align_val_t(alignment));
             }
 
-            void do_deallocate(void* p, size_t bytes, size_t alignment) {
+            void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) {
                 return ::operator delete(p, bytes, align_val_t(alignment));
             }
 
@@ -80,18 +80,18 @@ namespace std::pmr {
     monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* upstream)
         : memory_resource(), upstream_rsrc(upstream), current_buffer(nullptr), next_buffer_size(default_buffer_size), unused_buffer_part(nullptr) {}
 
-    monotonic_buffer_resource::monotonic_buffer_resource(size_t initial_size, memory_resource* upstream)
+    monotonic_buffer_resource::monotonic_buffer_resource(std::size_t initial_size, memory_resource* upstream)
         : memory_resource(), upstream_rsrc(upstream), current_buffer(nullptr), next_buffer_size(initial_size), unused_buffer_part(nullptr) {}
 
-    monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, size_t buffer_size, memory_resource* upstream)
+    monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, std::size_t buffer_size, memory_resource* upstream)
         : memory_resource(), upstream_rsrc(upstream), current_buffer(buffer), next_buffer_size(buffer_size * growth_factor), 
             unused_buffer_part(static_cast<void*>(static_cast<metadata*>(buffer) + 1)) {
         *static_cast<metadata*>(buffer) = { .prev_buffer = nullptr, .buffer_size = buffer_size };
     }
 
     monotonic_buffer_resource::monotonic_buffer_resource() : monotonic_buffer_resource(get_default_resource()) {}
-    monotonic_buffer_resource::monotonic_buffer_resource(size_t initial_size) : monotonic_buffer_resource(initial_size, get_default_resource()) {}
-    monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, size_t buffer_size) : monotonic_buffer_resource(buffer, buffer_size, get_default_resource()) {}
+    monotonic_buffer_resource::monotonic_buffer_resource(std::size_t initial_size) : monotonic_buffer_resource(initial_size, get_default_resource()) {}
+    monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, std::size_t buffer_size) : monotonic_buffer_resource(buffer, buffer_size, get_default_resource()) {}
 
     monotonic_buffer_resource::~monotonic_buffer_resource() { release(); }
 
@@ -105,10 +105,10 @@ namespace std::pmr {
 
     memory_resource* monotonic_buffer_resource::upstream_resource() const { return upstream_rsrc; }
 
-    void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t alignment) {
+    void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size_t alignment) {
         if (current_buffer) {
             const struct metadata& metadata = *static_cast<struct metadata*>(current_buffer);
-            size_t remaining_space = metadata.buffer_size - (static_cast<char*>(unused_buffer_part) - static_cast<char*>(current_buffer));
+            std::size_t remaining_space = metadata.buffer_size - (static_cast<char*>(unused_buffer_part) - static_cast<char*>(current_buffer));
             if (void* addr = align(alignment, bytes, unused_buffer_part, remaining_space); addr) {
                 unused_buffer_part = static_cast<void*>(static_cast<char*>(unused_buffer_part) + bytes);
                 return addr;
@@ -122,11 +122,11 @@ namespace std::pmr {
         current_buffer = upstream_rsrc->allocate(next_buffer_size);
         
         *static_cast<metadata*>(current_buffer) = { .prev_buffer = prev_buffer, .buffer_size = next_buffer_size };
-        size_t remaining_space = next_buffer_size - sizeof(metadata);
+        std::size_t remaining_space = next_buffer_size - sizeof(metadata);
         next_buffer_size *= growth_factor;
         unused_buffer_part = static_cast<void*>(static_cast<char*>(current_buffer) + sizeof(metadata));
 
-        void* addr = align(alignment, bytes, unused_buffer_part, remaining_space);
+        void* const addr = align(alignment, bytes, unused_buffer_part, remaining_space);
         unused_buffer_part = static_cast<void*>(static_cast<char*>(unused_buffer_part) + bytes);
         return addr;
     }

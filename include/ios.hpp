@@ -144,15 +144,15 @@ namespace std {
 
         event_callback* callbacks;
         int* callback_indices;
-        size_t callback_count;
+        std::size_t callback_count;
 
         locale* loc;
 
-        static constinit size_t index;
+        static constinit std::size_t index;
         long* iarray;
-        size_t iarray_size;
+        std::size_t iarray_size;
         void** parray;
-        size_t parray_size;
+        std::size_t parray_size;
 
         iostate rdstate;
         iostate exception;

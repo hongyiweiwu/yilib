@@ -15,7 +15,7 @@ namespace std {
         bool operator<=(const type_index& rhs) const noexcept;
         bool operator>=(const type_index& rhs) const noexcept;
         strong_ordering operator<=>(const type_index& rhs) const noexcept;
-        size_t hash_code() const noexcept;
+        std::size_t hash_code() const noexcept;
         const char* name() const noexcept;
 
     private:
@@ -23,6 +23,6 @@ namespace std {
     };
 
     template<> struct hash<type_index> {
-        size_t operator()(const type_index& index) const noexcept;
+        std::size_t operator()(const type_index& index) const noexcept;
     };
 }

@@ -14,8 +14,8 @@ namespace std {
         return strcmp(name(), rhs.name()) < 0;
     }
 
-    size_t type_info::hash_code() const noexcept {
-        return reinterpret_cast<size_t>(type_name);
+    std::size_t type_info::hash_code() const noexcept {
+        return reinterpret_cast<std::size_t>(type_name);
     }
 
     const char* type_info::name() const noexcept {

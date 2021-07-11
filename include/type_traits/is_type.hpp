@@ -32,7 +32,7 @@ namespace std::__internal {
     template<class T> struct is_unbounded_array : __is_unbounded_array<typename remove_cv<T>::type> {};
 
     template<class T> struct __is_bounded_array : false_type {};
-    template<class T, size_t N> struct __is_bounded_array<T[N]> : true_type {};
+    template<class T, std::size_t N> struct __is_bounded_array<T[N]> : true_type {};
     template<class T> struct is_bounded_array : __is_bounded_array<typename remove_cv<T>::type> {};
 
     template<class T> struct is_array : bool_constant<is_unbounded_array<T>::value || is_bounded_array<T>::value> {};

@@ -5,11 +5,11 @@
 
 namespace std {
     void declare_reachable(void*) {}
-    void declare_no_pointers(char*, size_t) {}
-    void undeclare_no_pointers(char*, size_t) {}
+    void declare_no_pointers(char*, std::size_t) {}
+    void undeclare_no_pointers(char*, std::size_t) {}
     pointer_safety get_pointer_safety() noexcept { return pointer_safety::relaxed; }
 
-    void* align(size_t alignment, size_t size, void*& ptr, size_t& space) {
+    void* align(std::size_t alignment, std::size_t size, void*& ptr, std::size_t& space) {
         // This is the amount of spacing we need from ptr before start loading an object of the given alignment.
         auto spacing = (alignment - reinterpret_cast<make_unsigned_t<ptrdiff_t>>(ptr) % alignment) % alignment;
         if (spacing + size > space) {

@@ -133,11 +133,11 @@ namespace std {
         return lhs.value() <=> rhs.value();
     }
 
-    size_t hash<error_code>::operator()(const error_code& code) const noexcept {
-        return static_cast<size_t>(code.value());
+    std::size_t hash<error_code>::operator()(const error_code& code) const noexcept {
+        return static_cast<std::size_t>(code.value());
     }
 
-    size_t hash<error_condition>::operator()(const error_condition& cond) const noexcept {
-        return static_cast<size_t>(cond.value());
+    std::size_t hash<error_condition>::operator()(const error_condition& cond) const noexcept {
+        return static_cast<std::size_t>(cond.value());
     }
 }

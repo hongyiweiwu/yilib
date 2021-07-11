@@ -92,7 +92,7 @@ namespace std {
 
     /* 17.12.5 No-op coroutines */ 
     struct noop_coroutine_promise {};
-    constexpr size_t alignment = alignof(noop_coroutine_promise);
+    constexpr std::size_t alignment = alignof(noop_coroutine_promise);
     template<> struct coroutine_handle<noop_coroutine_promise> : coroutine_handle<> {
         friend coroutine_handle<noop_coroutine_promise> noop_coroutine() noexcept;
 
