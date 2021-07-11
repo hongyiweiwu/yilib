@@ -180,7 +180,7 @@ namespace std {
 
         void swap(optional& rhs) noexcept(noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_swappable_v<T>))
             requires is_swappable_v<T&> {
-            if (*this && rhs) swap(*(*this), *rhs);
+            if (*this && rhs) std::swap(*(*this), *rhs);
             else if (*this && !rhs) { 
                 rhs.val.emplace(move(*(*this)));
                 *this = nullopt;

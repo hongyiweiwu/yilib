@@ -211,8 +211,8 @@ public:
 
         constexpr void swap(pair& p) noexcept(noexcept(is_nothrow_swappable_v<T1> && is_nothrow_swappable_v<T2>))
             requires is_swappable_v<T1> && is_swappable_v<T2> {
-            swap(first, p.first);
-            swap(second, p.second);
+            std::swap(first, p.first);
+            std::swap(second, p.second);
         }
     };
 

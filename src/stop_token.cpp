@@ -46,7 +46,7 @@ namespace std {
         }
 
         mtx.lock();
-        callback_executor.emplace(this_thread::get_id());
+        callback_executor.emplace(this_thread::get_id().identifier);
         __stop_callback_list_entry* it = callbacks_start.next;
         while (it != &callbacks_end) {
             // TODO: Investigate if this is still valid if both the current callback and its immediate next callback are both deleted during the former's

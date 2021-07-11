@@ -6,6 +6,7 @@
 #include "util/utility_traits.hpp"
 #include "compare.hpp"
 #include "new.hpp"
+#include "utility.hpp"
 
 #include "memory/unique_ptr.hpp"
 #include "memory/pointer_util.hpp"
@@ -214,8 +215,8 @@ namespace std {
     public:
         /* 20.11.3.5 Modifiers */
         void swap(shared_ptr& r) noexcept {
-            swap(ptr, r.ptr);
-            swap(ctrl, r.ctrl);
+            std::swap(ptr, r.ptr);
+            std::swap(ctrl, r.ctrl);
         }
 
         void reset() noexcept { shared_ptr().swap(*this); }

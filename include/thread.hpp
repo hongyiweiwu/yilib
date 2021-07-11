@@ -40,9 +40,10 @@ namespace std {
     public:
         class id {
         protected:
-            pthread_t identifier;
             constexpr id(pthread_t id) noexcept : identifier(id) {}
         public:
+            pthread_t identifier;
+
             constexpr id() noexcept : identifier(0) {}
 
             friend bool operator==(thread::id, thread::id) noexcept;

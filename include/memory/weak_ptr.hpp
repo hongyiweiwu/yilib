@@ -85,8 +85,8 @@ namespace std {
 
         /* 20.11.4.5 Modifiers */
         void swap(weak_ptr& r) noexcept {
-            swap(ptr, r.ptr);
-            swap(ctrl, r.ctrl);
+            std::swap(ptr, r.ptr);
+            std::swap(ctrl, r.ctrl);
         }
 
         void reset() noexcept { weak_ptr().swap(*this); }

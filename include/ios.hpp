@@ -303,7 +303,7 @@ namespace std {
 
         void move(basic_ios& rhs) { return move(std::move(rhs)); }
         void move(basic_ios&& rhs) {
-            swap(rhs);
+            std::swap(rhs);
             buf = nullptr;
             rhs.tiestr = nullptr;
         }
