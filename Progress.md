@@ -36,13 +36,13 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `version` | &check; | | | | |
 | `source_location` | | &check; | | | Blocked due to lack of intrinsic support from GCC. |
 | `new` | &check; | | | | |
-| `memory` | | &check; | | | Blocked due to `iostream` not yet implemented, and that it's unclear how to implement `shared_ptr`'s unbounded array constructor. |
+| `memory` | | &check; | | | Blocked due to `iostream` not yet implemented, and that it's unclear how to implement `shared_ptr`'s unbounded array constructor, and also the memory algorithms. |
 | `scoped_allocator` | | | | &check; | |
 | `memory_resource` | | &check; | | | Blocked due to unimplemented `pool_resources`. |
 | `climits` | &check; | | | | |
 | `cfloat` | &check; | | | | |
 | `cstdint` | &check; | | | | |
-| `cinttypes` | | | | &check; | |
+| `cinttypes` | &check; | | | | |
 | `limits` | &check; | | | | |
 | `exception` | &check; | | | | |
 | `stdexcept` | &check; | | | | |
