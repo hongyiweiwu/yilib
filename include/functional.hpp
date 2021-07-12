@@ -3,6 +3,7 @@
 #include "utility.hpp"
 #include "type_traits.hpp"
 #include "memory/pointer_util.hpp"
+#include "concepts.hpp"
 
 namespace std {
     /* 20.14.5 Function template invoke */
@@ -59,6 +60,16 @@ namespace std {
         }
     };
 
+    /* 20.14.12 Class identity */
+    struct identity {
+        template<class T>
+        constexpr T&& operator()(T&& t) const noexcept {
+            return forward<T>(t);
+        }
+
+        using is_transparent = void;
+    };
+
     /* 20.14.19 Class template hash */
     namespace __internal {
         /* Used purely to specify a specialization of std::hash that represents when std::hash is supposed to be deleted. All deleted std::hash specializations
@@ -80,4 +91,14 @@ namespace std {
     };
 
     template<class T> struct hash : hash<__internal::__deleted_hash_t> {};
+
+    /* 20.14.9 Concept-constrained comparisons */
+    namespace ranges {
+        struct less {
+            template<class T, class U> requires totally_ordered_with<T, U> || requires { declval<T>() < declval<U>(); }
+            constexpr bool operator()(T&& t, U&& u) const {
+                return forward<T>(t) < forward<U>(u);
+            }
+        };
+    }
 }

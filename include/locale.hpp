@@ -5,6 +5,8 @@
 #include "locale/xlocale.hpp"
 #include "locale/numeric.hpp"
 
+// TODO: Implements num_put, and collate, time, monetary, message facets.
+
 namespace std {
     template<class charT>
     struct collate {};

@@ -70,7 +70,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `stack` | | | | &check; | |
 | `queue` | | | | &check; | |
 | `span` | | | | &check; | |
-| `iterator` | | | | &check; | |
+| `iterator` | | | &check; | | |
 | `ranges` | | | | &check; | |
 | `algorithm` | | | | &check; | |
 | `execution` | | | | &check; | |
