@@ -9,10 +9,6 @@
 #include "util/macros.hpp"
 
 namespace std::__internal {
-    template<class T> struct is_complete : false_type {};
-    template<class T> requires requires { sizeof(T); }
-    struct is_complete<T> : true_type {};
-
     template<class T> struct __is_void_impl : false_type {};
     template<> struct __is_void_impl<void> : true_type {};
     template<class T> struct is_void : __is_void_impl<typename remove_cv<T>::type> {};
@@ -91,6 +87,10 @@ namespace std::__internal {
 
     template<class T> struct is_volatile : false_type {};
     template<class T> struct is_volatile<volatile T> : true_type {};
+
+    template<class T> struct is_complete : false_type {};
+    template<class T> requires is_function<T>::value || requires { sizeof(T); }
+    struct is_complete<T> : true_type {};
 
 #if __has_intrinsics_for(is_empty)
     template<class T> requires (!is_class<T>::value) || is_complete<T>::value

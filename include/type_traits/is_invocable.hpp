@@ -62,15 +62,10 @@ namespace std::__internal {
         return (forward<Fn>(fn))(forward<Args>(args)...);
     }
 
-    template<class ...Args>
-    struct __is_invocable : false_type {};
-    template<class ...Args> requires requires { __INVOKE(static_cast<int*>(nullptr), declval<Args>()...); }
-    struct __is_invocable<Args...> : true_type {};
-
     template<class Fn, class ...Args> 
         requires (is_complete<Fn>::value || is_void<Fn>::value || is_unbounded_array<Fn>::value)
             && ((is_complete<Args>::value || is_void<Args>::value || is_unbounded_array<Args>::value) && ...)
-    struct is_invocable : __is_invocable<Fn, Args...> {};
+    struct is_invocable : bool_constant<requires { __INVOKE(static_cast<int*>(nullptr), declval<Fn>(), declval<Args>()...); }> {};
 
     template<class R, class ...Args>
     struct __is_invocable_r {
