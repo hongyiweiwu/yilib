@@ -7,6 +7,7 @@
 #include "utility.hpp"
 #include "memory.hpp"
 #include "functional.hpp"
+#include "compare.hpp"
 
 namespace std {
     namespace __internal {
@@ -45,9 +46,9 @@ namespace std {
 
     template<class T>
     using iter_difference_t = conditional_t<
-        !requires { typename iterator_traits<remove_cvref_t<T>>::__specialized; },
-        typename incrementable_traits<remove_cvref_t<T>>::difference_type,
-        typename iterator_traits<remove_cvref_t<T>>::difference_type
+        requires { typename iterator_traits<remove_cvref_t<T>>::__specialized; },
+        typename iterator_traits<remove_cvref_t<T>>::difference_type,
+        typename incrementable_traits<remove_cvref_t<T>>::difference_type
     >;
 
     /* 23.3.2.2 Indirectly readable traits */
@@ -549,6 +550,447 @@ namespace std {
 
     template<class I, class R = ranges::less, class P = identity>
     concept sortable = permutable<I> && indirectly_strict_weak_order<R, projected<I, P>>;
+
+    /* 23.4.2 Standard iterator tags */
+    struct input_iterator_tag {};
+    struct output_iterator_tag {};
+    struct forward_iterator_tag : public input_iterator_tag {};
+    struct bidirectional_iterator_tag : public forward_iterator_tag {};
+    struct random_access_iterator_tag : public bidirectional_iterator_tag {};
+    struct contiguous_iterator_tag : public random_access_iterator_tag {};
+
+    /* 23.4.3 Iterator operations */
+    namespace __internal {
+        template<class I>
+        concept legacy_iterator = copy_constructible<I> && is_copy_assignable_v<I> && destructible<I> && swappable<I&>
+            && requires (I& r) {
+                typename iterator_traits<I>::value_type;
+                typename iterator_traits<I>::difference_type;
+                typename iterator_traits<I>::reference;
+                typename iterator_traits<I>::pointer;
+                typename iterator_traits<I>::iterator_category;
+                *r;
+                { ++r } -> same_as<I&>;
+            };
+
+        template<class I>
+        concept legacy_input_iterator = legacy_iterator<I> && equality_comparable<I> && requires (I i, I j) {
+            { i != j } -> convertible_to<bool>;
+            { *i } -> same_as<typename iterator_traits<I>::refererence>;
+            { *i } -> convertible_to<typename iterator_traits<I>::value_type>;
+            { ++i } -> same_as<I&>;
+            (void) i++;
+            { *i++ } -> convertible_to<typename iterator_traits<I>::value_type>;
+        };
+
+        template<class I>
+        concept legacy_output_iterator = legacy_iterator<I> && (is_class_v<I> || is_pointer_v<I>) && requires (I& r) {
+            { ++r } -> same_as<I&>;
+            { r++ } -> convertible_to<const I&>;
+        };
+
+        template<class I>
+        concept legacy_forward_iterator = legacy_input_iterator<I> && is_default_constructible_v<I> 
+            && ((is_same_v<typename iterator_traits<I>::reference, I&> && legacy_output_iterator<I>) || (is_same_v<typename iterator_traits<I>::reference, const I&> && !legacy_output_iterator<I>))
+            && requires (I i) {
+                { i++ } -> same_as<I>;
+                { *i++ } -> same_as<typename iterator_traits<I>::reference>;
+            };
+
+        template<class I>
+        concept legacy_bidirectional_iterator = legacy_forward_iterator<I> && requires (I a, I b) {
+            { --a } -> same_as<I&>;
+            { a-- } -> convertible_to<const I&>;
+            { *a-- } -> same_as<typename iterator_traits<I>::reference>;
+        };
+
+        template<class I>
+        concept legacy_random_access_iterator = legacy_bidirectional_iterator<I> 
+            && requires (I i, I a, I b, I& r, typename iterator_traits<I>::difference_type n) {
+                { r += n } -> same_as<I&>;
+                { a + n } -> same_as<I>;
+                { n + a } -> same_as<I>;
+                { r -= n } -> same_as<I&>;
+                { i - n } -> same_as<I>;
+                { b - a } -> same_as<typename iterator_traits<I>::difference_type>;
+                { i[n] } -> convertible_to<typename iterator_traits<I>::reference>;
+                { a < b } -> convertible_to<bool>;
+                { a > b } -> convertible_to<bool>;
+                { a <= b } -> convertible_to<bool>;
+                { a >= b } -> convertible_to<bool>;
+            };
+    }
+
+    template<__internal::legacy_input_iterator InputIterator, class Distance>
+    constexpr void advance(InputIterator& i, Distance n) {
+        if constexpr (is_same_v<typename iterator_traits<InputIterator>::iterator_category, random_access_iterator_tag>) {
+            i += n;
+        } else {
+            if (n >= 0) {
+                while (n--) {
+                    i++;
+                }
+            } else {
+                while (n++) {
+                    i--;
+                }
+            }
+        }
+    }
+
+    template<__internal::legacy_input_iterator InputIterator>
+    constexpr typename iterator_traits<InputIterator>::difference_type distance(InputIterator first, InputIterator last) {
+        if constexpr (is_same_v<typename iterator_traits<InputIterator>::iterator_category, random_access_iterator_tag>) {
+            return last - first;
+        } else {
+            typename iterator_traits<InputIterator>::difference_type i = 0;
+            while (last != first) {
+                first++;
+                i++;
+            }
+
+            return i;
+        }
+    }
+
+    template<__internal::legacy_input_iterator InputIterator>
+    constexpr InputIterator next(InputIterator x, typename iterator_traits<InputIterator>::difference_type n = 1) {
+        advance(x, n);
+        return x;
+    }
+
+    template<__internal::legacy_input_iterator InputIterator>
+    constexpr InputIterator prev(InputIterator x, typename iterator_traits<InputIterator>::difference_type n = 1) {
+        advance(x, -n);
+        return x;
+    }
+
+    /* 23.4.4 Range iterator operations */
+    namespace ranges {
+        namespace __advance_impl {
+            struct advance_fn {
+                template<input_or_output_iterator I>
+                constexpr void operator()(I& i, iter_difference_t<I> n) const {
+                    if constexpr (is_same_v<typename iterator_traits<I>::iterator_category, random_access_iterator_tag>) {
+                        i += n;
+                    } else {
+                        if (n >= 0) {
+                            while (n--) {
+                                i++;
+                            }
+                        } else {
+                            while (n++) {
+                                i--;
+                            }
+                        }
+                    }   
+                }
+
+                template<input_or_output_iterator I, sentinel_for<I> S>
+                constexpr void operator()(I& i, S bound) const {
+                    if constexpr (assignable_from<I&, S>) {
+                        i = move(bound);
+                    } else if constexpr (sized_sentinel_for<S, I>) {
+                        this->operator()(i, bound - i);
+                    } else {
+                        while (i != bound) {
+                            i++;
+                        }
+                    }
+                }
+
+                template<input_or_output_iterator I, sentinel_for<I> S>
+                constexpr iter_difference_t<I> operator()(I& i, iter_difference_t<I> n, S bound) const {
+                    if constexpr (sized_sentinel_for<S, I>) {
+                        // std::abs is not constexpr.
+                        constexpr auto abs = [](const iter_difference_t<I> x) {
+                            return x < 0 ? -x : x;
+                        };
+
+                        if (const auto dist = abs(n) - abs(bound - i); dist >= 0) {
+                            this->operator()(i, bound);
+                            return dist;
+                        } else {
+                            this->operator()(i, n);
+                            return 0;
+                        }
+                    } else {
+                        iter_difference_t<I> ct;
+                        if (n >= 0) {
+                            while (i != bound && n != 0) {
+                                i++;
+                                n--;
+                            }
+                        } else {
+                            while (i != bound && n != 0) {
+                                i--;
+                                n++;
+                            }
+                        }
+
+                        return n;
+                    }
+                }
+            };
+        }
+
+        inline constexpr __advance_impl::advance_fn advance;
+
+        namespace __distance_impl {
+            struct distance_fn {
+                template<input_or_output_iterator I, sentinel_for<I> S>
+                constexpr iter_difference_t<I> distance(I first, S last) const {
+                    if constexpr (sized_sentinel_for<S, I>) {
+                        return last - first;
+                    } else {
+                        iter_difference_t<I> i = 0;
+                        while (first != last) {
+                            first++;
+                            i++;
+                        }
+
+                        return i;
+                    }
+                }
+                
+                /* TODO: Uncomment after <ranges> is implemented.
+                template<range R>
+                constexpr range_difference_t<R> distance(R&& r) const {
+                    if constexpr (sized_range<R>) {
+                        return static_cast<range_difference_t<R>>(ranges::size(r));
+                    } else {
+                        return ranges::distance(ranges::begin(r), ranges::end(r));
+                    }
+                } */
+            };
+        }
+
+        inline constexpr __distance_impl::distance_fn distance;
+
+        namespace __next_impl {
+            struct next_fn {
+                template<input_or_output_iterator I>
+                constexpr I next(I x) const {
+                    ++x;
+                    return x;
+                }
+
+                template<input_or_output_iterator I>
+                constexpr I next(I x, iter_difference_t<I> n) const {
+                    ranges::advance(x, n);
+                    return x;
+                }
+
+                template<input_or_output_iterator I, sentinel_for<I> S>
+                constexpr I next(I x, S bound) const {
+                    ranges::advance(x, bound);
+                    return x;
+                }
+
+                template<input_or_output_iterator I, sentinel_for<I> S>
+                constexpr I next(I x, iter_difference_t<I> n, S bound) const {
+                    ranges::advance(x, n, bound);
+                    return x;
+                }
+            };
+        }
+
+        inline constexpr __next_impl::next_fn next;
+
+        namespace __prev_impl {
+            struct prev_fn {
+                template<input_or_output_iterator I>
+                constexpr I prev(I x) const {
+                    --x;
+                    return x;
+                }
+
+                template<input_or_output_iterator I>
+                constexpr I prev(I x, iter_difference_t<I> n) const {
+                    ranges::advance(x, -n);
+                    return x;
+                }
+
+                template<input_or_output_iterator I>
+                constexpr I prev(I x, iter_difference_t<I> n, I bound) const {
+                    ranges::advance(x, -n, bound);
+                    return x;
+                }
+            };
+        }
+
+        inline constexpr __prev_impl::prev_fn prev;
+    }
+
+    /* 23.5.1 Reverse iterators */
+    template<class Iterator> requires __internal::legacy_bidirectional_iterator<Iterator> || bidirectional_iterator<Iterator>
+    class reverse_iterator {
+    public:
+        using iterator_type = Iterator;
+        using iterator_concept = conditional_t<random_access_iterator<Iterator>, random_access_iterator_tag, bidirectional_iterator_tag>;
+        using iterator_category = conditional_t<derived_from<typename iterator_traits<Iterator>::iterator_category, random_access_iterator_tag>, 
+            random_access_iterator_tag, typename iterator_traits<Iterator>::iterator_category>;
+        using value_type = iter_value_t<Iterator>;
+        using difference_type = iter_difference_t<Iterator>;
+        using pointer = typename iterator_traits<Iterator>::pointer;
+        using reference = iter_reference_t<Iterator>;
+
+        constexpr reverse_iterator() : current() {}
+        constexpr explicit reverse_iterator(Iterator x) : current(x) {}
+        template<class U> constexpr reverse_iterator(const reverse_iterator<U>& u) : current(u.current) {}
+        template<class U> constexpr reverse_iterator& operator=(const reverse_iterator<U>& u) {
+            current = u.base();
+            return *this;
+        }
+
+        constexpr Iterator base() const {
+            return current;
+        }
+
+        constexpr reference operator*() const {
+            Iterator tmp = current;
+            return *--tmp;
+        }
+
+        constexpr pointer operator->() const requires is_pointer_v<Iterator> || requires (const Iterator i) { i.operator->(); } {
+            if constexpr (is_pointer_v<Iterator>) {
+                return prev(current);
+            } else {
+                return prev(current).operator->();
+            }
+        }
+
+        constexpr reverse_iterator& operator++() {
+            --current;
+            return *this;
+        }
+
+        constexpr reverse_iterator operator++(int) {
+            reverse_iterator tmp = *this;
+            --current;
+            return tmp;
+        }
+
+        constexpr reverse_iterator& operator--() {
+            ++current;
+            return *this;
+        }
+
+        constexpr reverse_iterator operator--(int) {
+            reverse_iterator tmp = *this;
+            ++current;
+            return tmp;
+        }
+
+        constexpr reverse_iterator operator+(difference_type n) const 
+            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+            return reverse_iterator(current - n);
+        }
+
+        constexpr reverse_iterator& operator+=(difference_type n) 
+            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+            current -= n;
+            return *this;
+        }
+
+        constexpr reverse_iterator operator-(difference_type n) const 
+            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+            return reverse_iterator(current + n);
+        }
+
+        constexpr reverse_iterator& operator-=(difference_type n) 
+            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+            current += n;
+            return *this;
+        }
+
+        constexpr auto operator[](difference_type n) const 
+            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+            return current[-n - 1];
+        }
+
+        friend constexpr iter_rvalue_reference_t<Iterator> iter_move(const reverse_iterator& i) 
+            noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(ranges::iter_move(--declval<Iterator&>()))) {
+            Iterator tmp = i.base();
+            return ranges::iter_move(--tmp);
+        }
+
+        template<indirectly_swappable<Iterator> Iterator2>
+        friend constexpr void iter_swap(const reverse_iterator& x, const reverse_iterator<Iterator2>& y) 
+            noexcept(is_nothrow_copy_constructible_v<Iterator> && is_nothrow_copy_constructible_v<Iterator2> && noexcept(ranges::iter_swap(--declval<Iterator&>(), --declval<Iterator2&>()))) {
+            Iterator xtmp = x.base();
+            Iterator ytmp = y.base();
+            ranges::iter_swap(--xtmp, --ytmp);
+        }
+
+    protected:
+        Iterator current;
+    };
+
+    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        { x.base() == y.base() } -> convertible_to<bool>;
+    }
+    constexpr bool operator==(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return x.base() == y.base();
+    }
+
+    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        { x.base() != y.base() } -> convertible_to<bool>;
+    }
+    constexpr bool operator!=(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return x.base() != y.base();
+    }
+
+    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        { x.base() < y.base() } -> convertible_to<bool>;
+    }
+    constexpr bool operator<(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return x.base() < y.base();
+    }
+
+    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        { x.base() > y.base() } -> convertible_to<bool>;
+    }
+    constexpr bool operator>(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return x.base() > y.base();
+    }
+
+    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        { x.base() <= y.base() } -> convertible_to<bool>;
+    }
+    constexpr bool operator<=(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return x.base() <= y.base();
+    }
+
+    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        { x.base() >= y.base() } -> convertible_to<bool>;
+    }
+    constexpr bool operator>=(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return x.base() >= y.base();
+    }
+
+    template<class Iterator1, three_way_comparable_with<Iterator1> Iterator2>
+    constexpr compare_three_way_result_t<Iterator1, Iterator2> operator<=>(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+        return y.base() <=> x.base();
+    }
+
+    template<class Iterator1, class Iterator2>
+    constexpr auto operator-(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) -> decltype(y.base() - x.base()) {
+        return y.base() - x.base();
+    }
+
+    template<class Iterator>
+    constexpr reverse_iterator<Iterator> operator+(iter_difference_t<Iterator> n, const reverse_iterator<Iterator>& x) {
+        return reverse_iterator<Iterator>(x.base() - n);
+    }
+
+    template<class Iterator>
+    constexpr reverse_iterator<Iterator> make_reverse_iterator(Iterator i) {
+        return reverse_iterator<Iterator>(i);
+    }
+
+    template<class Iterator1, class Iterator2> requires (!sized_sentinel_for<Iterator1, Iterator2>)
+    inline constexpr bool disable_sized_sentinel_for<reverse_iterator<Iterator1>, reverse_iterator<Iterator2>> = true;
 
     template<class CharT, class Traits>
     class istreambuf_iterator {
