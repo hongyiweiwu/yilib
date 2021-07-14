@@ -7,8 +7,10 @@
 #include "utility.hpp"
 #include "functional.hpp"
 #include "compare.hpp"
+#include "initializer_list.hpp"
 #include "ranges.hpp"
 
+// TODO: Implement counted_iterator and stream iterators.
 namespace std {
     namespace __internal {
         template<class T> using with_reference = T&;
@@ -1125,6 +1127,399 @@ namespace std {
         return insert_iterator<Container>(x, i);
     }
 
+    /* 23.5.3 Move iterators and sentinels */
+    template<semiregular S>
+    class move_sentinel {
+    private:
+        S last;
+    public:
+        constexpr move_sentinel() : last() {}
+
+        constexpr explicit move_sentinel(S s) : last(move(s)) {}
+
+        template<class S2> requires convertible_to<const S2&, S>
+        constexpr move_sentinel(const move_sentinel<S2>& s) : last(s) {}
+
+        template<class S2> requires assignable_from<S&, const S2&>
+        constexpr move_sentinel& operator=(const move_sentinel<S2>& s) {
+            last = s.last;
+            return *this;
+        }
+
+        constexpr S base() const {
+            return last;
+        }
+    };
+
+    template<class Iter> requires __internal::legacy_input_iterator<Iter> || input_iterator<Iter>
+    class move_iterator {
+    private:
+        Iter current;
+    public:
+        using iterator_type = Iter;
+        using iterator_concept = input_iterator_tag;
+        using iterator_category = conditional_t<derived_from<typename iterator_traits<Iter>::iterator_category, random_access_iterator_tag>, 
+            random_access_iterator_tag, typename iterator_traits<Iter>::iterator_category>;
+        using value_type = iter_value_t<Iter>;
+        using difference_type = iter_difference_t<Iter>;
+        using pointer = Iter;
+        using reference = iter_rvalue_reference_t<Iter>;
+
+        constexpr move_iterator() : current() {}
+
+        constexpr explicit move_iterator(Iter i) : current(move(i)) {}
+
+        template<convertible_to<Iter> U>
+        constexpr move_iterator(const move_iterator<U>& u) : current(u.base()) {}
+
+        template<convertible_to<Iter> U> 
+        constexpr move_iterator& operator=(const move_iterator<U>& u) {
+            current = u.base();
+            return *this;
+        }
+
+        constexpr iterator_type base() const & requires copy_constructible<Iter> {
+            return current;
+        }
+
+        constexpr iterator_type base() && {
+            return move(current);
+        }
+
+        constexpr reference operator*() const {
+            return ranges::iter_move(current);
+        }
+
+        constexpr move_iterator& operator++() {
+            current++;
+            return *this;
+        }
+
+        constexpr auto operator++(int) {
+            if constexpr (forward_iterator<Iter>) {
+                move_iterator tmp = *this;
+                current++;
+                return tmp;
+            } else {
+                current++;
+            }
+        }
+
+        constexpr move_iterator& operator--() requires __internal::legacy_bidirectional_iterator<Iter> || bidirectional_iterator<Iter> {
+            current--;
+            return *this;
+        }
+
+        constexpr move_iterator operator--(int) requires __internal::legacy_bidirectional_iterator<Iter> || bidirectional_iterator<Iter> {
+            move_iterator tmp = *this;
+            current--;
+            return tmp;
+        }
+
+        constexpr move_iterator operator+(difference_type n) const requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+            return move_iterator(current + n);
+        }
+
+        constexpr move_iterator& operator+=(difference_type n) requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+            current += n;
+            return *this;
+        }
+
+        constexpr move_iterator operator-(difference_type n) const requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+            return move_iterator(current - n);
+        }
+
+        constexpr move_iterator& operator-=(difference_type n) requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+            current -= n;
+            return *this;
+        }
+
+        constexpr reference operator[](difference_type n) const requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+            return ranges::iter_move(current + n);
+        }
+
+        template<sentinel_for<Iter> S> requires requires (const move_iterator& x, const move_sentinel<S>& y) { { x.base() == y.base() } -> convertible_to<bool>; }
+        friend constexpr bool operator==(const move_iterator& x, const move_sentinel<S>& y) {
+            return x.base() == y.base();
+        }
+
+        template<sized_sentinel_for<Iter> S>
+        friend constexpr iter_difference_t<Iter> operator-(const move_sentinel<S>& x, const move_iterator& y) {
+            return x.base() - y.base();
+        }
+
+        template<sized_sentinel_for<Iter> S>
+        friend constexpr iter_difference_t<Iter> operator-(const move_iterator& x, const move_sentinel<S>& y) {
+            return x.base() - y.base();
+        }
+
+        friend constexpr iter_rvalue_reference_t<Iter> iter_move(const move_iterator& i) noexcept(noexcept(ranges::iter_move(i.current))) {
+            return ranges::iter_move(i.current);
+        }
+
+        template<indirectly_swappable<Iter> Iter2>
+        friend constexpr void iter_swap(const move_iterator& x, const move_iterator<Iter2>& y) noexcept(noexcept(ranges::iter_swap(x.current, y.current))) {
+            ranges::iter_swap(x.current, y.current);
+        }
+    };
+
+    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() == y.base() } -> convertible_to<bool>; }
+    constexpr bool operator==(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
+        return x.base() == y.base();
+    }
+
+    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() < y.base() } -> convertible_to<bool>; }
+    constexpr bool operator<(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
+        return x.base() < y.base();
+    }
+
+    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { y.base() < x.base() } -> convertible_to<bool>; }
+    constexpr bool operator>(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
+        return y < x;
+    }
+
+    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { y.base() < x.base() } -> convertible_to<bool>; }
+    constexpr bool operator<=(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
+        return !(y < x);
+    }
+
+    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() < y.base() } -> convertible_to<bool>; }
+    constexpr bool operator>=(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
+        return !(x < y);
+    }
+
+    template<class Iter1, three_way_comparable_with<Iter1> Iter2>
+    constexpr compare_three_way_result_t<Iter1, Iter2> operator<=>(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
+        return x.base() <=> y.base();
+    }
+
+    template<class Iter1, class Iter2>
+    constexpr auto operator-(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) -> decltype(x.base() - y.base()) {
+        return x.base() - y.base();
+    }
+
+    template<class Iter> requires requires (iter_difference_t<Iter> n, const move_iterator<Iter>& x) { { x + n } -> same_as<Iter>; }
+    constexpr move_iterator<Iter> operator+(iter_difference_t<Iter> n, const move_iterator<Iter>& x) {
+        return x + n;
+    }
+
+    template<class Iter>
+    constexpr move_iterator<Iter> make_move_iterator(Iter i) {
+        return move_iterator<Iter>(move(i));
+    }
+
+    /* 23.5.4 Common iterators */
+    template<input_or_output_iterator I, sentinel_for<I> S> requires (!same_as<I, S> && copyable<I>)
+    class common_iterator {
+    private:
+        struct storage {
+            union {
+                char dummy;
+                I i;
+                S s;
+            };
+
+            enum { None, Iterator, Sentinel } curr_member;
+
+            constexpr storage() noexcept : dummy(0), curr_member(None) {}
+            constexpr storage(I i) noexcept : i(move(i)), curr_member(Iterator) {}
+            constexpr storage(S s) noexcept : s(move(s)), curr_member(Sentinel) {}
+
+            constexpr ~storage() noexcept {
+                switch (curr_member) {
+                    case Iterator:
+                        if constexpr (requires { i.~I(); }) {
+                            i.~I();
+                        }
+                        break;
+
+                    case Sentinel:
+                        if constexpr (requires { s.~S(); }) {
+                            s.~S();
+                        }
+                        break;
+                }
+            }
+
+            template<class Ip, class Sp>
+            constexpr storage(const typename common_iterator<Ip, Sp>::storage& storage) : dummy(0) {
+                ~storage();
+                switch (storage.curr_member) {
+                    case Iterator:
+                        i = storage.i;
+                        break;
+
+                    case Sentinel:
+                        s = storage.s;
+                        break;
+                }
+            }
+
+            template<class Ip, class Sp>
+            constexpr storage& operator=(const typename common_iterator<Ip, Sp>::storage& storage) {
+                ~storage();
+                switch (storage.curr_member) {
+                    case None:
+                        dummy = 0;
+                        break;
+
+                    case Iterator:
+                        i = storage.i;
+                        break;
+
+                    case Sentinel:
+                        s = storage.s;
+                        break;
+                }
+            }
+        };
+
+        storage s;
+    public:
+        constexpr common_iterator() = default;
+        constexpr common_iterator(I i) : s(move(i)) {}
+        constexpr common_iterator(S s) : s(move(s)) {}
+
+        template<class I2, class S2> requires convertible_to<const I2&, I> && convertible_to<const S2&, S>
+        constexpr common_iterator(const common_iterator<I2, S2>& x) : s(x.s) {}
+
+
+        template<class I2, class S2> requires convertible_to<const I2&, I> && convertible_to<const S2&, S>
+            && assignable_from<I&, const I2&> && assignable_from<S&, const S2&>
+        constexpr common_iterator& operator=(const common_iterator<I2, S2>& x) {
+            s = x.s;
+            return *this;
+        }
+
+        decltype(auto) operator*() {
+            return *s.i;
+        }
+
+        decltype(auto) operator*() const requires __internal::dereferenceable<const I> {
+            return *s.i;
+        }
+
+    private:
+        class proxy {
+            iter_value_t<I> keep;
+            proxy(iter_reference_t<I>&& x) : keep(move(x)) {}
+        public:
+            const iter_value_t<I>* operator->() const {
+                return addressof(keep);
+            }
+        };
+
+    public:
+        decltype(auto) operator->() const requires indirectly_readable<const I> &&
+            (requires (const I& i) { i.operator->(); } || is_reference_v<iter_reference_t<I>> || constructible_from<iter_value_t<I>, iter_reference_t<I>>) {
+            if constexpr (is_pointer_v<I> || requires { s.i.operator->(); }) {
+                return s.i;
+            } else if (is_reference_v<iter_reference_t<I>>) {
+                auto&& tmp = *s.i;
+                return addressof(tmp);
+            } else {
+                return proxy(*s.i);
+            }
+        }
+
+        common_iterator& operator++() {
+            s.i++;
+            return *this;
+        }
+
+        decltype(auto) operator++(int) {
+            if constexpr (forward_iterator<I>) {
+                common_iterator tmp = *this;
+                ++*this;
+                return tmp;
+            } else {
+                return s.i++;
+            }
+        }
+
+        template<class I2, sentinel_for<I> S2> requires sentinel_for<S, I2>
+        friend bool operator==(const common_iterator& x, const common_iterator<I2, S2>& y) {
+            if (static_cast<std::size_t>(x.s.curr_member) == static_cast<std::size_t>(y.s.curr_member)) {
+                return true;
+            } else if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Iterator) {
+                return x.s.s == y.s.i;
+            } else {
+                return x.s.i == y.s.s;
+            }
+        }
+
+        template<class I2, sentinel_for<I> S2> requires sentinel_for<S, I2> && equality_comparable_with<I, I2>
+        friend bool operator==(const common_iterator& x, const common_iterator<I2, S2>& y) {
+            if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Sentinel) {
+                return true;
+            } else if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Iterator) {
+                return x.s.s == y.s.i;
+            } else if (x.s.curr_member == common_iterator::storage::Iterator && y.s.curr_member == common_iterator<I2, S2>::storage::Iterator) {
+                return x.s.i == y.s.i;
+            } else {
+                return x.s.i == y.s.s;
+            }
+        }
+
+        template<sized_sentinel_for<I> I2, sized_sentinel_for<I> S2> requires sized_sentinel_for<S, I2>
+        friend iter_difference_t<I2> operator-(const common_iterator& x, const common_iterator<I2, S2>& y) {
+            if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Sentinel) {
+                return 0;
+            } else if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Iterator) {
+                return x.s.s - y.s.i;
+            } else if (x.s.curr_member == common_iterator::storage::Iterator && y.s.curr_member == common_iterator<I2, S2>::storage::Iterator) {
+                return x.s.i - y.s.i;
+            } else {
+                return x.s.i - y.s.s;
+            }
+        }
+
+        friend iter_rvalue_reference_t<I> iter_move(const common_iterator& i) noexcept(noexcept(ranges::iter_move(declval<const I&>()))) requires input_iterator<I> {
+            return ranges::iter_move(i.s.i);
+        }
+
+        template<indirectly_swappable<I> I2, class S2>
+        friend void iter_swap(const common_iterator& x, const common_iterator<I2, S2>& y) noexcept(noexcept(ranges::iter_swap(declval<const I&>(), declval<const I2&>()))) {
+            ranges::iter_swap(x.s.i, y.s.i);
+        }
+    };
+
+    template<class I, class S>
+    struct incrementable_traits<common_iterator<I, S>> {
+        using difference_type = iter_difference_t<I>;
+    };
+
+    template<input_iterator I, class S>
+    struct iterator_traits<common_iterator<I, S>> {
+    private:
+        static constexpr decltype(auto) get_pointer() noexcept {
+            if constexpr (requires (const common_iterator<I, S>& a) { a.operator->(); }) {
+                return declval<decltype(declval<const common_iterator<I, S>&>().operator->())>();
+            }
+        }
+    public:
+        using iterator_concept = conditional_t<forward_iterator<I>, forward_iterator_tag, input_iterator_tag>;
+        using iterator_category = conditional_t<derived_from<typename iterator_traits<I>::iterator_category, forward_iterator_tag>, forward_iterator_tag, input_iterator_tag>;
+        using value_type = iter_value_t<I>;
+        using difference_type = iter_difference_t<I>;
+        using pointer = decltype(get_pointer());
+        using reference = iter_reference_t<I>;
+    };
+
+    /* 23.5.5 Default sentinel */
+    struct default_sentinel_t {};
+
+    /* 23.5.7 Unreachable sentinel */
+    struct unreachable_sentinel_t {
+        template<weakly_incrementable I>
+        friend constexpr bool operator==(unreachable_sentinel_t, const I&) noexcept {
+            return false;
+        }
+    };
+
+    inline constexpr unreachable_sentinel_t unreachable_sentinel;
+
+    /* 23.6 Stream iterators */
     template<class CharT, class Traits>
     class istreambuf_iterator {
     public:
@@ -1136,6 +1531,152 @@ namespace std {
     template<class charT, class traits>
     bool operator==(const istreambuf_iterator<charT, traits>&, const istreambuf_iterator<charT, traits>&) {
         return true;
+    }
+
+    /* 23.7 Range access */
+    template<class C>
+    constexpr auto begin(C& c) -> decltype(c.begin()) {
+        return c.begin();
+    }
+
+    template<class C>
+    constexpr auto begin(const C& c) -> decltype(c.begin()) {
+        return c.begin();
+    }
+
+    template<class T, std::size_t N>
+    constexpr T* begin(T (&array)[N]) noexcept {
+        return array;
+    }
+
+    template<class C>
+    constexpr auto end(C& c) -> decltype(c.end()) {
+        return c.end();
+    }
+ 
+    template<class C>
+    constexpr auto end(const C& c) -> decltype(c.end()) {
+        return c.end();
+    }
+ 
+    template<class T, std::size_t N>
+    constexpr T* end(T (&array)[N]) noexcept {
+        return array + N;
+    }
+
+    template<class C>
+    constexpr auto cbegin(const C& c) noexcept(noexcept(std::begin(c))) -> decltype(std::begin(c)) {
+        return std::begin(c);
+    }
+
+    template<class C>
+    constexpr auto cend(const C& c) noexcept(noexcept(std::end(c))) -> decltype(std::end(c)) {
+        return std::end(c);
+    }
+
+    template<class C>
+    constexpr auto rbegin(C& c) -> decltype(c.rbegin()) {
+        return c.rbegin();
+    }
+
+    template<class C>
+    constexpr auto rbegin(const C& c) -> decltype(c.rbegin()) {
+        return c.rbegin();
+    }
+
+    template<class T, std::size_t N>
+    constexpr reverse_iterator<T*> rbegin(T (&array)[N]) {
+        return reverse_iterator<T*>(array + N);
+    }
+
+    template<class E>
+    constexpr reverse_iterator<const E*> rbegin(initializer_list<E> il) {
+        return reverse_iterator<const E*>(il.end());
+    }
+
+    template<class C>
+    constexpr auto rend(C& c) -> decltype(c.rend()) {
+        return c.rend();
+    }
+
+    template<class C>
+    constexpr auto rend(const C& c) -> decltype(c.rend()) {
+        return c.rend();
+    }
+
+    template<class T, std::size_t N>
+    constexpr reverse_iterator<T*> rend(T (&array)[N]) {
+        return reverse_iterator<T*>(array);
+    }
+
+    template<class E>
+    constexpr reverse_iterator<const E*> rend(initializer_list<E> il) {
+        return reverse_iterator<const E*>(il.begin());
+    }
+
+    template<class C>
+    constexpr auto crbegin(const C& c) -> decltype(std::rbegin(c)) {
+        return std::rbegin(c);
+    }
+
+    template<class C>
+    constexpr auto crend(const C& c) -> decltype(std::rend(c)) {
+        return std::rend(c);
+    }
+
+    template<class C>
+    constexpr auto osize(const C& c) -> decltype(c.size()) {
+        return c.size();
+    }
+
+    template<class T, std::size_t N>
+    constexpr std::size_t osize(const T (&)[N]) noexcept {
+        return N;
+    }
+
+    template<class C>
+    constexpr auto ssize(const C& c) -> common_type_t<std::ptrdiff_t, make_signed_t<decltype(c.size())>> {
+        return static_cast<common_type_t<std::ptrdiff_t, make_signed_t<decltype(c.size())>>>(c.size());
+    }
+
+    template<class T, std::ptrdiff_t N> 
+    constexpr std::ptrdiff_t ssize(const T (&)[N]) noexcept {
+        return N;
+    }
+
+    template<class C>
+    [[nodiscard]] constexpr auto empty(const C& c) -> decltype(c.empty()) {
+        return c.empty();
+    }
+
+    template<class T, std::size_t N>
+    [[nodiscard]] constexpr bool empty(const T (&)[N]) noexcept {
+        return false;
+    }
+
+    template<class E>
+    [[nodiscard]] constexpr bool empty(initializer_list<E> il) noexcept {
+        return il.size() == 0;
+    }
+
+    template<class C>
+    constexpr auto data(C& c) -> decltype(c.data()) {
+        return c.data();
+    }
+
+    template<class C>
+    constexpr auto data(const C& c) -> decltype(c.data()) {
+        return c.data();
+    }
+
+    template<class T, std::size_t N>
+    constexpr T* data(T (&array)[N]) noexcept {
+        return array;
+    }
+
+    template<class E>
+    constexpr const E* data(initializer_list<E> il) noexcept {
+        return il.begin();
     }
 
     /* Implementation */
