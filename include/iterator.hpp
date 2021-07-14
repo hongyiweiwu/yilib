@@ -9,6 +9,7 @@
 #include "compare.hpp"
 #include "initializer_list.hpp"
 #include "ranges.hpp"
+#include "new.hpp"
 
 // TODO: Implement counted_iterator and stream iterators.
 namespace std {
@@ -261,7 +262,7 @@ namespace std {
             struct iter_move_fn {
             private:
                 template<class E>
-                static consteval bool use_adl_iter_move() noexcept {
+                static constexpr bool use_adl_iter_move() noexcept {
                     return (is_class_v<E> || is_enum_v<E>) && requires (E&& e) { iter_move(forward<E>(e)); };
                 }
             public:
@@ -301,16 +302,16 @@ namespace std {
             struct iter_swap_fn {
             private:
                 template<class X, class Y>
-                static consteval bool use_adl_iter_swap() noexcept {
+                static constexpr bool use_adl_iter_swap() noexcept {
                     return (is_class_v<X> || is_enum_v<X>) && (is_class_v<Y> || is_enum_v<Y>)
                         && requires (X&& x, Y&& y) { iter_swap(forward<X>(x), forward<Y>(y)); };
                 }
 
                 template<class X, class Y>
-                static consteval bool use_ranges_swap() noexcept;
+                static constexpr bool use_ranges_swap() noexcept;
 
                 template<class X, class Y>
-                static consteval bool use_iter_exchange_move() noexcept;
+                static constexpr bool use_iter_exchange_move() noexcept;
             public:
                 template<class X, class Y> requires (use_adl_iter_swap<X, Y>())
                 constexpr void operator()(X&& x, Y&& y) const noexcept(noexcept(iter_swap(forward<X>(x), forward<Y>(y)))) {
@@ -347,7 +348,7 @@ namespace std {
         template<class I>
         struct __iter_concept {
         private:
-            static constexpr decltype(auto) get_type() noexcept {
+            static constexpr auto get_type() noexcept {
                 if constexpr (requires { typename __iter_traits_t<I>::iterator_concept; }) {
                     return declval<typename __iter_traits_t<I>::iterator_concept>();
                 } else if constexpr (requires { typename __iter_traits_t<I>::iterator_category; }) {
@@ -424,25 +425,25 @@ namespace std {
     template<class I>
     concept input_iterator = input_or_output_iterator<I> && indirectly_readable<I>
         && requires { typename __internal::__iter_concept<I>; }
-        && derived_from<__internal::__iter_concept<I>, input_iterator_tag>;
+        && derived_from<__internal::__iter_concept_t<I>, input_iterator_tag>;
 
     template<class I, class T>
     concept output_iterator = input_or_output_iterator<I> && indirectly_writable<I, T>
         && requires (I i, T&& t) { *i++ = forward<T>(t); };
 
     template<class I>
-    concept forward_iterator = input_iterator<I> && derived_from<__internal::__iter_concept<I>, forward_iterator_tag>
+    concept forward_iterator = input_iterator<I> && derived_from<__internal::__iter_concept_t<I>, forward_iterator_tag>
         && incrementable<I> && sentinel_for<I, I>;
 
     template<class I>
-    concept bidirectional_iterator = forward_iterator<I> && derived_from<__internal::__iter_concept<I>, bidirectional_iterator_tag>
+    concept bidirectional_iterator = forward_iterator<I> && derived_from<__internal::__iter_concept_t<I>, bidirectional_iterator_tag>
         && requires (I i) {
             { --i } -> same_as<I&>;
             { i-- } -> same_as<I>;
         };
 
     template<class I>
-    concept random_access_iterator = bidirectional_iterator<I> && derived_from<__internal::__iter_concept<I>, random_access_iterator_tag>
+    concept random_access_iterator = bidirectional_iterator<I> && derived_from<__internal::__iter_concept_t<I>, random_access_iterator_tag>
         && totally_ordered<I> && sized_sentinel_for<I, I>
         && requires (I i, const I j, const iter_difference_t<I> n) {
             { i += n } -> same_as<I&>;
@@ -454,7 +455,7 @@ namespace std {
         };
 
     template<class I>
-    concept contiguous_iterator = random_access_iterator<I> && derived_from<__internal::__iter_concept<I>, contiguous_iterator_tag>
+    concept contiguous_iterator = random_access_iterator<I> && derived_from<__internal::__iter_concept_t<I>, contiguous_iterator_tag>
         && is_lvalue_reference_v<iter_reference_t<I>> && same_as<iter_value_t<I>, remove_cvref_t<iter_reference_t<I>>>
         && requires (const I& i) {
             { to_address(i) } -> same_as<add_pointer_t<iter_reference_t<I>>>;
@@ -1492,7 +1493,7 @@ namespace std {
     template<input_iterator I, class S>
     struct iterator_traits<common_iterator<I, S>> {
     private:
-        static constexpr decltype(auto) get_pointer() noexcept {
+        static constexpr auto get_pointer() noexcept {
             if constexpr (requires (const common_iterator<I, S>& a) { a.operator->(); }) {
                 return declval<decltype(declval<const common_iterator<I, S>&>().operator->())>();
             }
@@ -1682,13 +1683,13 @@ namespace std {
     /* Implementation */
     namespace ranges::__iter_swap_internal {
         template<class X, class Y>
-        consteval bool iter_swap_fn::use_ranges_swap() noexcept {
+        constexpr bool iter_swap_fn::use_ranges_swap() noexcept {
             return !use_adl_iter_swap<X, Y>() && indirectly_readable<X> && indirectly_readable<Y>
                 && swappable_with<X&, Y&>;
         }
 
         template<class X, class Y>
-        consteval bool iter_swap_fn::use_iter_exchange_move() noexcept {
+        constexpr bool iter_swap_fn::use_iter_exchange_move() noexcept {
             return !use_ranges_swap<X, Y>() && indirectly_movable_storable<X, Y> && indirectly_movable_storable<Y, X>;
         }
     }

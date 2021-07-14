@@ -58,7 +58,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `string_view` | | | | &check; | |
 | `charconv` | | | | &check; | |
 | `format` | | | | &check; | |
-| `array` | | | | &check; | |
+| `array` | &check; | | | | |
 | `vector` | | | | &check; | |
 | `deque` | | | | &check; | |
 | `list` | | | | &check; | |
