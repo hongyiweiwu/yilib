@@ -1520,6 +1520,157 @@ namespace std {
 
     inline constexpr unreachable_sentinel_t unreachable_sentinel;
 
+    /* 23.5.6 Counted iterators */
+    template<input_or_output_iterator I>
+    class counted_iterator {
+    private:
+        I current = I();
+        iter_difference_t<I> length = 0;
+    public:
+        using iterator_type = I;
+
+        constexpr counted_iterator() = default;
+        constexpr counted_iterator(I x, iter_difference_t<I> n) : current(move(x)), length(n) {}
+        template<class I2> requires convertible_to<const I2&, I>
+        constexpr counted_iterator(const counted_iterator<I2>& x) : current(x.current), length(x.length) {}
+
+        template<class I2> requires assignable_from<I&, const I2&>
+        constexpr counted_iterator& operator=(const counted_iterator<I2>& x) {
+            current = x.current;
+            length = x.length;
+            return *this;
+        }
+
+        constexpr I base() const & requires copy_constructible<I> {
+            return current;
+        }
+        
+        constexpr I base() && {
+            return move(current);
+        }
+
+        constexpr iter_difference_t<I> count() const noexcept {
+            return length;
+        }
+
+        constexpr decltype(auto) operator*() {
+            return *current;
+        }
+
+        constexpr decltype(auto) operator*() const requires __internal::dereferenceable<const I> {
+            return *current;
+        }
+
+        constexpr counted_iterator& operator++() {
+            current++;
+            length--;
+            return *this;
+        }
+
+        decltype(auto) operator++(int) {
+            length--;
+            try {
+                return current++;
+            } catch (...) {
+                length++;
+                throw;
+            }
+        }
+
+        constexpr counted_iterator operator++(int) requires forward_iterator<I> {
+            counted_iterator tmp = *this;
+            *this++;
+            return tmp;
+        }
+
+        constexpr counted_iterator& operator--() requires bidirectional_iterator<I> {
+            current--;
+            length++;
+            return *this;
+        }
+
+        constexpr counted_iterator operator--(int) requires bidirectional_iterator<I> {
+            counted_iterator tmp = *this;
+            *this--;
+            return tmp;
+        }
+
+        constexpr counted_iterator operator+(iter_difference_t<I> n) const requires random_access_iterator<I> {
+            return counted_iterator(current + n, length - n);
+        }
+
+        friend constexpr counted_iterator operator+(iter_difference_t<I> n, const counted_iterator& x) requires random_access_iterator<I> {
+            return x + n;
+        }
+
+        constexpr counted_iterator& operator+=(iter_difference_t<I> n) requires random_access_iterator<I> {
+            current += n;
+            length -= n;
+            return *this;
+        }
+
+        constexpr counted_iterator operator-(iter_difference_t<I> n) const requires random_access_iterator<I> {
+            return counted_iterator(current - n, length + n);
+        }
+
+        template<common_with<I> I2>
+        friend constexpr iter_difference_t<I2> operator-(const counted_iterator& x, const counted_iterator<I2>& y) {
+            return y.length - x.length;
+        }
+
+        friend constexpr iter_difference_t<I> operator-(const counted_iterator& x, default_sentinel_t) {
+            return -x.length;
+        }
+
+        friend constexpr iter_difference_t<I> operator-(default_sentinel_t, const counted_iterator& y) {
+            return y.length;
+        }
+
+        constexpr counted_iterator& operator-=(iter_difference_t<I> n) requires random_access_iterator<I> {
+            current -= n;
+            length += n;
+            return *this;
+        }
+
+        constexpr decltype(auto) operator[](iter_difference_t<I> n) const requires random_access_iterator<I> {
+            return current[n];
+        }
+
+        template<common_with<I> I2>
+        friend constexpr bool operator==(const counted_iterator& x, const counted_iterator<I2>& y) {
+            return x.length == y.length;
+        }
+
+        friend constexpr bool operator==(const counted_iterator& x, default_sentinel_t) {
+            return x.length == 0;
+        }
+
+        template<common_with<I> I2>
+        friend constexpr strong_ordering operator<=>(const counted_iterator& x, const counted_iterator<I2>& y) {
+            return y.length <=> x.length;
+        }
+
+        friend constexpr iter_rvalue_reference_t<I> iter_move(const counted_iterator& i) noexcept(noexcept(ranges::iter_move(i.current)))
+        requires input_iterator<I> {
+            return ranges::iter_move(i.current);
+        }
+
+        template<indirectly_swappable<I> I2>
+        friend constexpr void iter_swap(const counted_iterator& x, const counted_iterator<I2>& y) noexcept(noexcept(ranges::iter_swap(x.current, y.current))) {
+            return ranges::iter_swap(x.current, y.current);
+        }
+    };
+
+    template<class I>
+    struct incrementable_traits<counted_iterator<I>> {
+        using difference_type = iter_difference_t<I>;
+    };
+
+    template<input_iterator I>
+    struct iterator_traits<counted_iterator<I>> : iterator_traits<I> {
+        using pointer = void;
+    };
+
     /* 23.6 Stream iterators */
     template<class CharT, class Traits>
     class istreambuf_iterator {
