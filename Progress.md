@@ -69,7 +69,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `unordered_map` | | | | &check; | |
 | `stack` | | | | &check; | |
 | `queue` | | | | &check; | |
-| `span` | | | | &check; | |
+| `span` | &check; | | | | |
 | `iterator` | | | &check; | | |
 | `ranges` | | | | &check; | |
 | `algorithm` | | | | &check; | |
