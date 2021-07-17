@@ -1778,12 +1778,12 @@ namespace std {
     }
 
     template<class C>
-    constexpr auto osize(const C& c) -> decltype(c.size()) {
+    constexpr auto size(const C& c) -> decltype(c.size()) {
         return c.size();
     }
 
     template<class T, std::size_t N>
-    constexpr std::size_t osize(const T (&)[N]) noexcept {
+    constexpr std::size_t size(const T (&)[N]) noexcept {
         return N;
     }
 

@@ -23,7 +23,7 @@ namespace std {
         using const_reference = const value_type&;
         using const_iterator = const_pointer;
         using iterator = const_iterator;
-        using const_reverse_iterator = reverse_iterator<const_iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
         using reverse_iterator = const_reverse_iterator;
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
