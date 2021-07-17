@@ -12,8 +12,7 @@ namespace std {
             : line_v(line), column_v(column), file_name_v(file_name), function_name_v(function_name) {}
 
     public:
-        // TODO: Wait for clang's full support for consteval functions.
-        static constexpr source_location current(
+        static consteval source_location current(
             uint_least32_t line = __builtin_LINE(), 
             uint_least32_t column = __builtin_COLUMN(), 
             const char* file_name = __builtin_FILE(), 
