@@ -1,6 +1,6 @@
 #pragma once
 
-#include "string.hpp"
+#include "iosfwd.hpp"
 #include "exception.hpp"
 
 namespace std {
@@ -12,7 +12,7 @@ namespace std {
         const char* what() const noexcept override;
 
     protected:
-        string what_str;
+        const char* what_str;
     };
 
     class domain_error : public logic_error {
@@ -47,7 +47,7 @@ namespace std {
         const char* what() const noexcept override;
 
     protected:
-        string what_str;
+        const char* what_str;
     };
 
     class range_error : public runtime_error {

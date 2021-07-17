@@ -88,4 +88,10 @@ namespace std {
 
     using streamoff = long long;
     using streamsize = std::ptrdiff_t;
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_string;
+
+    using string = basic_string<char>;
+    using wstring = basic_string<wchar_t>;
 }

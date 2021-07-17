@@ -11,7 +11,7 @@
 #include "ranges.hpp"
 #include "new.hpp"
 
-// TODO: Implement counted_iterator and stream iterators.
+// TODO: Implement stream iterators.
 namespace std {
     namespace __internal {
         template<class T> using with_reference = T&;
@@ -579,7 +579,7 @@ namespace std {
         template<class I>
         concept legacy_input_iterator = legacy_iterator<I> && equality_comparable<I> && requires (I i, I j) {
             { i != j } -> convertible_to<bool>;
-            { *i } -> same_as<typename iterator_traits<I>::refererence>;
+            { *i } -> same_as<typename iterator_traits<I>::reference>;
             { *i } -> convertible_to<typename iterator_traits<I>::value_type>;
             { ++i } -> same_as<I&>;
             (void) i++;
@@ -594,7 +594,8 @@ namespace std {
 
         template<class I>
         concept legacy_forward_iterator = legacy_input_iterator<I> && is_default_constructible_v<I> 
-            && ((is_same_v<typename iterator_traits<I>::reference, I&> && legacy_output_iterator<I>) || (is_same_v<typename iterator_traits<I>::reference, const I&> && !legacy_output_iterator<I>))
+            && ((is_same_v<typename iterator_traits<I>::reference, typename iterator_traits<I>::value_type&> && legacy_output_iterator<I>) 
+                || (is_same_v<typename iterator_traits<I>::reference, const typename iterator_traits<I>::value_type&> && !legacy_output_iterator<I>))
             && requires (I i) {
                 { i++ } -> same_as<I>;
                 { *i++ } -> same_as<typename iterator_traits<I>::reference>;
