@@ -299,7 +299,7 @@ namespace std {
 
     /* 20.6.10 Hash support */
     template<class T> requires is_default_constructible_v<hash<remove_const_t<T>>>
-    struct hash<optional<T>> {
+    struct hash<optional<T>> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const optional<T>& key) const {
             return key ? hash<remove_const_t<T>>()(*key) : 0;
         }

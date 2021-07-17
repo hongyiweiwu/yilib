@@ -22,7 +22,7 @@ namespace std {
         const type_info* target;
     };
 
-    template<> struct hash<type_index> {
+    template<> struct hash<type_index> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const type_index& index) const noexcept;
     };
 }

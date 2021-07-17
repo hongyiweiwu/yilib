@@ -214,11 +214,11 @@ namespace std {
     strong_ordering operator<=>(const error_condition& lhs, const error_condition& rhs) noexcept;
 
     /* 19.5.7 Hash support */
-    template<> struct hash<error_code> {
+    template<> struct hash<error_code> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const error_code& code) const noexcept;
     };
 
-    template<> struct hash<error_condition> {
+    template<> struct hash<error_condition> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const error_condition& cond) const noexcept;
     };
 }

@@ -53,13 +53,13 @@ namespace std {
 
     /* 20.11.7 Smart pointer hash support */
     template<class T, class D> requires is_default_constructible_v<hash<typename unique_ptr<T, D>::pointer>>
-    struct hash<unique_ptr<T, D>> {
+    struct hash<unique_ptr<T, D>> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const unique_ptr<T, D>& ptr) const {
             return hash<typename unique_ptr<T, D>::pointer>()(ptr.get());
         }
     };
 
-    template<class T> struct hash<shared_ptr<T>> {
+    template<class T> struct hash<shared_ptr<T>> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const shared_ptr<T>& ptr) const {
             return hash<typename shared_ptr<T>::element_type*>()(ptr.get());
         } 

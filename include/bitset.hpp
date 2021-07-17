@@ -191,6 +191,7 @@ namespace std {
             } else return storage[0];
         }
 
+        // TODO: Implement.
         template<class charT = char, class traits = char_traits<charT>, class Allocator = allocator<charT>>
         basic_string<charT, traits, Allocator> to_string(charT zero = charT('0'), charT one = charT('1')) const;
 
@@ -220,8 +221,10 @@ namespace std {
         bitset<N> operator>>(std::size_t pos) const noexcept { return bitset<N>(*this) >>= pos; }
     };
 
-    template<std::size_t N> struct hash<bitset<N>> {
-        std::size_t operator()(const bitset<N>& key) const { return hash(key.to_string()); }
+    template<std::size_t N> struct hash<bitset<N>> : hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const bitset<N>& key) const { 
+            return hash<string>()(key.to_string()); 
+        }
     };
 
     template<std::size_t N> bitset<N> operator&(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) &= rhs; }

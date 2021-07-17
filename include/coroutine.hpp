@@ -4,6 +4,7 @@
 #include "type_traits.hpp"
 #include "cstddef.hpp"
 #include "util/macros.hpp"
+#include "functional.hpp"
 
 namespace std {
     /* 17.12.3 Coroutine traits */
@@ -88,7 +89,12 @@ namespace std {
     }
 
     /* 17.12.4.8 Hash support */
-    // TODO Implement hash support.
+    template<class Promise>
+    struct hash<coroutine_handle<Promise>> : hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const coroutine_handle<Promise>& key) const noexcept {
+            return reinterpret_cast<std::size_t>(key.ptr);
+        }
+    };
 
     /* 17.12.5 No-op coroutines */ 
     struct noop_coroutine_promise {};

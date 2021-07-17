@@ -77,9 +77,15 @@ namespace std {
         struct __deleted_hash_t {
             explicit __deleted_hash_t() = default;
         };
+
+        /* Used purely to specify a specialization of std::hash that should be enabled. All std::hash specializations that are enabled should inherit from
+         * hash<__enabled_hash_t> publicly, which contains a generic hashing algorithm. */
+        struct __enabled_hash_t {
+            explicit __enabled_hash_t() = default;
+        };
     }
 
-    // Forward declaration.
+    // Forward declaration, declare below.
     template<class T> struct hash;
 
     template<> struct hash<__internal::__deleted_hash_t> {
@@ -90,7 +96,98 @@ namespace std {
         hash& operator=(const hash&) = delete;
     };
 
+    template<> struct hash<__internal::__enabled_hash_t> {
+    protected:
+        std::size_t hash_bytes(const void* ptr, std::size_t len, std::size_t seed = std::size_t(0xc70f6907UL)) const noexcept;
+    };
+
     template<class T> struct hash : hash<__internal::__deleted_hash_t> {};
+
+    template<> struct hash<bool> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const bool& key) const noexcept;
+    };
+
+    template<> struct hash<char> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const char& key) const noexcept;
+    };
+
+    template<> struct hash<signed char> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const signed char& key) const noexcept;
+    };
+
+    template<> struct hash<unsigned char> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const unsigned char& key) const noexcept;
+    };
+
+    template<> struct hash<char8_t> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const char8_t& key) const noexcept;
+    };
+
+    template<> struct hash<char16_t> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const char16_t& key) const noexcept;
+    };
+
+    template<> struct hash<char32_t> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const char32_t& key) const noexcept;
+    };
+
+    template<> struct hash<wchar_t> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const wchar_t& key) const noexcept;
+    };
+
+    template<> struct hash<short> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const short& key) const noexcept;
+    };
+
+    template<> struct hash<unsigned short> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const unsigned short& key) const noexcept;
+    };
+
+    template<> struct hash<int> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const int& key) const noexcept;
+    };
+
+    template<> struct hash<unsigned int> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const unsigned int& key) const noexcept;
+    };
+
+    template<> struct hash<long> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const long& key) const noexcept;
+    };
+
+    template<> struct hash<long long> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const long long& key) const noexcept;
+    };
+
+    template<> struct hash<unsigned long> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const unsigned long& key) const noexcept;
+    };
+
+    template<> struct hash<unsigned long long> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const unsigned long long& key) const noexcept;
+    };
+
+    template<> struct hash<float> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const float& key) const noexcept;
+    };
+
+    template<> struct hash<double> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const double& key) const noexcept;
+    };
+
+    template<> struct hash<long double> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const long double& key) const noexcept;
+    };
+
+    template<> struct hash<std::nullptr_t> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const std::nullptr_t& key) const noexcept;
+    };
+    
+    template<class T> struct hash<T*> : public hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(T* const& key) const noexcept {
+            return reinterpret_cast<std::size_t>(key);
+        }
+    };
 
     /* 20.14.9 Concept-constrained comparisons */
     namespace ranges {

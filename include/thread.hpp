@@ -96,7 +96,7 @@ namespace std {
     template<class charT, class traits>
     basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& out, thread::id id); */
 
-    template<> struct hash<thread::id> {
+    template<> struct hash<thread::id> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const thread::id& id) const;
     };
 
