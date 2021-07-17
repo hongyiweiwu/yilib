@@ -6,45 +6,46 @@
 #include "utility.hpp"
 #include "memory/pointer_util.hpp"
 #include "memory/specialized_algorithms.hpp"
+#include "cstddef.hpp"
 
 namespace std {
     /* 20.10.9 Allocator traits */
     namespace __internal {
-        template<class Alloc> auto __allocator_traits_pointer_type() -> typename Alloc::value_type;
+        template<class Alloc> auto __allocator_traits_pointer_type() -> typename Alloc::value_type*;
         template<class Alloc> requires requires { typename Alloc::pointer; }
         auto __allocator_traits_pointer_type() -> typename Alloc::pointer;
 
         template<class Alloc> auto __allocator_traits_const_pointer_type() {
-            if constexpr (requires { typename Alloc::const_pointer; }) return declval<Alloc::const_pointer>();
+            if constexpr (requires { typename Alloc::const_pointer; }) return declval<typename Alloc::const_pointer>();
 
             using pointer = decltype(__allocator_traits_pointer_type<Alloc>());
             using value_type = typename Alloc::value_type;
-            return declval<pointer_traits<pointer>::template rebind<const value_type>>();
+            return declval<typename pointer_traits<pointer>::template rebind<const value_type>>();
         } 
 
         template<class Alloc> auto __allocator_traits_void_pointer_type() {
-            if constexpr (requires { typename Alloc::void_pointer; }) return declval<Alloc::void_pointer>();
+            if constexpr (requires { typename Alloc::void_pointer; }) return declval<typename Alloc::void_pointer>();
 
             using pointer = decltype(__allocator_traits_pointer_type<Alloc>());
-            return declval<pointer_traits<pointer>::template rebind<void>>();
+            return declval<typename pointer_traits<pointer>::template rebind<void>>();
         } 
 
         template<class Alloc> auto __allocator_traits_const_void_pointer_type() {
-            if constexpr (requires { typename Alloc::const_void_pointer; }) return declval<Alloc::const_void_pointer>();
+            if constexpr (requires { typename Alloc::const_void_pointer; }) return declval<typename Alloc::const_void_pointer>();
 
             using pointer = decltype(__allocator_traits_pointer_type<Alloc>());
-            return declval<pointer_traits<pointer>::template rebind<const void>>();
+            return declval<typename pointer_traits<pointer>::template rebind<const void>>();
         }
 
         template<class Alloc> auto __allocator_traits_difference_type() {
-            if constexpr (requires { typename Alloc::difference_type; }) return declval<Alloc::difference_type>();
+            if constexpr (requires { typename Alloc::difference_type; }) return declval<typename Alloc::difference_type>();
 
             using pointer = decltype(__allocator_traits_pointer_type<Alloc>());
-            return declval<pointer_traits<pointer>::difference_type>();
+            return declval<typename pointer_traits<pointer>::difference_type>();
         }
 
         template<class Alloc> auto __allocator_traits_size_type() {
-            if constexpr (requires { typename Alloc::size_type; }) return declval<Alloc::size_type>();
+            if constexpr (requires { typename Alloc::size_type; }) return declval<typename Alloc::size_type>();
             return declval<make_unsigned_t<decltype(__allocator_traits_difference_type<Alloc>())>>();
         }
 
