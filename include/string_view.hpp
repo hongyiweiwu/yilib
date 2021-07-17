@@ -121,8 +121,9 @@ namespace std {
         }
 
         constexpr void swap(basic_string_view& s) noexcept {
-            std::swap(d, s.d);
-            std::swap(s, s.s);
+            using std::swap;
+            swap(d, s.d);
+            swap(s, s.s);
         }
 
         constexpr size_type copy(charT* s, size_type n, size_type pos = 0) const {
@@ -200,7 +201,7 @@ namespace std {
         }
 
         constexpr size_type find(basic_string_view s, size_type pos = 0) const noexcept {
-            for (std::size_t i = pos; i <= size() - s.size(); i++) {
+            for (size_type i = pos; i <= size() - s.size(); i++) {
                 if (traits::compare(s.data(), data()[i], s.size()) == 0) {
                     return i;
                 }
@@ -222,7 +223,7 @@ namespace std {
         }
 
         constexpr size_type rfind(basic_string_view s, size_type pos = npos) const noexcept {
-            for (std::size_t i = size() - s.size(); i >= pos; i--) {
+            for (size_type i = size() - s.size(); i >= pos; i--) {
                 if (traits::compare(s.data(), data()[i], s.size()) == 0) {
                     return i;
                 }
