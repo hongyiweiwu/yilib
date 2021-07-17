@@ -55,7 +55,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `cwchar` | &check; | | | | |
 | `cuchar` | | &check; | | | Blocked due to unknown logic for `mbrtoc8` and `c8rtomb`. |
 | `string` | | | | &check; | |
-| `string_view` | | | | &check; | |
+| `string_view` | &check; | | | | |
 | `charconv` | | | | &check; | |
 | `format` | | | | &check; | |
 | `array` | &check; | | | | |
