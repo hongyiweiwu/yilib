@@ -2,6 +2,7 @@
 
 #include "iosfwd.hpp"
 #include "exception.hpp"
+#include "memory.hpp"
 
 namespace std {
     class logic_error : public exception {
@@ -12,7 +13,7 @@ namespace std {
         const char* what() const noexcept override;
 
     protected:
-        const char* what_str;
+        const unique_ptr<char[]> what_str;
     };
 
     class domain_error : public logic_error {
@@ -47,7 +48,7 @@ namespace std {
         const char* what() const noexcept override;
 
     protected:
-        const char* what_str;
+        const unique_ptr<char[]> what_str;
     };
 
     class range_error : public runtime_error {
