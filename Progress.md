@@ -54,7 +54,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `cstring` | &check; | | | | |
 | `cwchar` | &check; | | | | |
 | `cuchar` | | &check; | | | Blocked due to unknown logic for `mbrtoc8` and `c8rtomb`. |
-| `string` | | | | &check; | |
+| `string` |  |&check; | | | Blocked due to `iostream` not yet implemented. |
 | `string_view` | &check; | | | | |
 | `charconv` | | | | &check; | |
 | `format` | | | | &check; | |
