@@ -5,6 +5,7 @@
 #include "cstddef.hpp"
 #include "util/macros.hpp"
 #include "functional.hpp"
+#include "memory.hpp"
 
 namespace std {
     /* 17.12.3 Coroutine traits */
@@ -61,7 +62,7 @@ namespace std {
         using coroutine_handle<>::coroutine_handle;
 #if __has_intrinsics_for(builtin_coro_promise)
         static coroutine_handle from_promise(Promise& p) {
-            return coroutine_handle<Promise>(__builtin_coro_promise(&p, alignof(Promise), true));
+            return coroutine_handle<Promise>(__builtin_coro_promise(addressof(p), alignof(Promise), true));
         }
 #endif
         coroutine_handle& operator=(nullptr_t) noexcept {

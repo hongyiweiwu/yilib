@@ -54,7 +54,7 @@ namespace std {
 
             template<class ...Args> constexpr void emplace(Args&& ...args) {
                 if (!has_value) has_value = true;
-                ::new (static_cast<void*>(&val)) T(forward<Args>(args)...);
+                construct_at(addressof(val), forward<Args>(args)...);
             }
 
             __optional_storage() requires is_trivially_default_constructible_v<T> = default;
