@@ -28,7 +28,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `chrono` | | | | &check; | |
 | `cstddef` | &check; | | | | |
 | `initializer_list` | &check; | | | | |
-| `tuple` | | &check; | | | Blocked due to unresolved circular dependency between `tuple` and `memory` for `uses-allocator` constructors. |
+| `tuple` | &check; | | | | |
 | `any` | &check; | | | | |
 | `optional` | &check; | | | | |
 | `variant` | | | | &check; | |
@@ -54,7 +54,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `cstring` | &check; | | | | |
 | `cwchar` | &check; | | | | |
 | `cuchar` | | &check; | | | Blocked due to unknown logic for `mbrtoc8` and `c8rtomb`. |
-| `string` |  |&check; | | | Blocked due to `iostream` not yet implemented. |
+| `string` |  | &check; | | | Blocked due to `iostream` not yet implemented. |
 | `string_view` | &check; | | | | |
 | `charconv` | | | | &check; | |
 | `format` | | | | &check; | |

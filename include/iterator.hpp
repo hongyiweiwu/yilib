@@ -49,7 +49,7 @@ namespace std {
 
     template<class T>
     using iter_difference_t = conditional_t<
-        requires { typename iterator_traits<remove_cvref_t<T>>::__specialized; },
+        requires { typename iterator_traits<remove_cvref_t<T>>::__primary_template; },
         typename iterator_traits<remove_cvref_t<T>>::difference_type,
         typename incrementable_traits<remove_cvref_t<T>>::difference_type
     >;
@@ -81,7 +81,7 @@ namespace std {
 
     template<class T>
     using iter_value_t = conditional_t<
-        requires { typename iterator_traits<remove_cvref_t<T>>::__specialized; },
+        requires { typename iterator_traits<remove_cvref_t<T>>::__primary_template; },
         typename iterator_traits<remove_cvref_t<T>>::value_type,
         typename indirectly_readable_traits<remove_cvref_t<T>>::value_type
     >;
@@ -158,7 +158,7 @@ namespace std {
         using pointer = typename I::pointer;
         using reference = typename I::reference;
         using iterator_category = typename I::iterator_category;
-        using __specialized = void;
+        using __primary_template = void;
     };
 
     template<class I> requires requires {
@@ -173,7 +173,7 @@ namespace std {
         using pointer = void;
         using reference = typename I::reference;
         using iterator_category = typename I::iterator_category;
-        using __specialized = void;
+        using __primary_template = void;
     };
 
     template<class I> requires (!requires {
@@ -219,7 +219,7 @@ namespace std {
         using pointer = decltype(get_pointer_type());
         using reference = decltype(get_reference_type());
         using iterator_category = decltype(get_iterator_category());
-        using __specialized = void;
+        using __primary_template = void;
     };
 
     template<class I> requires (!requires {
@@ -241,7 +241,7 @@ namespace std {
         using pointer = void;
         using reference = void;
         using iterator_category = output_iterator_tag;
-        using __specialized = void;
+        using __primary_template = void;
     };
 
     template<class T> requires is_object_v<T>
@@ -343,7 +343,7 @@ namespace std {
     /* 23.3.4 Iterator concepts */
     namespace __internal {
         template<class I>
-        using __iter_traits_t = conditional_t<!requires { typename iterator_traits<I>::specialized; }, I, iterator_traits<I>>;
+        using __iter_traits_t = conditional_t<!requires { typename iterator_traits<I>::__primary_template; }, I, iterator_traits<I>>;
 
         template<class I>
         struct __iter_concept {
@@ -353,7 +353,7 @@ namespace std {
                     return declval<typename __iter_traits_t<I>::iterator_concept>();
                 } else if constexpr (requires { typename __iter_traits_t<I>::iterator_category; }) {
                     return declval<typename __iter_traits_t<I>::iterator_category>();
-                } else if constexpr (!requires { typename iterator_traits<I>::__specialized; }) {
+                } else if constexpr (!requires { typename iterator_traits<I>::__primary_template; }) {
                     return declval<random_access_iterator_tag>();
                 }
             }

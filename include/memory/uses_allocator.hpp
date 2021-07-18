@@ -8,7 +8,7 @@
 
 namespace std {
     /* 20.10.7 Allocator argument tag */
-    struct allocator_arg_t { explicit allocator_arg_t() = default; };
+    struct allocator_arg_t;     // Defined in "tuple.hpp"
     inline constexpr allocator_arg_t allocator_arg;
 
     /* 20.10.8 uses_allocator */
@@ -18,7 +18,6 @@ namespace std {
     template<class T, class Alloc> inline constexpr bool uses_allocator_v = uses_allocator<T, Alloc>::value;
     
     namespace __internal {
-        // TODO: This merely checks if T is a class based on the pair template. It doesn't check if T is an explicitly defined specialization.
         template<class T> struct __is_specialized_of_pair : false_type {};
         template<class T1, class T2> struct __is_specialized_of_pair<pair<T1, T2>> : true_type {};
         template<class T> struct is_specialized_of_pair : __is_specialized_of_pair<remove_cv_t<T>> {};
