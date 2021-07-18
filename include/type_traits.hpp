@@ -217,11 +217,11 @@ namespace std {
 
     /* 20.15.6 Type property queries */
     using __internal::alignment_of;
-    template<class T> inline constexpr bool alignment_of_v = alignment_of<T>::value;
+    template<class T> inline constexpr std::size_t alignment_of_v = alignment_of<T>::value;
     using __internal::rank;
-    template<class T> inline constexpr bool rank_v = rank<T>::value;
+    template<class T> inline constexpr std::size_t rank_v = rank<T>::value;
     using __internal::extent;
-    template<class T, unsigned I = 0> inline constexpr bool extent_v = extent<T, I>::value;
+    template<class T, unsigned I = 0> inline constexpr std::size_t extent_v = extent<T, I>::value;
 
     /* 20.15.7 Type relations */
     using __internal::is_same;

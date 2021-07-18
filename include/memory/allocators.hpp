@@ -165,7 +165,7 @@ namespace std {
             if (numeric_limits<std::size_t>::max() / sizeof(T) < n) {
                 throw bad_array_new_length();
             } else {
-                return ::operator new(n * sizeof(T));
+                return static_cast<T*>(::operator new(n * sizeof(T)));
             }
         }
 
