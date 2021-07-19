@@ -569,7 +569,6 @@ namespace std {
     template<class ...T, class ...U> 
     constexpr common_comparison_category_t<__internal::synth_three_way_result<T, U>...>
     operator<=>(const tuple<T...>& t, const tuple<U...>& u) {
-        
         if constexpr (sizeof...(T) != sizeof...(U)) {
             return sizeof...(T) <=> sizeof...(U);
         }

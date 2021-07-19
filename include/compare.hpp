@@ -4,6 +4,7 @@
 #include "type_traits.hpp"
 #include "concepts.hpp"
 #include "limits.hpp"
+#include "bit.hpp"
 
 #include "utility/typecast.hpp"
 #include "utility/declval.hpp"
@@ -351,6 +352,31 @@ namespace std {
         using is_transparent = void;
     };
 
+    namespace __internal {
+        /* Provides a weak_ordering of floating point types using the total order definition from IEEE 754-1985. Compared to the built-in
+         * spaceship operator, this function includes an ordering of NaN, so floating point types do not only have a partial order anymore. */
+        template<floating_point T>
+        constexpr weak_ordering floating_point_comparison(T a, T b) noexcept {
+            // We first use the built-in operator for comparison and directly return the result. This only doesn't work if one of a or b is NaN.
+            const partial_ordering ord = a <=> b;
+            if (is_lt(ord)) {
+                return weak_ordering::less;
+            } else if (is_gt(ord)) {
+                return weak_ordering::greater;
+            } else if (is_eq(ord)) {
+                return weak_ordering::equivalent;
+            }
+
+            if (__builtin_nan(a) && __builtin_signbit(a) && (!__builtin_nan(b) || !__builtin_signbit(b))) {
+                return weak_ordering::less;
+            } else if (__builtin_nan(b) && !__builtin_signbit(b) && (!__builtin_nan(a) || __builtin_signbit(a))) {
+                return weak_ordering::less;
+            } else {
+                return weak_ordering::equivalent;
+            }
+        }
+    }
+
     namespace __strong_order {
         // Brings forward, declval, and always_false from std::__internal into this namespace to make things clearer.
         using ::std::__internal::forward;
@@ -366,8 +392,7 @@ namespace std {
                     if constexpr (requires (E&& e, F&& f) { strong_ordering(strong_order(forward<E>(e), forward<F>(f))); }) {
                         return noexcept(strong_order(declval<E>(), declval<F>()));
                     } else if constexpr (is_floating_point_v<decay_t<E>>) {
-                        // TODO: Implement.
-                        return true;
+                        return noexcept(__internal::floating_point_comparison(declval<decay_t<E>>(), declval<decay_t<E>>()));
                     } else if constexpr (requires (E&& e, F&& f) { strong_ordering(compare_three_way()(forward<E>(), forward<F>())); }) {
                         return noexcept(compare_three_way()(declval<E>(), declval<F>()));
                     }
@@ -382,8 +407,7 @@ namespace std {
                     if constexpr (requires (E&& e, F&& f) { strong_ordering(strong_order(forward<E>(e), forward<F>(f))); }) {
                         return strong_order(forward<E>(e), forward<F>(f));
                     } else if constexpr (is_floating_point_v<decay_t<E>>) {
-                        // TODO: Implement.
-                        return strong_ordering::less;
+                        return __internal::floating_point_comparison(forward<decay_t<E>>(e), forward<decay_t<E>>(f));
                     } else if constexpr (requires (E&& e, F&& f) { strong_ordering(compare_three_way()(forward<E>(), forward<F>())); }) {
                         return compare_three_way()(forward<E>(e), forward<F>(f));
                     }
@@ -413,8 +437,7 @@ namespace std {
                     if constexpr (requires (E&& e, F&& f) { weak_ordering(weak_order(forward<E>(e), forward<F>(f))); }) {
                         return noexcept(weak_order(declval<E>(), declval<F>()));
                     } else if constexpr (is_floating_point_v<decay_t<E>>) {
-                        // TODO: Implement.
-                        return true;
+                        return noexcept(__internal::floating_point_comparison(declval<decay_t<E>>(), declval<decay_t<E>>()));
                     } else if constexpr (requires (E&& e, F&& f) { weak_ordering(compare_three_way()(forward<E>(e), forward<F>(f))); }) {
                         return noexcept(compare_three_way()(declval<E>(), declval<F>()));
                     } else if constexpr (requires (E&& e, F&& f) { strong_order(forward<E>(e), forward<F>(f)); }) {
@@ -431,8 +454,7 @@ namespace std {
                     if constexpr (requires (E&& e, F&& f) { weak_ordering(weak_order(forward<E>(e), forward<F>(f))); }) {
                         return weak_order(forward<E>(e), forward<F>(f));
                     } else if constexpr (is_floating_point_v<decay_t<E>>) {
-                        // TODO: Implement.
-                        return weak_ordering::less;
+                        return __internal::floating_point_comparison(forward<decay_t<E>>(e), forward<decay_t<E>>(f));
                     } else if constexpr (requires (E&& e, F&& f) { weak_ordering(compare_three_way()(forward<E>(e), forward<F>(f))); }) {
                         return compare_three_way()(forward<E>(e), forward<F>(f));
                     } else if constexpr (requires (E&& e, F&& f) { strong_order(forward<E>(e), forward<F>(f)); }) {

@@ -32,7 +32,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `any` | &check; | | | | |
 | `optional` | &check; | | | | |
 | `variant` | | | | &check; | |
-| `compare` | | &check; | | | Blocked due to complicated float comparison logic. |
+| `compare` | &check; | | | | |
 | `version` | &check; | | | | |
 | `source_location` | | &check; | | | Blocked due to lack of intrinsic support from GCC. |
 | `new` | &check; | | | | |
