@@ -635,7 +635,7 @@ namespace std {
         constexpr basic_string(basic_string&& str, const Allocator& a) : alloc(a), stack(), len(str.len), is_heap_in_use(str.is_heap_in_use) {
             if (is_heap_in_use) {
                 heap = str.heap;
-                str.stack = {0};
+                str.stack[0] = typename traits::char_type(0);
                 str.is_heap_in_use = false;
             } else {
                 traits::copy(stack, str.stack, len + 1);
@@ -697,7 +697,7 @@ namespace std {
                     heap = str.heap;
                 }
 
-                str.stack = {0};
+                str.stack[0] = typename traits::char_type(0);
                 str.is_heap_in_use = false;
                 str.len = 0;
             } else {
@@ -1277,12 +1277,12 @@ namespace std {
                 swap(stack, str.stack);
             } else if (is_heap_in_use && !str.is_heap_in_use) {
                 auto heap_info = heap;
-                stack = { 0 };
+                stack[0] = typename traits::char_type(0);
                 traits::copy(stack, str.stack, stack_capacity);
                 str.heap = heap_info;
             } else {
                 auto heap_info = str.heap;
-                str.stack = { 0 };
+                str.stack[0] = typename traits::char_type(0);
                 traits::copy(str.stack, stack, stack_capacity);
                 heap = heap_info;
             }
