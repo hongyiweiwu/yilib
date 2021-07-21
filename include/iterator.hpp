@@ -1673,17 +1673,142 @@ namespace std {
     };
 
     /* 23.6 Stream iterators */
+    template<class T, class charT = char, class traits = char_traits<charT>, class Distance = std::ptrdiff_t>
+    class istream_iterator {
+    public:
+        using iterator_category = input_iterator_tag;
+        using value_type = T;
+        using difference_type = Distance;
+        using pointer = const T*;
+        using reference = const T&;
+        using char_type = charT;
+        using traits_type = traits;
+        using istream_type = basic_istream<charT, traits>;
+
+        constexpr istream_iterator() : in_stream(nullptr), value() {}
+
+        constexpr istream_iterator(default_sentinel_t) : in_stream(nullptr), value() {}
+
+        istream_iterator(istream_type& s) : in_stream(addressof(s)), value() {
+            operator++();
+        }
+
+        istream_iterator(const istream_iterator& x) = default;
+        ~istream_iterator() = default;
+        istream_iterator& operator=(const istream_iterator&) = default;
+
+        const T& operator*() const {
+            return value;
+        }
+
+        const T* operator->() const {
+            return addressof(value);
+        }
+
+        istream_iterator& operator++() {
+            if (!(*in_stream >> value)) {
+                in_stream = nullptr;
+            }
+            return *this;
+        }
+
+        istream_iterator operator++(int) {
+            istream_iterator tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        friend bool operator==(const istream_iterator& i, default_sentinel_t) {
+            return !i.in_stream;
+        }
+
+    private:
+        basic_istream<charT, traits>* in_stream;
+        T value;
+    };
+
+    template<class T, class charT, class traits, class Distance>
+    bool operator==(const istream_iterator<T, charT, traits, Distance>& x, const istream_iterator<T, charT, traits, Distance>& y) {
+        return x.in_stream == y.in_stream;
+    }
+
     template<class CharT, class Traits>
     class istreambuf_iterator {
     public:
-        constexpr istreambuf_iterator() noexcept = default;
-        CharT operator*() const { return 0; }
-        istreambuf_iterator& operator++() { return *this; }
+        using iterator_category = input_iterator_tag;
+        using value_type = CharT;
+        using difference_type = typename Traits::off_type;
+        using pointer = CharT*;
+        using reference = CharT;
+        using char_type = CharT;
+        using traits = Traits;
+        using int_type = typename Traits::int_type;
+        using streambuf_type = basic_streambuf<CharT, Traits>;
+        using istream_type = basic_istream<CharT, Traits>;
+
+    private:
+        class proxy {
+            CharT keep;
+            basic_streambuf<CharT, Traits>* sbuf;
+
+            proxy(CharT c, basic_streambuf<CharT, Traits>* sbuf) : keep(c), sbuf(sbuf) {}
+
+        public:
+            CharT operator*() {
+                return keep;
+            }
+        };
+
+        constexpr istreambuf_iterator() noexcept : sbuf(nullptr) {}
+
+        constexpr istreambuf_iterator(default_sentinel_t) noexcept : sbuf(nullptr) {}
+
+        istreambuf_iterator(const istreambuf_iterator&) noexcept = default;
+        ~istreambuf_iterator() = default;
+
+        istreambuf_iterator(istream_type& s) noexcept : sbuf(s.rdbuf()) {}
+
+        istreambuf_iterator(streambuf_type* s) noexcept : sbuf(s) {}
+
+        istreambuf_iterator(const proxy& p) noexcept : sbuf(p.sbuf) {}
+
+        istreambuf_iterator& operator=(const istreambuf_iterator&) noexcept = default;
+
+        CharT operator*() const {
+            return sbuf->sgetc();
+        }
+
+        istreambuf_iterator& operator++() {
+            sbuf->sbumpc();
+            return *this;
+        }
+
+        proxy operator++(int) {
+            return proxy(sbuf->sbumpc(), sbuf);
+        }
+
+        bool equal(const istreambuf_iterator& b) const {
+            if (!sbuf || !b.sbuf) {
+                return sbuf == b.sbuf;
+            } 
+            
+            const bool a_is_eof = traits::eq_int_type(traits::eof(), sbuf->sgetc());
+            const bool b_is_eof = traits::eq_int_type(traits::eof(), b.sbuf->sgetc());
+            
+            return a_is_eof == b_is_eof;
+        }
+
+        friend bool operator==(const istreambuf_iterator& i, default_sentinel_t s) {
+            return i.equals(s);
+        }
+
+    private:
+        streambuf_type* sbuf;
     };
 
     template<class charT, class traits>
-    bool operator==(const istreambuf_iterator<charT, traits>&, const istreambuf_iterator<charT, traits>&) {
-        return true;
+    bool operator==(const istreambuf_iterator<charT, traits>& a, const istreambuf_iterator<charT, traits>& b) {
+        return a.equal(b);
     }
 
     /* 23.7 Range access */
