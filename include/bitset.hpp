@@ -41,30 +41,30 @@ namespace std {
     public:
         class reference {
             friend class bitset;
-            reference() noexcept : bitset(nullptr), index(0) {}
+            reference() noexcept : bs(nullptr), idx(0) {}
             reference(bitset<N>* bitset, std::size_t index) noexcept requires (index < N)
-                : bitset(bitset), index(index) {}
+                : bs(bitset), idx(index) {}
 
-            bitset* bitset;
-            std::size_t index;
+            bitset* bs;
+            std::size_t idx;
 
         public:
             reference(const reference&) = default;
             ~reference() = default;
             reference& operator=(bool x) noexcept {
-                bitset->operator[](index) = x;
+                bs->operator[](idx) = x;
                 return *this;
             }
 
             reference& operator=(const reference& ref) noexcept {
-                bitset->set(index, ref.bitset->operator[](ref.index));
+                bs->set(idx, ref.bs->operator[](ref.idx));
                 return *this;
             }
 
-            bool operator~() const noexcept { return bitset->flip(index)[index]; }
-            operator bool() const noexcept { return bitset->operator[](index); }
+            bool operator~() const noexcept { return bs->flip(idx)[idx]; }
+            operator bool() const noexcept { return bs->operator[](idx); }
             reference& flip() noexcept {
-                bitset->flip(index);
+                bs->flip(idx);
                 return *this;
             }
         };
