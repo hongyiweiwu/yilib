@@ -1759,6 +1759,7 @@ namespace std {
             }
         };
 
+    public:
         constexpr istreambuf_iterator() noexcept : sbuf(nullptr) {}
 
         constexpr istreambuf_iterator(default_sentinel_t) noexcept : sbuf(nullptr) {}

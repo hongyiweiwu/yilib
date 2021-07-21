@@ -10,9 +10,12 @@
 #include "utility.hpp"
 #include "memory.hpp"
 #include "stdexcept.hpp"
+#include "istream.hpp"
+#include "ios.hpp"
 
 namespace std {
-    template<std::size_t N> class bitset {
+    template<std::size_t N> 
+    class bitset {
     private:
         /* The number of bits each element in the storage array can store. */
         static constexpr std::size_t storage_block_size = sizeof(uintmax_t) * CHAR_BIT;
@@ -77,12 +80,17 @@ namespace std {
                         charT zero = charT('0'),
                         charT one = charT('1')) : storage{} {
             const std::size_t rlen = min(n, str.size() - pos);
-            if (rlen > N) throw out_of_range("Supplied string is larger than the capacity of the bitset.");
+            if (rlen > N) {
+                throw out_of_range("Supplied string is larger than the capacity of the bitset.");
+            }
 
-            for (std::size_t i = 0, str_i = pos; i < rlen && i < N; i++, str_i++) {
+            for (std::size_t i = rlen - 1, str_i = pos; i >= 0; i--, str_i++) {
                 const auto [slot, offset] = bit_location(i);
-                if (traits::eq(str[pos], one)) storage[slot] |= test_bit(offset);
-                else if (!traits::eq(str[pos], zero)) throw invalid_argument("Found character equal to neither zero or one.");
+                if (traits::eq(str[str_i], one)) {
+                    storage[slot] |= test_bit(offset);
+                } else if (!traits::eq(str[str_i], zero)) {
+                    throw invalid_argument("Found character equal to neither zero or one.");
+                }
             }
         }
 
@@ -96,17 +104,23 @@ namespace std {
 
         /* 20.9.2.3 Bitset operations */
         bitset<N>& operator&=(const bitset<N>& rhs) noexcept {
-            for (std::size_t i = 0; i < storage_block_size; i++) storage[i] &= rhs.storage[i];
+            for (std::size_t i = 0; i < storage_blocks; i++) {
+                storage[i] &= rhs.storage[i];
+            }
             return *this;
         }
 
         bitset<N>& operator!=(const bitset<N>& rhs) noexcept {
-            for (std::size_t i = 0; i < storage_block_size; i++) storage[i] |= rhs.storage[i];
+            for (std::size_t i = 0; i < storage_blocks; i++) {
+                storage[i] |= rhs.storage[i];
+            }
             return *this;
         }
 
         bitset<N>& operator^=(const bitset<N>& rhs) noexcept {
-            for (std::size_t i = 0; i < storage_block_size; i++) storage[i] ^= rhs.storage[i];
+            for (std::size_t i = 0; i < storage_blocks; i++) {
+                storage[i] ^= rhs.storage[i];
+            }
             return *this;
         }
 
@@ -121,7 +135,9 @@ namespace std {
         }
 
         bitset<N>& set() noexcept {
-            for (std::uintmax_t& i : storage) i = UINTMAX_MAX;
+            for (std::uintmax_t& i : storage) {
+                i = UINTMAX_MAX;
+            }
             return *this;
         }
 
@@ -138,11 +154,16 @@ namespace std {
         }
 
         bitset<N>& reset() {
-            for (std::uintmax_t& i : storage) i = 0;
+            for (std::uintmax_t& i : storage) {
+                i = 0;
+            }
             return *this;
         }
 
-        bitset<N>& reset(std::size_t pos) { return set(pos, false); }
+        bitset<N>& reset(std::size_t pos) { 
+            return set(pos, false); 
+        }
+
         bitset<N> operator~() const noexcept {
             bitset<N> result;
             for (std::size_t i = 0; i < storage_blocks - 1; i++) {
@@ -191,9 +212,18 @@ namespace std {
             } else return storage[0];
         }
 
-        // TODO: Implement.
         template<class charT = char, class traits = char_traits<charT>, class Allocator = allocator<charT>>
-        basic_string<charT, traits, Allocator> to_string(charT zero = charT('0'), charT one = charT('1')) const;
+        basic_string<charT, traits, Allocator> to_string(charT zero = charT('0'), charT one = charT('1')) const {
+            basic_string<charT, traits, Allocator> s(N, zero);
+
+            for (std::size_t i = N - 1; i >= 0; i--) {
+                if (operator[](i)) {
+                    s[N - 1 - i] = one;
+                }
+            }
+
+            return s;
+        }
 
         std::size_t count() const noexcept {
             std::size_t c = 0;
@@ -231,11 +261,41 @@ namespace std {
     template<std::size_t N> bitset<N> operator|(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) |= rhs; }
     template<std::size_t N> bitset<N> operator^(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) ^= rhs; }
 
+    template<class charT, class traits, size_t N> 
+    basic_istream<charT, traits>& operator>>(basic_istream<charT, traits>& is, bitset<N>& x) {
+        basic_istream<charT, traits>::__formatted_input_function([&](ios_base::iostate& err) {
+            basic_string<charT, traits> str;
+            str.reserve(N);
+            
+            while (str.size() < N) {
+                const typename traits::int_type cint = is.rdbuf()->sgetc();
+                if (traits::eq_int_type(cint, traits::eof())) {
+                    err |= ios_base::eofbit;
+                    break;
+                }
+                const charT c = traits::to_char_type(cint);
+                if (!traits::eq(c, is.widen('0')) && !traits::eq(c, is.widen('1'))) {
+                    break;
+                } else {
+                    str.append(c);
+                    is.rdbuf()->sbumpc();
+                }
+            }
+
+            if constexpr (N > 0) {
+                if (str.empty()) {
+                    err |= ios_base::failbit;
+                }
+            }
+
+            x = bitset<N>(str);
+        });
+
+        return is;
+    }
+
     // TODO: Implement after implementing iosfwd.
     /*
-    template<class charT, class traits, size_t N> 
-    basic_istream<charT, traits>& operator>>(basic_istream<charT, traits>& is, bitset<N>& x);
-
     template<class charT, class traits, size_t N> 
     basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const bitset<N>& x); */
 }

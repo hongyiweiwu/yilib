@@ -8,11 +8,11 @@
 namespace std {
     template<class charT, class traits>
     class basic_istream : virtual public basic_ios<charT, traits> {
-    private:
+    public:
         /* Executes a callable using the FormattedInputFunction named requirement routine. The callable must be a void-returning function that takes
          * a reference to an ios_base::iostate variable. */
         template<class Invocable>
-        void formatted_input_function(Invocable fn) {
+        void __formatted_input_function(Invocable fn) {
             const sentry s{*this, false};
             if (bool(s)) {
                 ios_base::iostate err = ios_base::goodbit;
@@ -30,7 +30,6 @@ namespace std {
             }
         }
 
-    public:
         using char_type = typename basic_ios<charT, traits>::char_type;
         using int_type = typename basic_ios<charT, traits>::int_type;
         using pos_type = typename basic_ios<charT, traits>::pos_type;
@@ -99,7 +98,7 @@ namespace std {
         }
 
         basic_istream& operator>>(bool& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -107,7 +106,7 @@ namespace std {
         }
 
         basic_istream& operator>>(short& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 long lval;
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, lval);
                 if (lval < numeric_limits<short>::min()) {
@@ -125,7 +124,7 @@ namespace std {
         }
 
         basic_istream& operator>>(unsigned short& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -133,7 +132,7 @@ namespace std {
         }
         
         basic_istream& operator>>(int& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 long lval;
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, lval);
                 if (lval < numeric_limits<int>::min()) {
@@ -151,7 +150,7 @@ namespace std {
         }
 
         basic_istream& operator>>(unsigned int& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -159,7 +158,7 @@ namespace std {
         }
 
         basic_istream& operator>>(long& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -167,7 +166,7 @@ namespace std {
         }
 
         basic_istream& operator>>(unsigned long& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -175,7 +174,7 @@ namespace std {
         }
 
         basic_istream& operator>>(long long& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -183,7 +182,7 @@ namespace std {
         }
 
         basic_istream& operator>>(unsigned long long& n) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, n);
             });
 
@@ -191,7 +190,7 @@ namespace std {
         }
         
         basic_istream& operator>>(float& f) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, f);
             });
 
@@ -199,7 +198,7 @@ namespace std {
         }
         
         basic_istream& operator>>(double& f) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, f);
             });
 
@@ -207,7 +206,7 @@ namespace std {
         }
         
         basic_istream& operator>>(long double& f) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, f);
             });
 
@@ -215,7 +214,7 @@ namespace std {
         }
 
         basic_istream& operator>>(void*& p) {
-            formatted_input_function([&](ios_base::iostate& err) {
+            __formatted_input_function([&](ios_base::iostate& err) {
                 use_facet<num_get<charT, istreambuf_iterator<charT, traits>>>(this->getloc()).get(*this, 0, *this, err, p);
             });
 
@@ -776,12 +775,6 @@ namespace std {
         }
     private:
         streamsize gcnt;
-
-        template<class CT, class TT>
-        friend basic_istream<CT, TT>& operator>>(basic_istream<CT, TT>& in, charT& c);
-
-        template<class CT, class TT, std::size_t N>
-        friend basic_istream<CT, TT>& operator>>(basic_istream<CT, TT>& in, charT (&s)[N]);
 
         template<class CT, class TT>
         friend basic_istream<CT, TT>& ws(basic_istream<CT, TT>& is);
