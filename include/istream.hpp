@@ -20,7 +20,7 @@ namespace std {
                     fn(err);
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exception() & ios_base::badbit) {
                         throw;
                     }
@@ -258,7 +258,7 @@ namespace std {
                         err |= ios_base::failbit;
                     }
 
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exception() & ios_base::badbit || this->exception() & ios_base::failbit) {
                         throw;
                     }
@@ -290,7 +290,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exception() & ios_base::badbit) {
                         throw;
                     }
@@ -342,7 +342,7 @@ namespace std {
                     gcnt = n_read;
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         if (n > 0) {
                             *s = this->widen('\0');
@@ -436,7 +436,7 @@ namespace std {
                     gcnt = n_read;
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         if (n > 0) {
                             *s = this->widen('\0');
@@ -484,7 +484,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -510,7 +510,7 @@ namespace std {
                     }   
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -543,7 +543,7 @@ namespace std {
                     gcnt = i;
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -583,7 +583,7 @@ namespace std {
                     gcnt = i;
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -597,7 +597,7 @@ namespace std {
         }
 
         basic_istream& putback(char_type c) {
-            this->iostate &= ~ios_base::eofbit;
+            ios_base::rdstate &= ~ios_base::eofbit;
             gcnt = 0;
             ios_base::iostate err = ios_base::goodbit;
             sentry sent{*this, true};
@@ -613,7 +613,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -626,7 +626,7 @@ namespace std {
         }
 
         basic_istream& unget() {
-            this->iostate &= ~ios_base::eofbit;
+            ios_base::rdstate &= ~ios_base::eofbit;
             gcnt = 0;
             ios_base::iostate err = ios_base::goodbit;
             sentry sent{*this, true};
@@ -642,7 +642,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -670,7 +670,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -693,7 +693,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -704,7 +704,7 @@ namespace std {
         }
 
         basic_istream& seekg(pos_type pos) {
-            this->iostate &= ~ios_base::eofbit;
+            ios_base::rdstate &= ~ios_base::eofbit;
             ios_base::iostate err = ios_base::goodbit;
             sentry sent{*this, true};
 
@@ -717,7 +717,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
@@ -730,7 +730,7 @@ namespace std {
         }
 
         basic_istream& seekg(off_type off, ios_base::seekdir dir) {
-            this->iostate &= ~ios_base::eofbit;
+            ios_base::rdstate &= ~ios_base::eofbit;
             ios_base::iostate err = ios_base::goodbit;
             sentry sent{*this, true};
 
@@ -743,7 +743,7 @@ namespace std {
                     }
                 } catch (...) {
                     err |= ios_base::badbit;
-                    this->iostate = this->rdstate() | err | (this->rdbuf() ? ios_base::goodbit : ios_base::badbit);
+                    ios_base::rdstate |= err;
                     if (this->exceptions() & ios_base::badbit) {
                         throw;
                     }
