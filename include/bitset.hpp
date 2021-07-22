@@ -263,7 +263,7 @@ namespace std {
 
     template<class charT, class traits, size_t N> 
     basic_istream<charT, traits>& operator>>(basic_istream<charT, traits>& is, bitset<N>& x) {
-        basic_istream<charT, traits>::__formatted_input_function([&](ios_base::iostate& err) {
+        is.__formatted_input_function([&](ios_base::iostate& err) {
             basic_string<charT, traits> str;
             str.reserve(N);
             
