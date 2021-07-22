@@ -88,7 +88,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `iosfwd` | &check; | | | | |
 | `ios` | &check; | | | | |
 | `istream` | &check; | | | | |
-| `ostream` | | | | &check; | |
+| `ostream` | | &check; | | | Blocked due to unimplemented `syncstream`. |
 | `iostream` | | | | &check; | |
 | `fstream` | | | | &check; | |
 | `sstream` | | | | &check; | |
