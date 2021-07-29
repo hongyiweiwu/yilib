@@ -17,8 +17,8 @@
 #include "stdexcept.hpp"
 #include "memory_resource.hpp"
 #include "functional.hpp"
+#include "ios.hpp"
 
-// TODO: Add iostream related functions.
 namespace std {
     /* 21.2 Character traits */
     template<class charT> struct char_traits {};
@@ -1630,6 +1630,149 @@ namespace std {
     constexpr void swap(basic_string<charT, traits, Allocator>& lhs, basic_string<charT, traits, Allocator>& rhs)
     noexcept(noexcept(lhs.swap(rhs))) {
         lhs.swap(rhs);
+    }
+
+    template<class charT, class traits, class Allocator>
+    basic_istream<charT, traits>& operator>>(basic_istream<charT, traits>& is, basic_string<charT, traits, Allocator>& str) {
+        basic_istream<charT, traits>::__formatted_input_function([&](ios_base::iostate& err) {
+            str.erase();
+            const std::streamsize n = is.width() > 0 ? is.width() : str.max_size();
+
+            std::streamsize extracted = 0;
+            for (; extracted < n; extracted++) {
+                const typename traits::int_type c = is.rdbuf().sgetc();
+                if (traits::eq_int_type(c, traits::eof())) {
+                    err |= ios_base::eofbit;
+                    break;
+                }
+
+                const charT cchar = traits::to_char_type(c);
+                if (std::isspace(c, is.getloc())) {
+                    break;
+                } else {
+                    is.rdbuf().sbumpc();
+                    str.append(1, cchar);
+                }
+            }
+
+            is.width(0);
+            if (extracted == 0) {
+                err |= ios_base::failbit;
+            }
+        });
+
+        return is;
+    }
+
+    template<class charT, class traits, class Allocator>
+    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const basic_string<charT, traits, Allocator>& str) {
+        return os << basic_string_view<charT, traits>(str);
+    }
+
+    template<class charT, class traits, class Allocator>
+    basic_istream<charT, traits>& getline(basic_istream<charT, traits>& is, basic_string<charT, traits, Allocator>& str, charT delim) {
+        ios_base::iostate err = ios_base::goodbit;
+        typename basic_istream<charT, traits>::sentry sent{is, true};
+        
+        if (sent) {
+            try {
+                str.erase();
+                std::streamsize n_extracted = 0;
+                while (true) {
+                    if (n_extracted == str.max_size()) {
+                        err |= ios_base::failbit;
+                        break;
+                    }
+
+                    const typename traits::int_type c = is.rdbuf().sgetc();
+                    if (traits::eq_int_type(c, traits::eof())) {
+                        err |= ios_base::eofbit;
+                        break;
+                    }
+
+                    n_extracted++;
+                    is.rdbuf().sbumpc();
+                    const charT cchar = traits::to_char_type(c);
+                    if (!traits::eq(cchar, delim)) {
+                        str.append(1, cchar);
+                    } else {
+                        break;
+                    }
+                }
+
+                if (n_extracted == 0) {
+                    err |= ios_base::failbit;
+                }
+            } catch (...) {
+                err |= ios_base::badbit;
+                try {
+                    is.setstate(err);
+                } catch (...) {}
+                if (is.exceptions() & ios_base::badbit) {
+                    throw;
+                }
+            }
+
+            is.setstate(err);
+        }
+    }
+
+    template<class charT, class traits, class Allocator>
+    basic_istream<charT, traits>& getline(basic_istream<charT, traits>&& is, basic_string<charT, traits, Allocator>& str, charT delim) {
+        ios_base::iostate err = ios_base::goodbit;
+        typename basic_istream<charT, traits>::sentry sent{is, true};
+        
+        if (sent) {
+            try {
+                str.erase();
+                std::streamsize n_extracted = 0;
+                while (true) {
+                    if (n_extracted == str.max_size()) {
+                        err |= ios_base::failbit;
+                        break;
+                    }
+
+                    const typename traits::int_type c = is.rdbuf().sgetc();
+                    if (traits::eq_int_type(c, traits::eof())) {
+                        err |= ios_base::eofbit;
+                        break;
+                    }
+
+                    n_extracted++;
+                    is.rdbuf().sbumpc();
+                    const charT cchar = traits::to_char_type(c);
+                    if (!traits::eq(cchar, delim)) {
+                        str.append(1, cchar);
+                    } else {
+                        break;
+                    }
+                }
+
+                if (n_extracted == 0) {
+                    err |= ios_base::failbit;
+                }
+            } catch (...) {
+                err |= ios_base::badbit;
+                try {
+                    is.setstate(err);
+                } catch (...) {}
+                if (is.exceptions() & ios_base::badbit) {
+                    throw;
+                }
+            }
+
+            is.setstate(err);
+        }
+    }
+
+    template<class charT, class traits, class Allocator>
+    basic_istream<charT, traits>& getline(basic_istream<charT, traits>& is, basic_string<charT, traits, Allocator>& str) {
+        return getline(is, str, is.widen('\n'));
+    }
+
+    template<class charT, class traits, class Allocator>
+    basic_istream<charT, traits>& getline(basic_istream<charT, traits>&& is, basic_string<charT, traits, Allocator>& str) {
+        return getline(is, str, is.widen('\n'));
     }
 
     template<class charT, class traits, class Allocator, class U>

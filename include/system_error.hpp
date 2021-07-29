@@ -2,11 +2,11 @@
 
 #include "compare.hpp"
 #include "cerrno.hpp"
-#include "string.hpp"
 #include "type_traits.hpp"
 #include "cstddef.hpp"
 #include "functional.hpp"
 #include "stdexcept.hpp"
+#include "iosfwd.hpp"
 
 namespace std {
     // Forward declaration. Implementation given below.
@@ -197,12 +197,10 @@ namespace std {
 
     error_code make_error_code(errc e) noexcept;
 
-    // TODO: Uncomment after <iostream> is implemented.
-    /*
     template<class charT, class traits>
     basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const error_code& ec) {
         return os << ec.category().name() << ';' << ec.value();
-    } */
+    }
 
     error_condition make_error_condition(errc e) noexcept;
 

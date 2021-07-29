@@ -294,8 +294,11 @@ namespace std {
         return is;
     }
 
-    // TODO: Implement after implementing iosfwd.
-    /*
     template<class charT, class traits, size_t N> 
-    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const bitset<N>& x); */
+    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const bitset<N>& x) {
+        return os << x.template to_string<charT, traits, allocator<charT>>(
+            use_facet<ctype<charT>>(os.getloc()).widen('0'),
+            use_facet<ctype<charT>>(os.getloc()).widen('1')
+        );
+    }
 }

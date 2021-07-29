@@ -5,6 +5,8 @@
 #include "locale/xlocale.hpp"
 #include "locale/numeric.hpp"
 
+#include "string.hpp"
+
 // TODO: Implements num_put, and collate, time, monetary, message facets.
 
 namespace std {
@@ -32,4 +34,10 @@ namespace std {
     template<class charT> bool isblank(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).is(ctype_base::blank, c); }
     template<class charT> charT toupper(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).toupper(c); }
     template<class charT> charT tolower(charT c, const locale& loc) { return use_facet<ctype<charT>>(loc).tolower(c); }
+
+    template<class charT>
+    ctype_byname<charT>::ctype_byname(const string& loc, std::size_t refs) : ctype_byname(loc.c_str(), refs) {}
+
+    template<class internT, class externT, class stateT>
+    codecvt_byname<internT, externT, stateT>::codecvt_byname(const string& loc, std::size_t refs) : codecvt_byname(loc.c_str(), refs) {}
 }

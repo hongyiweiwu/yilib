@@ -9,6 +9,8 @@
 #include "stdexcept.hpp"
 #include "functional.hpp"
 #include "ranges.hpp"
+#include "ios.hpp"
+#include "algorithm.hpp"
 
 namespace std {
     /* 21.4.3 Class template basic_string_view */
@@ -460,10 +462,31 @@ namespace std {
     }
 
     /* 21.4.6 Inserters and extractors */
-    // TODO: Uncomment and implement once iostream is done.
-    /*
     template<class charT, class traits>
-    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, basic_string_view<charT, traits> str); */
+    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, basic_string_view<charT, traits> str) {
+        basic_ostream<charT, traits>::__formatted_output_function([&](ios_base::iostate& err) {
+            const std::streamsize padsize = max(os.width() - str.length(), 0);
+            const charT fill_char = os.fill();
+
+            if (padsize > 0 && (os.flags() & ios_base::adjustfield) != ios_base::left) {
+                for (std::streamsize i = 0; i < padsize; i++) {
+                    os.rdbuf()->sputn(&fill_char, 1);
+                }
+            }
+
+            os.rdbuf()->sputn(str.c_str(), min(os.width(), str.size()));
+
+            if (padsize > 0 && (os.flags() & ios_base::adjustfield) == ios_base::left) {
+                for (std::streamsize i = 0; i < padsize; i++) {
+                    os.rdbuf()->sputn(&fill_char, 1);
+                }
+            }
+
+            os.width(0);
+        });
+
+        return os;
+    }
 
     using string_view = basic_string_view<char>;
     using u8string_view = basic_string_view<char8_t>;

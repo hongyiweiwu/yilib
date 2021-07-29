@@ -1,7 +1,6 @@
 #pragma once
 
 #include "iosfwd.hpp"
-#include "string.hpp"
 #include "type_traits.hpp"
 #include "system_error.hpp"
 #include "memory.hpp"

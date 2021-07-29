@@ -75,8 +75,13 @@ namespace std {
         return sysconf(_SC_NPROCESSORS_ONLN);
     }
 
-    bool operator==(thread::id x, thread::id y) noexcept { return x.identifier == y.identifier; }
-    strong_ordering operator<=>(thread::id x, thread::id y) noexcept { return x.identifier <=> y.identifier; }
+    bool operator==(thread::id x, thread::id y) noexcept { 
+        return x.identifier == y.identifier;
+    }
+
+    strong_ordering operator<=>(thread::id x, thread::id y) noexcept { 
+        return x.identifier <=> y.identifier; 
+    }
 
     std::size_t hash<thread::id>::operator()(const thread::id& id) const {
         return reinterpret_cast<std::size_t>(id.identifier);

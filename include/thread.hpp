@@ -92,9 +92,10 @@ namespace std {
     bool operator==(thread::id, thread::id) noexcept;
     strong_ordering operator<=>(thread::id x, thread::id y) noexcept;
 
-    /* // TODO Uncomment after iostream is finished.
     template<class charT, class traits>
-    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& out, thread::id id); */
+    basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& out, thread::id id) {
+        return out << id.identifier;
+    }
 
     template<> struct hash<thread::id> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const thread::id& id) const;

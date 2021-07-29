@@ -11,7 +11,6 @@
 #include "ranges.hpp"
 #include "new.hpp"
 
-// TODO: Implement stream iterators.
 namespace std {
     namespace __internal {
         template<class T> using with_reference = T&;
@@ -1732,6 +1731,53 @@ namespace std {
         return x.in_stream == y.in_stream;
     }
 
+    template<class T, class charT = char, class traits = char_traits<charT>>
+    class ostream_iterator {
+    public:
+        using iterator_category = output_iterator_tag;
+        using value_type = void;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = void;
+        using char_type = charT;
+        using traits_type = traits;
+        using ostream_type = basic_ostream<charT, traits>;
+
+        constexpr ostream_iterator() noexcept = default;
+        ostream_iterator(ostream_type& s) : out_stream(addressof(s)), delim(nullptr) {}
+
+        ostream_iterator(ostream_type& s, const charT* delimiter) : out_stream(addressof(s)), delim(delimiter) {}
+        
+        ostream_iterator(const ostream_iterator& x) = default;
+        ~ostream_iterator() = default;
+        ostream_iterator& operator=(const ostream_iterator&) = default;
+
+        ostream_iterator& operator=(const T& value) {
+            *out_stream << value;
+            if (delim) {
+                *out_stream << delim;
+            }
+
+            return *this;
+        }
+
+        ostream_iterator& operator*() {
+            return *this;
+        }
+
+        ostream_iterator& operator++() {
+            return *this;
+        }
+
+        ostream_iterator& operator++(int) {
+            return *this;
+        }
+
+    private:
+        basic_ostream<charT, traits>* out_stream = nullptr;
+        const charT* delim = nullptr;
+    };
+
     template<class CharT, class Traits>
     class istreambuf_iterator {
     public:
@@ -1811,6 +1857,54 @@ namespace std {
     bool operator==(const istreambuf_iterator<charT, traits>& a, const istreambuf_iterator<charT, traits>& b) {
         return a.equal(b);
     }
+
+    template<class charT, class traits>
+    class ostreambuf_iterator {
+    public:
+        using iterator_category = output_iterator_tag;
+        using value_type = void;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = void;
+        using char_type = charT;
+        using traits_type = traits;
+        using streambuf_type = basic_streambuf<charT, traits>;
+        using ostream_type = basic_ostream<charT, traits>;
+
+        constexpr ostreambuf_iterator() noexcept = default;
+        ostreambuf_iterator(ostream_type& s) noexcept : sbuf(s.rdbuf()) {}
+
+        ostreambuf_iterator(streambuf_type* s) noexcept : sbuf(s) {}
+
+        ostreambuf_iterator& operator=(charT c) {
+            if (!failed()) {
+                if (traits::eq_int_type(sbuf->sputc(c), traits::eof())) {
+                    failed_flag = true;
+                }
+            }
+            return *this;
+        }
+
+        ostreambuf_iterator& operator*() {
+            return *this;
+        }
+
+        ostreambuf_iterator& operator++() {
+            return *this;
+        }
+
+        ostreambuf_iterator& operator++(int) {
+            return *this;
+        }
+
+        bool failed() const noexcept {
+            return failed_flag;
+        }
+
+    private:
+        streambuf_type* sbuf = nullptr;
+        bool failed_flag = false;
+    };
 
     /* 23.7 Range access */
     template<class C>

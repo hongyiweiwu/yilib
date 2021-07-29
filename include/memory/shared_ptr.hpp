@@ -608,8 +608,8 @@ namespace std {
     }
 
     /* 20.11.3.12 I/O */
-    // TODO: Uncomment this when iostream is done.
-    /*
     template<class E, class T, class Y>
-    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const shared_ptr<Y>& p) { return os << p.get(); } */
+    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const shared_ptr<Y>& p) { 
+        return os << p.get(); 
+    }
 }

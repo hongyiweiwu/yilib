@@ -54,7 +54,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `cstring` | &check; | | | | |
 | `cwchar` | &check; | | | | |
 | `cuchar` | | &check; | | | Blocked due to unknown logic for `mbrtoc8` and `c8rtomb`. |
-| `string` |  | &check; | | | Blocked due to `iostream` not yet implemented. |
+| `string` | &check; | | | | |
 | `string_view` | &check; | | | | |
 | `charconv` | | | | &check; | |
 | `format` | | | | &check; | |
@@ -70,7 +70,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `stack` | | | | &check; | |
 | `queue` | | | | &check; | |
 | `span` | &check; | | | | |
-| `iterator` | | | &check; | | |
+| `iterator` | &check; | | | | |
 | `ranges` | | | | &check; | |
 | `algorithm` | | | | &check; | |
 | `execution` | | | | &check; | |
@@ -99,7 +99,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `filesystem` | | | | &check; | |
 | `regex` | | | | &check; | |
 | `atomic` | | | | &check; | |
-| `thread` | | &check; | | | Blocked due to unimplemented `iostream`. |
+| `thread` | &check; | | | | |
 | `stop_token` | | &check; | | | Blocked due to possibly buggy `request_stop` implementation. |
 | `mutex` | | &check; | | | Blocked due to the unimplemented `lock` algorithm. |
 | `shared_mutex` | &check; | | | | |

@@ -5,6 +5,7 @@
 #include "utility.hpp"
 #include "cstddef.hpp"
 #include "functional.hpp"
+#include "iosfwd.hpp"
 
 /* 20.11.1 Class template unique_ptr */
 namespace std {
@@ -318,8 +319,9 @@ namespace std {
     }
 
     /* 20.11.1.7 I/O */
-    // TODO: Include "iostream.hpp" & enable this code after implementing it.
-    /*
-    template<class E, class T, class Y, class D> requires requires (basic_ostream<E, T>& os) { os << p.get(); }
-    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const unique_ptr<Y, D>& p) { return os << p.get(); } */
+    template<class E, class T, class Y, class D>
+    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const unique_ptr<Y, D>& p) 
+    requires requires (basic_ostream<E, T>& os) { os << p.get(); } {
+        return os << p.get(); 
+    }
 }

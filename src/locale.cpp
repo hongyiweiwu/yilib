@@ -454,6 +454,11 @@ namespace std {
 #endif
 
     // ctype_byname<wchar_t>
+    ctype_byname<wchar_t>::ctype_byname(const char* loc, std::size_t refs)
+        : ctype<wchar_t>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
+        
+    ctype_byname<wchar_t>::ctype_byname(const string& loc, std::size_t refs) : ctype_byname(loc.c_str(), refs) {}
+
     const wchar_t* ctype_byname<wchar_t>::do_is(const wchar_t* low, const wchar_t* high, mask* vec) const {
         auto loc = get_locale();
 #if YILIB_HAS_XLOCALE
@@ -526,6 +531,11 @@ namespace std {
     }
 
     // ctype_byname<char>
+    ctype_byname<char>::ctype_byname(const char* loc, std::size_t refs)
+        : ctype<char>(nullptr, false, refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
+        
+    ctype_byname<char>::ctype_byname(const string& loc, std::size_t refs) : ctype_byname(loc.c_str(), refs) {}
+
     char ctype_byname<char>::do_toupper(char c) const {
         auto loc = get_locale();
 

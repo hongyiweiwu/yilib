@@ -192,18 +192,17 @@ namespace std {
         explicit ctype_byname(const char* loc, std::size_t refs = 0)
             : ctype<charT>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
             
-        explicit ctype_byname(const string& loc, std::size_t refs = 0) : ctype_byname(loc.c_str(), refs) {}
+        explicit ctype_byname(const string& loc, std::size_t refs = 0);
     protected:
         ~ctype_byname() = default;
     };
 
-    template<> class ctype_byname<wchar_t> : public ctype<wchar_t>, public __internal::__locale_container<> {
+    template<> 
+    class ctype_byname<wchar_t> : public ctype<wchar_t>, public __internal::__locale_container<> {
     public:
         using mask = typename ctype<wchar_t>::mask;
-        explicit ctype_byname(const char* loc, std::size_t refs = 0)
-            : ctype<wchar_t>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
-            
-        explicit ctype_byname(const string& loc, std::size_t refs = 0) : ctype_byname(loc.c_str(), refs) {}
+        explicit ctype_byname(const char* loc, std::size_t refs = 0);
+        explicit ctype_byname(const string& loc, std::size_t refs = 0);
     protected:
         ~ctype_byname() = default;
 
@@ -216,13 +215,12 @@ namespace std {
         char do_narrow(wchar_t c, char dfault) const override;
     };
 
-    template<> class ctype_byname<char> : public ctype<char>, public __internal::__locale_container<> {
+    template<> 
+    class ctype_byname<char> : public ctype<char>, public __internal::__locale_container<> {
     public:
         using mask = typename ctype<char>::mask;
-        explicit ctype_byname(const char* loc, std::size_t refs = 0)
-            : ctype<char>(nullptr, false, refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
-            
-        explicit ctype_byname(const string& loc, std::size_t refs = 0) : ctype_byname(loc.c_str(), refs) {}
+        explicit ctype_byname(const char* loc, std::size_t refs = 0);
+        explicit ctype_byname(const string& loc, std::size_t refs = 0);
     protected:
         ~ctype_byname() = default;
 
@@ -429,7 +427,7 @@ namespace std {
     public:
         explicit codecvt_byname(const char* loc, std::size_t refs = 0)
             : codecvt<internT, externT, stateT>(refs), __internal::__locale_container<>(loc, LC_CTYPE) {}
-        explicit codecvt_byname(const string& loc, std::size_t refs = 0) : codecvt_byname(loc.c_str(), refs) {}
+        explicit codecvt_byname(const string& loc, std::size_t refs = 0);
 
     protected:
         ~codecvt_byname() = default;
