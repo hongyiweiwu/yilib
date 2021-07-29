@@ -1,10 +1,10 @@
 #pragma once
 
 #include "cstddef.hpp"
-#include "string.hpp"
 #include "cstring.hpp"
 #include "typeinfo.hpp"
 #include "stdexcept.hpp"
+#include "memory.hpp"
 
 namespace std {
     /* 28.3.1 locale */
@@ -53,9 +53,10 @@ namespace std {
         locale(const locale& other, const char* std_name, category);
         locale(const locale& other, const string& std_name, category);
         template<class Facet> locale(const locale& other, Facet* f) : locale(other) {
-            n = "*";
-            if (!f) return;
-            else if (Facet::id.n >= facets_arr_size) {
+            std::strcpy(n.get(), "*");
+            if (!f) {
+                return;
+            } else if (Facet::id.n >= facets_arr_size) {
                 locale::facet** new_facets_arr = new locale::facet*[Facet::id.n + 1]();
                 std::memcpy(new_facets_arr, facets, sizeof(locale::facet*) * facets_arr_size);
                 delete[] facets;
@@ -63,7 +64,9 @@ namespace std {
                 facets_arr_size = Facet::id.n + 1;
             }
 
-            if (facets[Facet::id.n]) facets[Facet::id.n]->decrement_ref();
+            if (facets[Facet::id.n]) {
+                facets[Facet::id.n]->decrement_ref();
+            }
             f->increment_ref();
             facets[Facet::id.n] = f;
         }
@@ -93,7 +96,7 @@ namespace std {
         /* Backdoor constructor for the classic locale. */
         locale(locale::facet** facets, std::size_t facets_arr_size, const char* name = "C");
 
-        string n;
+        unique_ptr<char[]> n;
         locale::facet** facets;
         std::size_t facets_arr_size;
 

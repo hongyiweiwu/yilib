@@ -42,13 +42,20 @@ namespace std {
 
     // locale
     locale::locale() noexcept : locale(classic()) {}
-    locale::locale(const locale& other) noexcept : n(other.n), facets(other.facets), facets_arr_size(other.facets_arr_size) {
+    locale::locale(const locale& other) noexcept : n(), facets(other.facets), facets_arr_size(other.facets_arr_size) {
+        n = std::make_unique<char[]>(std::strlen(n.get()) + 1);
+        std::strcpy(n.get(), other.n.get());
         for (std::size_t i = 0; i < facets_arr_size; i++)
             if (facets[i]) facets[i]->increment_ref();
     }
 
-    locale::locale(const char* std_name) : n(string(std_name)) {
-        if (!std_name) throw runtime_error("Invalid std_name in locale constructor.");
+    locale::locale(const char* std_name) : n() {
+        if (!std_name) {
+            throw runtime_error("Invalid std_name in locale constructor.");
+        }
+
+        n = std::make_unique<char[]>(std::strlen(std_name) + 1);
+        std::strcpy(n.get(), std_name);
 
         static const std::size_t max_id = max({ std::ctype<char>::id.n, std::ctype<wchar_t>::id.n,
             codecvt<char, char, std::mbstate_t>::id.n, codecvt<char16_t, char8_t, std::mbstate_t>::id.n,
@@ -105,7 +112,10 @@ namespace std {
     locale::locale(const locale& other, const string& std_name, category c) : locale(other, std_name.c_str(), c) {}
 
     locale::locale(const locale& other, const locale& one, category c) : locale(other) {
-        if (other.name() == "*" && one.name() == "*") n = "*";
+        if (other.name() == "*" && one.name() == "*") {
+            std::strcpy(n.get(), "*");
+        }
+
         static constexpr auto replace_facet = [](locale::facet** facet_arr, std::size_t idx, locale::facet* replacement) {
             if (facet_arr[idx]) facet_arr[idx]->decrement_ref();
             facet_arr[idx] = replacement;
@@ -142,22 +152,32 @@ namespace std {
     }
 
     const locale& locale::operator=(const locale& other) noexcept {
-        n = other.n;
+        n = std::make_unique<char[]>(std::strlen(other.n.get()) + 1);
+        std::strcpy(n.get(), other.n.get());
         facets = other.facets;
         facets_arr_size = other.facets_arr_size;
 
-        for (std::size_t i = 0; i < facets_arr_size; i++)
-            if (facets[i]) facets[i]->increment_ref();
+        for (std::size_t i = 0; i < facets_arr_size; i++) {
+            if (facets[i]) {
+                facets[i]->increment_ref();
+            }
+        }
 
         return *this;
     }
 
-    string locale::name() const { return n; }
+    string locale::name() const { 
+        return n.get(); 
+    }
 
     bool locale::operator==(const locale& other) const {
-        if (n != "*" && other.n != "*" && n == other.n)  return true;
-        else if (n == other.n && facets == other.facets && facets_arr_size == other.facets_arr_size) return true;
-        else return false;
+        if (name() != "*" && other.name() != "*" && n == other.n) {
+            return true;
+        } else if (n == other.n && facets == other.facets && facets_arr_size == other.facets_arr_size) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     locale locale::global(const locale& other) {
@@ -196,7 +216,9 @@ namespace std {
     }
 
     locale::locale(locale::facet** facets, std::size_t facets_arr_size, const char* name) 
-        : n(string(name)), facets(facets), facets_arr_size(facets_arr_size) {}
+        : n(std::make_unique<char[]>(std::strlen(name) + 1)), facets(facets), facets_arr_size(facets_arr_size) {
+        std::strcpy(n.get(), name);
+    }
 
     // ctype<char>
     ctype<char>::ctype(const mask* tab, bool del, std::size_t refs) : locale::facet(refs), __internal::__ctype_impl<char>(), tab(tab), del_tab(del) {}
