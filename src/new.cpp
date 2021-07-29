@@ -1,9 +1,7 @@
 #include "new.hpp"
 #include "cstddef.hpp"
 #include "cstdlib.hpp"
-
-// TODO: Replace with "cmath.hpp" once it's implemented.
-#include "math.h"
+#include "cmath.hpp"
 
 namespace std {
     const char* bad_alloc::what() const noexcept { return "std::bad_alloc"; }
@@ -35,7 +33,7 @@ namespace std {
     }
 
     if (size % static_cast<size_t>(alignment) != 0) {
-        size = ceil(double(size) / static_cast<size_t>(alignment)) * static_cast<size_t>(alignment);
+        size = std::ceil(double(size) / static_cast<size_t>(alignment)) * static_cast<size_t>(alignment);
     }
 
     void* ptr = nullptr;

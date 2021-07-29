@@ -4,9 +4,7 @@
 #include "climits.hpp"
 #include "cfloat.hpp"
 #include "util/macros.hpp"
-
-// TODO: Temporary include. Later replace with "cmath.hpp".
-#include "math.h"
+#include "cmath.hpp"
 
 namespace std {
     /* 17.3.4 Floating-point type properties */
