@@ -138,8 +138,8 @@ namespace std {
 
     /* 20.11.1.4 unique_ptr for array objects with a runtime length */
     template<class T, class D> 
-        requires (is_function_v<D> || (!is_rvalue_reference_v<D> && is_object_v<remove_reference_t<D>> 
-            && requires { declval<D>()(declval<typename __internal::__unique_ptr_pointer_type<T, D>::type>()); } ))
+    requires is_function_v<D> || (!is_rvalue_reference_v<D> && is_object_v<remove_reference_t<D>> 
+        && requires { declval<D>()(declval<typename __internal::__unique_ptr_pointer_type<T, D>::type>()); } )
     class unique_ptr<T[], D> {
     public:
         using pointer = typename __internal::__unique_ptr_pointer_type<T, D>::type;

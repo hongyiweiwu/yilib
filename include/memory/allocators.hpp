@@ -114,9 +114,9 @@ namespace std {
         static constexpr void construct(Alloc& a, T* p, Args&& ...args) 
             requires requires { a.construct(p, forward<Args>(args)...); } || requires { construct_at(p, forward<Args>(args)...); } {
             if constexpr (requires { a.construct(p, forward<Args>(args)...); }) {
-                return a.construct(p, forward<Args>(args)...);
+                a.construct(p, forward<Args>(args)...);
             } else {
-                return construct_at(p, forward<Args>(args)...);
+                construct_at(p, forward<Args>(args)...);
             }
         }
 
