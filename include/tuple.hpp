@@ -3,7 +3,7 @@
 #include "cstddef.hpp"
 #include "utility.hpp"
 #include "type_traits.hpp"
-#include "algorithm.hpp"
+#include "compare.hpp"
 
 #include "__tuple.hpp"
 

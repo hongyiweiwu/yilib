@@ -59,7 +59,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `charconv` | | | | &check; | |
 | `format` | | | | &check; | |
 | `array` | &check; | | | | |
-| `vector` | | | | &check; | |
+| `vector` | | | &check; | | |
 | `deque` | | | | &check; | |
 | `list` | | | | &check; | |
 | `forward_list` | | | | &check; | |
