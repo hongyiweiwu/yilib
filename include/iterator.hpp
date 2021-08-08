@@ -261,16 +261,16 @@ namespace std {
             struct iter_move_fn {
             private:
                 template<class E>
-                static constexpr bool use_adl_iter_move() noexcept {
-                    return (is_class_v<E> || is_enum_v<E>) && requires (E&& e) { iter_move(forward<E>(e)); };
-                }
+                static constexpr bool use_adl_iter_move = (is_class_v<E> || is_enum_v<E>) && requires (E&& e) { iter_move(forward<E>(e)); };
             public:
-                template<class E> requires (use_adl_iter_move<E>())
+                template<class E> 
+                requires use_adl_iter_move<E>
                 constexpr decltype(auto) operator()(E&& e) const noexcept(noexcept(iter_move(forward<E>(e)))) {
                     return iter_move(forward<E>(e));
                 }
 
-                template<class E> requires (!use_adl_iter_move<E>()) && requires (E&& e) { *forward<E>(e); }
+                template<class E> 
+                requires (!use_adl_iter_move<E>) && requires (E&& e) { *forward<E>(e); }
                 constexpr decltype(auto) operator()(E&& e) const noexcept(noexcept(*forward<E>(e))) {
                     if constexpr (is_lvalue_reference_v<decltype(*forward<E>(e))>) {
                         return move(*forward<E>(e));
@@ -278,18 +278,18 @@ namespace std {
                         return *forward<E>(e);
                     }
                 }
-
             };
         }
 
-        inline namespace __inline_iter_move {
-            inline constexpr __iter_move_internal::iter_move_fn iter_move;
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__iter_move_internal::iter_move_fn iter_move;
         }
 
         /* 23.3.3.2 ranges::iter_swap */
         namespace __iter_swap_internal {
             template<class X, class Y>
-            constexpr iter_value_t<X> iter_exchange_move(X&& x, Y&& y) noexcept(noexcept(iter_value_t<X>(iter_move(x))) && noexcept(*x = iter_move(y))) {
+            constexpr iter_value_t<X> iter_exchange_move(X&& x, Y&& y) 
+            noexcept(noexcept(iter_value_t<X>(iter_move(x))) && noexcept(*x = iter_move(y))) {
                 iter_value_t<X> old_value(iter_move(x));
                 *x = iter_move(y);
                 return old_value;
@@ -306,35 +306,41 @@ namespace std {
                         && requires (X&& x, Y&& y) { iter_swap(forward<X>(x), forward<Y>(y)); };
                 }
 
+                // Forward declaration. Implemented below.
                 template<class X, class Y>
                 static constexpr bool use_ranges_swap() noexcept;
 
+                // Forward declaration. Implemented below.
                 template<class X, class Y>
                 static constexpr bool use_iter_exchange_move() noexcept;
             public:
-                template<class X, class Y> requires (use_adl_iter_swap<X, Y>())
+                template<class X, class Y>
+                requires (use_adl_iter_swap<X, Y>())
                 constexpr void operator()(X&& x, Y&& y) const noexcept(noexcept(iter_swap(forward<X>(x), forward<Y>(y)))) {
                     iter_swap(forward<X>(x), forward<Y>(y));
                 }
 
-                template<class X, class Y> requires (use_ranges_swap<X, Y>())
+                template<class X, class Y>
+                requires (use_ranges_swap<X, Y>())
                 constexpr void operator()(X&& x, Y&& y) const noexcept(noexcept(ranges::swap(*forward<X>(x), *forward<Y>(y)))) {
                     ranges::swap(forward<X>(x), forward<Y>(y));
                 }
 
-                template<class X, class Y> requires (use_iter_exchange_move<X, Y>())
+                template<class X, class Y>
+                requires (use_iter_exchange_move<X, Y>())
                 constexpr void operator()(X&& x, Y&& y) const noexcept(noexcept(*forward<X>(x) = iter_exchange_move(forward<Y>(y), forward<X>(x)))) {
                     *forward<X>(x) = iter_exchange_move(forward<Y>(y), forward<X>(x));
                 }
             };
         }
 
-        inline namespace __inline_iter_swap {
-            inline constexpr __iter_swap_internal::iter_swap_fn iter_swap;
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__iter_swap_internal::iter_swap_fn iter_swap;
         }
     }
 
-    template<__internal::dereferenceable T> requires requires (T& t) {
+    template<__internal::dereferenceable T> 
+    requires requires (T& t) {
         { ranges::iter_move(t) } -> __internal::can_reference;
     }
     using iter_rvalue_reference_t = decltype(ranges::iter_move(declval<T&>()));
@@ -670,159 +676,158 @@ namespace std {
 
     /* 23.4.4 Range iterator operations */
     namespace ranges {
-        namespace __advance_impl {
-            struct advance_fn {
-                template<input_or_output_iterator I>
-                constexpr void operator()(I& i, iter_difference_t<I> n) const {
-                    if constexpr (is_same_v<typename iterator_traits<I>::iterator_category, random_access_iterator_tag>) {
-                        i += n;
-                    } else {
-                        if (n >= 0) {
-                            while (n--) {
-                                i++;
-                            }
-                        } else {
-                            while (n++) {
-                                i--;
-                            }
-                        }
-                    }   
-                }
-
-                template<input_or_output_iterator I, sentinel_for<I> S>
-                constexpr void operator()(I& i, S bound) const {
-                    if constexpr (assignable_from<I&, S>) {
-                        i = move(bound);
-                    } else if constexpr (sized_sentinel_for<S, I>) {
-                        this->operator()(i, bound - i);
-                    } else {
-                        while (i != bound) {
+        struct __advance_fn {
+            template<input_or_output_iterator I>
+            constexpr void operator()(I& i, iter_difference_t<I> n) const {
+                if constexpr (is_same_v<typename iterator_traits<I>::iterator_category, random_access_iterator_tag>) {
+                    i += n;
+                } else {
+                    if (n >= 0) {
+                        while (n--) {
                             i++;
                         }
+                    } else {
+                        while (n++) {
+                            i--;
+                        }
+                    }
+                }   
+            }
+
+            template<input_or_output_iterator I, sentinel_for<I> S>
+            constexpr void operator()(I& i, S bound) const {
+                if constexpr (assignable_from<I&, S>) {
+                    i = move(bound);
+                } else if constexpr (sized_sentinel_for<S, I>) {
+                    this->operator()(i, bound - i);
+                } else {
+                    while (i != bound) {
+                        i++;
                     }
                 }
+            }
 
-                template<input_or_output_iterator I, sentinel_for<I> S>
-                constexpr iter_difference_t<I> operator()(I& i, iter_difference_t<I> n, S bound) const {
-                    if constexpr (sized_sentinel_for<S, I>) {
-                        // std::abs is not constexpr.
-                        constexpr auto abs = [](const iter_difference_t<I> x) {
-                            return x < 0 ? -x : x;
-                        };
+            template<input_or_output_iterator I, sentinel_for<I> S>
+            constexpr iter_difference_t<I> operator()(I& i, iter_difference_t<I> n, S bound) const {
+                if constexpr (sized_sentinel_for<S, I>) {
+                    // std::abs is not constexpr.
+                    constexpr auto abs = [](const iter_difference_t<I> x) {
+                        return x < 0 ? -x : x;
+                    };
 
-                        if (const auto dist = abs(n) - abs(bound - i); dist >= 0) {
-                            this->operator()(i, bound);
-                            return dist;
-                        } else {
-                            this->operator()(i, n);
-                            return 0;
-                        }
+                    if (const auto dist = abs(n) - abs(bound - i); dist >= 0) {
+                        this->operator()(i, bound);
+                        return dist;
                     } else {
-                        iter_difference_t<I> ct;
-                        if (n >= 0) {
-                            while (i != bound && n != 0) {
-                                i++;
-                                n--;
-                            }
-                        } else {
-                            while (i != bound && n != 0) {
-                                i--;
-                                n++;
-                            }
-                        }
-
-                        return n;
+                        this->operator()(i, n);
+                        return 0;
                     }
-                }
-            };
-        }
-
-        inline constexpr __advance_impl::advance_fn advance;
-
-        namespace __distance_impl {
-            struct distance_fn {
-                template<input_or_output_iterator I, sentinel_for<I> S>
-                constexpr iter_difference_t<I> distance(I first, S last) const {
-                    if constexpr (sized_sentinel_for<S, I>) {
-                        return last - first;
-                    } else {
-                        iter_difference_t<I> i = 0;
-                        while (first != last) {
-                            first++;
+                } else {
+                    if (n >= 0) {
+                        while (i != bound && n != 0) {
                             i++;
+                            n--;
                         }
-
-                        return i;
-                    }
-                }
-                
-                /* TODO: Uncomment after <ranges> is implemented.
-                template<range R>
-                constexpr range_difference_t<R> distance(R&& r) const {
-                    if constexpr (sized_range<R>) {
-                        return static_cast<range_difference_t<R>>(ranges::size(r));
                     } else {
-                        return ranges::distance(ranges::begin(r), ranges::end(r));
+                        while (i != bound && n != 0) {
+                            i--;
+                            n++;
+                        }
                     }
-                } */
-            };
+
+                    return n;
+                }
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__advance_fn advance;
         }
 
-        inline constexpr __distance_impl::distance_fn distance;
+        struct __distance_fn {
+            template<input_or_output_iterator I, sentinel_for<I> S>
+            constexpr iter_difference_t<I> distance(I first, S last) const {
+                if constexpr (sized_sentinel_for<S, I>) {
+                    return last - first;
+                } else {
+                    iter_difference_t<I> i = 0;
+                    while (first != last) {
+                        first++;
+                        i++;
+                    }
 
-        namespace __next_impl {
-            struct next_fn {
-                template<input_or_output_iterator I>
-                constexpr I next(I x) const {
-                    ++x;
-                    return x;
+                    return i;
                 }
+            }
+            
+            /* TODO: Uncomment after <ranges> is implemented.
+            template<range R>
+            constexpr range_difference_t<R> distance(R&& r) const {
+                if constexpr (sized_range<R>) {
+                    return static_cast<range_difference_t<R>>(ranges::size(r));
+                } else {
+                    return ranges::distance(ranges::begin(r), ranges::end(r));
+                }
+            } */
+        };
 
-                template<input_or_output_iterator I>
-                constexpr I next(I x, iter_difference_t<I> n) const {
-                    ranges::advance(x, n);
-                    return x;
-                }
-
-                template<input_or_output_iterator I, sentinel_for<I> S>
-                constexpr I next(I x, S bound) const {
-                    ranges::advance(x, bound);
-                    return x;
-                }
-
-                template<input_or_output_iterator I, sentinel_for<I> S>
-                constexpr I next(I x, iter_difference_t<I> n, S bound) const {
-                    ranges::advance(x, n, bound);
-                    return x;
-                }
-            };
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__distance_fn distance;
         }
 
-        inline constexpr __next_impl::next_fn next;
+        struct __next_fn {
+            template<input_or_output_iterator I>
+            constexpr I next(I x) const {
+                ++x;
+                return x;
+            }
 
-        namespace __prev_impl {
-            struct prev_fn {
-                template<input_or_output_iterator I>
-                constexpr I prev(I x) const {
-                    --x;
-                    return x;
-                }
+            template<input_or_output_iterator I>
+            constexpr I next(I x, iter_difference_t<I> n) const {
+                ranges::advance(x, n);
+                return x;
+            }
 
-                template<input_or_output_iterator I>
-                constexpr I prev(I x, iter_difference_t<I> n) const {
-                    ranges::advance(x, -n);
-                    return x;
-                }
+            template<input_or_output_iterator I, sentinel_for<I> S>
+            constexpr I next(I x, S bound) const {
+                ranges::advance(x, bound);
+                return x;
+            }
 
-                template<input_or_output_iterator I>
-                constexpr I prev(I x, iter_difference_t<I> n, I bound) const {
-                    ranges::advance(x, -n, bound);
-                    return x;
-                }
-            };
+            template<input_or_output_iterator I, sentinel_for<I> S>
+            constexpr I next(I x, iter_difference_t<I> n, S bound) const {
+                ranges::advance(x, n, bound);
+                return x;
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__next_fn next;
         }
 
-        inline constexpr __prev_impl::prev_fn prev;
+        struct prev_fn {
+            template<input_or_output_iterator I>
+            constexpr I prev(I x) const {
+                --x;
+                return x;
+            }
+
+            template<input_or_output_iterator I>
+            constexpr I prev(I x, iter_difference_t<I> n) const {
+                ranges::advance(x, -n);
+                return x;
+            }
+
+            template<input_or_output_iterator I>
+            constexpr I prev(I x, iter_difference_t<I> n, I bound) const {
+                ranges::advance(x, -n, bound);
+                return x;
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::prev_fn prev;
+        }
     }
 
     /* 23.5.1 Reverse iterators */
@@ -2055,14 +2060,15 @@ namespace std {
     /* Implementation */
     namespace ranges::__iter_swap_internal {
         template<class X, class Y>
-        constexpr bool iter_swap_fn::use_ranges_swap() noexcept {
-            return !use_adl_iter_swap<X, Y>() && indirectly_readable<X> && indirectly_readable<Y>
-                && swappable_with<X&, Y&>;
+        constexpr bool iter_swap_fn::use_ranges_swap() noexcept { 
+            return !use_adl_iter_swap<X, Y>() && indirectly_readable<X> 
+                && indirectly_readable<Y> && swappable_with<X&, Y&>;
         }
 
         template<class X, class Y>
-        constexpr bool iter_swap_fn::use_iter_exchange_move() noexcept {
-            return !use_ranges_swap<X, Y>() && indirectly_movable_storable<X, Y> && indirectly_movable_storable<Y, X>;
+        constexpr bool iter_swap_fn::use_iter_exchange_move() noexcept { 
+            return !use_ranges_swap<X, Y>() && indirectly_movable_storable<X, Y> 
+                && indirectly_movable_storable<Y, X>;
         }
     }
 }

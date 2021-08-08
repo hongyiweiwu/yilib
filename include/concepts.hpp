@@ -48,34 +48,36 @@ namespace std {
         // want to pollute the latter with our custom deleted swap function.
         namespace __swap_internal {
             // Prevents any ranges::swap declarations in the ranges namespace from engaging in overload resolution.
-            template<class T> void swap(T&, T&) = delete;
+            template<class T>
+            void swap(T&, T&) = delete;
 
-            struct __swap_fn;
-
-            template<class T, class U>
-            concept __std_swap_usable = (is_class_v<remove_cvref_t<T>> || is_enum_v<remove_cvref_t<T>>) && (is_class_v<remove_cvref_t<U>> || is_enum_v<remove_cvref_t<U>>)
+            struct swap_fn {
+            private:
+                template<class T, class U>
+                static constexpr bool user_swap_usable = (is_class_v<remove_cvref_t<T>> || is_enum_v<remove_cvref_t<T>>) && (is_class_v<remove_cvref_t<U>> || is_enum_v<remove_cvref_t<U>>)
                     && requires (T&& e1, U&& e2) { (void) swap(e1, e2); };
 
-            template<class T, class U>
-            concept __array_swappable = !__std_swap_usable<T, U> && is_array_v<T> && is_array_v<U> && (extent_v<T> == extent_v<U>)
-                && requires (T&& e1, U&&e2, const __swap_fn& swap) { swap(*e1, *e2); };
+                template<class T, class U>
+                static constexpr bool array_swappable = !user_swap_usable<T, U> && is_array_v<T> && is_array_v<U> && (extent_v<T> == extent_v<U>)
+                    && requires (T&& e1, U&&e2, const swap_fn& swap) { swap(*e1, *e2); };
 
-            template<class T>
-            concept __exchangeable = (!__std_swap_usable<T&, T&>) && (!__array_swappable<T&, T&>)
-                && assignable_from<T&, T>
-                // move_constructible<T, T> spelled out 
-                && is_nothrow_destructible_v<T> && is_constructible_v<T, T> && convertible_to<T, T>;
+                template<class T>
+                static constexpr bool exchangeable = (!user_swap_usable<T&, T&>) && (!array_swappable<T&, T&>)
+                    && assignable_from<T&, T>
+                    // move_constructible<T, T> spelled out 
+                    && is_nothrow_destructible_v<T> && is_constructible_v<T, T> && convertible_to<T, T>;
 
-            struct __swap_fn {
-                template<class T, class U> requires __std_swap_usable<T, U>
+            public:
+                template<class T, class U> 
+                requires user_swap_usable<T, U>
                 constexpr void operator()(T&& e1, U&& e2) const
-                    noexcept(noexcept(swap(::std::__internal::forward<T>(e1), ::std::__internal::forward<U>(e2))))
+                noexcept(noexcept(swap(::std::__internal::forward<T>(e1), ::std::__internal::forward<U>(e2))))
                 {
                     swap(::std::__internal::forward<T>(e1), ::std::__internal::forward<U>(e2));
                 }
 
                 template<class T, class U, std::size_t N>
-                requires __array_swappable<T(&)[N], U(&)[N]>
+                requires array_swappable<T(&)[N], U(&)[N]>
                 constexpr void operator()(T(&e1)[N], U(&e2)[N]) const noexcept(noexcept((*this)(*e1, *e2))) {
                     // ranges::swap_ranges spelled out
                     for (std::size_t i = 0; i < N; i++) {
@@ -84,8 +86,9 @@ namespace std {
                 }
 
                 template<class T>
-                requires __exchangeable<T>
-                constexpr void operator()(T& e1, T& e2) const noexcept(noexcept(T(::std::__internal::move(e1)), e1 = ::std::__internal::move(e2), e2 = ::std::__internal::move(::std::__internal::declval<T&>()))) {
+                requires exchangeable<T>
+                constexpr void operator()(T& e1, T& e2) const 
+                noexcept(noexcept(T(::std::__internal::move(e1)), e1 = ::std::__internal::move(e2), e2 = ::std::__internal::move(::std::__internal::declval<T&>()))) {
                     T t(::std::__internal::move(e1));
                     e1 = ::std::__internal::move(e2);
                     e2 = ::std::__internal::move(t);
@@ -93,8 +96,8 @@ namespace std {
             };
         }
 
-        inline namespace __inline_swap {
-            inline constexpr ::std::ranges::__swap_internal::__swap_fn swap;
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__swap_internal::swap_fn swap;
         }
     }
 

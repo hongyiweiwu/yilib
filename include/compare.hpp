@@ -385,7 +385,7 @@ namespace std {
         }
     }
 
-    namespace __strong_order {
+    namespace __strong_order_internal {
         // Brings forward, declval, and always_false from std::__internal into this namespace to make things clearer.
         using ::std::__internal::forward;
         using ::std::__internal::declval;
@@ -394,8 +394,10 @@ namespace std {
         // All xxx_order structs are defined in a context where their actual std-qualified versions are deleted.
         template<class E, class F> constexpr strong_ordering strong_order(E&&, F&&) = delete;
 
-        struct __strong_order {
-            template<class E, class F> static consteval bool __noexcept() {
+        struct strong_order_fn {
+        private:
+            template<class E, class F>
+            static consteval bool is_noexcept() noexcept {
                 if constexpr (is_same_v<decay_t<E>, decay_t<F>>) {
                     if constexpr (requires (E&& e, F&& f) { strong_ordering(strong_order(forward<E>(e), forward<F>(f))); }) {
                         return noexcept(strong_order(declval<E>(), declval<F>()));
@@ -409,8 +411,9 @@ namespace std {
                 return true;
             }
 
+        public:
             template<class E, class F>
-            constexpr strong_ordering operator()(E&& e, F&& f) const noexcept(__noexcept<E, F>()) {
+            constexpr strong_ordering operator()(E&& e, F&& f) const noexcept(is_noexcept<E, F>()) {
                 if constexpr (is_same_v<decay_t<E>, decay_t<F>>) {
                     if constexpr (requires (E&& e, F&& f) { strong_ordering(strong_order(forward<E>(e), forward<F>(f))); }) {
                         return strong_order(forward<E>(e), forward<F>(f));
@@ -426,11 +429,11 @@ namespace std {
         };
     }
 
-    inline namespace __inline_order {
-        inline constexpr __strong_order::__strong_order strong_order;
+    inline namespace __fn_objects {
+        inline constexpr ::std::__strong_order_internal::strong_order_fn strong_order;
     }
 
-    namespace __weak_order {
+    namespace __weak_order_internal {
         // Brings forward, declval, and always_false from std::__internal into this namespace to make things clearer.
         using ::std::__internal::forward;
         using ::std::__internal::declval;
@@ -439,8 +442,10 @@ namespace std {
         // All xxx_order structs are defined in a context where their actual std-qualified versions are deleted.
         template<class E, class F> constexpr weak_ordering weak_order(E&&, F&&) = delete;
 
-        struct __weak_order {
-            template<class E, class F> static consteval bool __noexcept() {
+        struct weak_order_fn {
+        private:
+            template<class E, class F>
+            static consteval bool is_noexcept() {
                 if constexpr (is_same_v<decay_t<E>, decay_t<F>>) {
                     if constexpr (requires (E&& e, F&& f) { weak_ordering(weak_order(forward<E>(e), forward<F>(f))); }) {
                         return noexcept(weak_order(declval<E>(), declval<F>()));
@@ -456,8 +461,9 @@ namespace std {
                 return true;
             }
 
+        public:
             template<class E, class F>
-            constexpr weak_ordering operator()(E&& e, F&& f) const noexcept(__noexcept<E, F>()) {
+            constexpr weak_ordering operator()(E&& e, F&& f) const noexcept(is_noexcept<E, F>()) {
                 if constexpr (is_same_v<decay_t<E>, decay_t<F>>) {
                     if constexpr (requires (E&& e, F&& f) { weak_ordering(weak_order(forward<E>(e), forward<F>(f))); }) {
                         return weak_order(forward<E>(e), forward<F>(f));
@@ -475,11 +481,11 @@ namespace std {
         };
     }
 
-    inline namespace __inline_order {
-        inline constexpr __weak_order::__weak_order weak_order;
+    inline namespace __fn_objects {
+        inline constexpr ::std::__weak_order_internal::weak_order_fn weak_order;
     }
 
-    namespace __partial_order {
+    namespace __partial_order_internal {
         // Brings forward, declval, and always_false from std::__internal into this namespace to make things clearer.
         using ::std::__internal::forward;
         using ::std::__internal::declval;
@@ -488,8 +494,10 @@ namespace std {
         // All xxx_order structs are defined in a context where their actual std-qualified versions are deleted.
         template<class E, class F> constexpr partial_ordering partial_order(E&&, F&&) = delete;
 
-        struct __partial_order {
-            template<class E, class F> static consteval bool __noexcept() {
+        struct partial_order_fn {
+        private:
+            template<class E, class F>
+            static consteval bool is_noexcept() {
                 if constexpr (is_same_v<decay_t<E>, decay_t<F>>) {
                     if constexpr (requires (E&& e, F&& f) { partial_ordering(partial_order(forward<E>(e), forward<F>(f))); }) {
                         return noexcept(partial_order(declval<E>(), declval<F>()));
@@ -503,8 +511,9 @@ namespace std {
                 return true;
             }
 
+        public:
             template<class E, class F>
-            constexpr partial_ordering operator()(E&& e, F&& f) const noexcept(__noexcept<E, F>()) {
+            constexpr partial_ordering operator()(E&& e, F&& f) const noexcept(is_noexcept<E, F>()) {
                 if constexpr (is_same_v<decay_t<E>, decay_t<F>>) {
                     if constexpr (requires (E&& e, F&& f) { partial_ordering(partial_order(forward<E>(e), forward<F>(f))); }) {
                         return partial_order(forward<E>(e), forward<F>(f));
@@ -520,87 +529,78 @@ namespace std {
         };
     }
 
-    inline namespace __inline_order {
-        inline constexpr __partial_order::__partial_order partial_order;
+    inline namespace __fn_objects {
+        inline constexpr ::std::__partial_order_internal::partial_order_fn partial_order;
     }
 
-    namespace __internal {
-        struct compare_strong_order_fallback {
-            template<class E, class F>
-            requires same_as<decay_t<E>, decay_t<F>> && requires (E&& e, F&& f) { strong_order(forward<E>(e), forward<F>(f)); }
-            constexpr strong_ordering operator()(E&& e, F&& f) const noexcept(noexcept(strong_order(forward<E>(e), forward<F>(f)))) {
-                return strong_order(forward<E>(e), forward<F>(f));
-            }
+    struct __compare_strong_order_fallback_fn {
+        template<class E, class F>
+        requires same_as<decay_t<E>, decay_t<F>> && requires (E&& e, F&& f) { strong_order(forward<E>(e), forward<F>(f)); }
+        constexpr strong_ordering operator()(E&& e, F&& f) const noexcept(noexcept(strong_order(forward<E>(e), forward<F>(f)))) {
+            return strong_order(forward<E>(e), forward<F>(f));
+        }
 
-            template<class E, class F>
-            requires same_as<decay_t<E>, decay_t<F>> 
-                && (!requires (E&& e, F&& f) { strong_order(forward<E>(e), forward<F>(f)); })
-                && requires (E&& e, F&& f) {
-                    { e == f } -> convertible_to<bool>;
-                    { e < f } -> convertible_to<bool>;
-            } constexpr strong_ordering operator()(E&& e, F&& f) const 
-                noexcept(noexcept(e == f ? strong_ordering::equivalent
-                                : e < f ? strong_ordering::less
-                                : strong_ordering::greater)) {
-                return e == f ? strong_ordering::equivalent
-                     : e < f ? strong_ordering::less
-                     : strong_ordering::greater;
+        template<class E, class F>
+        requires same_as<decay_t<E>, decay_t<F>> 
+            && (!requires (E&& e, F&& f) { strong_order(forward<E>(e), forward<F>(f)); })
+            && requires (E&& e, F&& f) {
+                { e == f } -> convertible_to<bool>;
+                { e < f } -> convertible_to<bool>;
             }
-        };
+        constexpr strong_ordering operator()(E&& e, F&& f) const noexcept(noexcept(e == f, e < f)) {
+            return e == f ? strong_ordering::equivalent
+                : e < f ? strong_ordering::less
+                : strong_ordering::greater;
+        }
+    };
 
-        struct compare_weak_order_fallback {
-            template<class E, class F>
-            requires same_as<decay_t<E>, decay_t<F>> && requires (E&& e, F&& f) { weak_order(forward<E>(e), forward<F>(f)); }
-            constexpr weak_ordering operator()(E&& e, F&& f) const noexcept(noexcept(weak_order(forward<E>(e), forward<F>(f)))) {
-                return weak_order(forward<E>(e), forward<F>(f));
+    struct __compare_weak_order_fallback_fn {
+        template<class E, class F>
+        requires same_as<decay_t<E>, decay_t<F>> && requires (E&& e, F&& f) { weak_order(forward<E>(e), forward<F>(f)); }
+        constexpr weak_ordering operator()(E&& e, F&& f) const noexcept(noexcept(weak_order(forward<E>(e), forward<F>(f)))) {
+            return weak_order(forward<E>(e), forward<F>(f));
+        }
+
+        template<class E, class F>
+        requires same_as<decay_t<E>, decay_t<F>> 
+            && (!requires (E&& e, F&& f) { weak_order(forward<E>(e), forward<F>(f)); })
+            && requires (E&& e, F&& f) {
+                { e == f } -> convertible_to<bool>;
+                { e < f } -> convertible_to<bool>;
             }
+        constexpr weak_ordering operator()(E&& e, F&& f) const noexcept(noexcept(e == f, e < f)) {
+            return e == f ? weak_ordering::equivalent
+                 : e < f ? weak_ordering::less
+                 : weak_ordering::greater;
+        }
+    };
 
-            template<class E, class F>
-            requires same_as<decay_t<E>, decay_t<F>> 
-                && (!requires (E&& e, F&& f) { weak_order(forward<E>(e), forward<F>(f)); })
-                && requires (E&& e, F&& f) {
-                    { e == f } -> convertible_to<bool>;
-                    { e < f } -> convertible_to<bool>;
-            } constexpr weak_ordering operator()(E&& e, F&& f) const 
-                noexcept(noexcept(e == f ? weak_ordering::equivalent
-                                : e < f ? weak_ordering::less
-                                : weak_ordering::greater)) {
-                return e == f ? weak_ordering::equivalent
-                     : e < f ? weak_ordering::less
-                     : weak_ordering::greater;
+    struct __compare_partial_order_fallback_fn {
+        template<class E, class F>
+        requires same_as<decay_t<E>, decay_t<F>> && requires (E&& e, F&& f) { partial_order(forward<E>(e), forward<F>(f)); }
+        constexpr partial_ordering operator()(E&& e, F&& f) const noexcept(noexcept(partial_order(forward<E>(e), forward<F>(f)))) {
+            return partial_order(forward<E>(e), forward<F>(f));
+        }
+
+        template<class E, class F>
+        requires same_as<decay_t<E>, decay_t<F>> 
+            && (!requires (E&& e, F&& f) { partial_order(forward<E>(e), forward<F>(f)); })
+            && requires (E&& e, F&& f) {
+                { e == f } -> convertible_to<bool>;
+                { e < f } -> convertible_to<bool>;
             }
-        };
+        constexpr partial_ordering operator()(E&& e, F&& f) const noexcept(noexcept(e == f, e < f, f < e)) {
+            return e == f ? partial_ordering::equivalent
+                : e < f ? partial_ordering::less
+                : f < e ? partial_ordering::greater
+                : partial_ordering::unordered;
+        }
+    };
 
-        struct compare_partial_order_fallback {
-            template<class E, class F>
-            requires same_as<decay_t<E>, decay_t<F>> && requires (E&& e, F&& f) { partial_order(forward<E>(e), forward<F>(f)); }
-            constexpr partial_ordering operator()(E&& e, F&& f) const noexcept(noexcept(partial_order(forward<E>(e), forward<F>(f)))) {
-                return partial_order(forward<E>(e), forward<F>(f));
-            }
-
-            template<class E, class F>
-            requires same_as<decay_t<E>, decay_t<F>> 
-                && (!requires (E&& e, F&& f) { partial_order(forward<E>(e), forward<F>(f)); })
-                && requires (E&& e, F&& f) {
-                    { e == f } -> convertible_to<bool>;
-                    { e < f } -> convertible_to<bool>;
-            } constexpr partial_ordering operator()(E&& e, F&& f) const 
-                noexcept(noexcept(e == f ? partial_ordering::equivalent
-                                : e < f ? partial_ordering::less
-                                : f < e ? partial_ordering::greater
-                                : partial_ordering::unordered)) {
-                return e == f ? partial_ordering::equivalent
-                    : e < f ? partial_ordering::less
-                    : f < e ? partial_ordering::greater
-                    : partial_ordering::unordered;
-            }
-        };
-    }
-
-    inline namespace __inline_order {
-        inline constexpr __internal::compare_strong_order_fallback compare_strong_order_fallback;
-        inline constexpr __internal::compare_weak_order_fallback compare_weak_order_fallback;
-        inline constexpr __internal::compare_partial_order_fallback compare_partial_order_fallback;
+    inline namespace __fn_objects {
+        inline constexpr ::std::__compare_strong_order_fallback_fn compare_strong_order_fallback;
+        inline constexpr ::std::__compare_weak_order_fallback_fn compare_weak_order_fallback;
+        inline constexpr ::std::__compare_partial_order_fallback_fn compare_partial_order_fallback;
     }
 
     namespace __internal {

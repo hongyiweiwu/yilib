@@ -118,20 +118,22 @@ namespace std {
     }
 
     namespace ranges {
-        namespace __construct_at_impl {
-            struct construct_at_fn {
-                template<class T, class ...Args> requires requires (void* ptr, Args&& ...args) { ::new (ptr) T(forward<Args>(args)...); }
-                constexpr T* operator()(T* p, Args&& ...args) const {
-                    return std::construct_at(p, forward<Args>(args)...);
-                }
-            };
-        }
+        struct __construct_at_fn {
+            template<class T, class ...Args> 
+            requires requires (void* ptr, Args&& ...args) { ::new (ptr) T(forward<Args>(args)...); }
+            constexpr T* operator()(T* p, Args&& ...args) const {
+                return std::construct_at(p, forward<Args>(args)...);
+            }
+        };
 
-        inline constexpr __construct_at_impl::construct_at_fn construct_at;
+        inline namespace __fn_objects {
+            inline constexpr ::std::ranges::__construct_at_fn construct_at;
+        }
     }
 
     /* 25.11.9 destroy */
-    template<class T> constexpr void destroy_at(T* location) {
+    template<class T>
+    constexpr void destroy_at(T* location) {
         if constexpr (is_array<T>::value) {
             // Equivalent to destroy(begin(*location), end(*location)).
             for (T& elem: *location) {
@@ -142,16 +144,17 @@ namespace std {
         }
     }
     
-    namespace ranges {
-        namespace __destroy_at_impl {
-            struct destroy_at_fn {
-                template<destructible T> constexpr void destroy_at(T* location) noexcept {
-                    return std::destroy_at(location);
-                }
-            };
-        }
+    namespace ranges {            
+        struct __destroy_at_fn {   
+            template<destructible T> 
+            constexpr void operator()(T* location) const noexcept {
+                return std::destroy_at(location);
+            }
+        };
 
-        inline constexpr __destroy_at_impl::destroy_at_fn destroy_at;
+        inline namespace __fn_objects {
+            inline constexpr std::ranges::__destroy_at_fn destroy_at;
+        }
     }
 
     template<__internal::no_throw_forward_iterator ForwardIt>
