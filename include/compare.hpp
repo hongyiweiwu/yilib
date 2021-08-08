@@ -329,20 +329,28 @@ namespace std {
     template<class T, class U = T> using compare_three_way_result_t = typename compare_three_way_result<T, U>::type;
 
     namespace __internal {
-        // 20.14.8.8 Models T and U if <=> in the expression "declval<T>() <=> declval<U>()"  resolvevs to a built-in operator comparing pointers.
-        template<class T, class U> concept __builtin_ptr_three_way = 
-            convertible_to<T, const volatile void*> && convertible_to<T, const volatile void*>
-            && requires (T&& t, U&& u) { static_cast<const volatile void*>(forward<T>(t)) <=> static_cast<const volatile void *>(forward<U>(u)); }
-            // User-defined operators can only be called through function notations. We use this check to make sure no <=> operators have been defined by the user
-            // for these two types.
-            && !requires (T&& t, U&& u) { operator<=>(forward<T>(t), forward<U>(u)); }
-            && !requires (T&& t, U&& u) { forward<T>(t).operator<=>(forward<U>(u)); };
+/* Creates a concept named __builtin_ptr_NAME that verifies if the given two types use the built-in pointer comparison when performing the 
+* operation specified by OP. */
+#define YILIB_BUILTIN_PTR_OP(NAME, OP) \
+        template<class T, class U> \
+        concept builtin_ptr_##NAME = convertible_to<T, const volatile void*> && convertible_to<T, const volatile void*> \
+            && requires (T&& t, U&& u) { static_cast<const volatile void*>(forward<T>(t)) OP static_cast<const volatile void *>(forward<U>(u)); } \
+            && !requires (T&& t, U&& u) { operator OP (forward<T>(t), forward<U>(u)); } \
+            && !requires (T&& t, U&& u) { forward<T>(t).operator OP (forward<U>(u)); }; \
+
+        YILIB_BUILTIN_PTR_OP(three_way, <=>)
+        YILIB_BUILTIN_PTR_OP(equal, ==);
+        YILIB_BUILTIN_PTR_OP(unequal, !=);
+        YILIB_BUILTIN_PTR_OP(less, <);
+        YILIB_BUILTIN_PTR_OP(less_or_equal, <=);
+        YILIB_BUILTIN_PTR_OP(greater, >);
+        YILIB_BUILTIN_PTR_OP(greater_or_equal, >=);
     }
 
     struct compare_three_way {
-        template<class T, class U> requires three_way_comparable_with<T, U> || __internal::__builtin_ptr_three_way<T, U>
+        template<class T, class U> requires three_way_comparable_with<T, U> || __internal::builtin_ptr_three_way<T, U>
         constexpr auto operator()(T&& t, U&& u) const noexcept(noexcept(__internal::forward<T>(t) <=> __internal::forward<U>(u))) {
-            if constexpr (__internal::__builtin_ptr_three_way<T, U>) {
+            if constexpr (__internal::builtin_ptr_three_way<T, U>) {
                 return static_cast<const volatile void*>(t) <=> static_cast<const volatile void*>(u);
             } else {
                 return __internal::forward<T>(t) <=> __internal::forward<U>(u);
@@ -596,10 +604,12 @@ namespace std {
     }
 
     namespace __internal {
-        template<class T, class U> requires requires (const T& t, const U& u) {
+        template<class T, class U> 
+        requires requires (const T& t, const U& u) {
             { t < u } -> boolean_testable;
             { u < t } -> boolean_testable;
-        } constexpr auto synth_three_way(const T& t, const U& u) {
+        } 
+        constexpr auto synth_three_way(const T& t, const U& u) {
             if constexpr (three_way_comparable_with<T, U>) {
                 return t <=> u;
             } else {
@@ -609,6 +619,7 @@ namespace std {
             }
         }
 
-        template<class T, class U = T> using synth_three_way_result = decltype(synth_three_way(declval<T&>(), declval<U&>()));
+        template<class T, class U = T> 
+        using synth_three_way_result = decltype(synth_three_way(declval<T&>(), declval<U&>()));
     }
 }

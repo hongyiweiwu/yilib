@@ -22,7 +22,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `typeindex` | &check; | | | | |
 | `type_traits` | &check; | | | | |
 | `bitset` | | &check; | | | Blocked due to complicated bit-shifting logic. |
-| `functional` | | | | &check; | |
+| `functional` | | | &check; | | |
 | `utility` | &check; | | | | |
 | `ctime` | &check; | | | | |
 | `chrono` | | | | &check; | |
@@ -78,7 +78,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `complex` | | | | &check; | |
 | `valarray` | | | | &check; | |
 | `random` | | | | &check; | |
-| `numeric` | | | | &check; | |
+| `numeric` | | | &check; | | |
 | `ratio` | | | | &check; | |
 | `cfenv` | &check; | | | | |
 | `bit` | &check; | | | | |
