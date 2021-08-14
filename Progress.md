@@ -79,7 +79,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `valarray` | | | | &check; | |
 | `random` | | | | &check; | |
 | `numeric` | | | &check; | | |
-| `ratio` | | | | &check; | |
+| `ratio` | &check; | | | | |
 | `cfenv` | &check; | | | | |
 | `bit` | &check; | | | | |
 | `numbers` | &check; | | | | |
