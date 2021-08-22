@@ -5,6 +5,7 @@
 #include "exception.hpp"
 #include "type_traits.hpp"
 #include "utility.hpp"
+#include "string.hpp"
 
 namespace std {
     template<class charT, class traits>
@@ -355,7 +356,7 @@ namespace std {
                         throw;
                     }
                 }
-            
+
                 this->setstate(err);
             }
 
@@ -616,7 +617,7 @@ namespace std {
 
             os.width(0);
         });
-        
+
         return os;
     }
 
@@ -652,7 +653,7 @@ namespace std {
 
             os.width(0);
         });
-        
+
         return os;
     }
 
