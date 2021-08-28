@@ -276,6 +276,7 @@ namespace std {
     constexpr T midpoint(T a, T b) noexcept {
         if constexpr (is_integral_v<T>) {
             using U = make_unsigned_t<T>;
+            return a > b ? a - (U(a) - b) / 2 : a + (U(b) - a) / 2;
         } else {
             return __builtin_isnormal(a) && __builtin_isnormal(b) ? (a / 2 + b / 2) : ((a + b) / 2);
         }
