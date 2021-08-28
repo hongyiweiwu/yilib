@@ -19,12 +19,28 @@ namespace std {
         using const_iterator = const E*;
         
         constexpr initializer_list() noexcept : beg(nullptr), s(0) {}
-        constexpr std::size_t size() const noexcept { return s; }
-        constexpr const E* begin() const noexcept { return beg; }
-        constexpr const E* end() const noexcept { return begin() + size(); }
+
+        constexpr std::size_t size() const noexcept {
+            return s;
+        }
+
+        constexpr const E* begin() const noexcept {
+            return beg;
+        }
+
+        constexpr const E* end() const noexcept {
+            return begin() + size();
+        }  
     };
 
     /* 17.10.5 Initializer list range access */
-    template<class E> constexpr const E* begin(initializer_list<E> il) noexcept { return il.begin(); }
-    template<class E> constexpr const E* end(initializer_list<E> il) noexcept { return il.end(); }
+    template<class E>
+    constexpr const E* begin(initializer_list<E> il) noexcept {
+        return il.begin();
+    }
+
+    template<class E>
+    constexpr const E* end(initializer_list<E> il) noexcept {
+        return il.end();
+    }
 }

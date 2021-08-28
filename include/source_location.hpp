@@ -13,9 +13,9 @@ namespace std {
 
     public:
         static consteval source_location current(
-            uint_least32_t line = __builtin_LINE(), 
-            uint_least32_t column = __builtin_COLUMN(), 
-            const char* file_name = __builtin_FILE(), 
+            uint_least32_t line = __builtin_LINE(),
+            uint_least32_t column = __builtin_COLUMN(),
+            const char* file_name = __builtin_FILE(),
             const char* function_name = __builtin_FUNCTION()) noexcept {
             return source_location(line, column, file_name, function_name);
         }
@@ -23,10 +23,22 @@ namespace std {
         constexpr source_location() noexcept
             : line_v(0), column_v(0), file_name_v(""), function_name_v("") {}
 
-        constexpr uint_least32_t line() const noexcept { return line_v; }
-        constexpr uint_least32_t column() const noexcept { return column_v; };
-        constexpr const char* file_name() const noexcept { return file_name_v; };
-        constexpr const char* function_name() const noexcept { return function_name_v; };
+        constexpr uint_least32_t line() const noexcept {
+            return line_v;
+        }
+
+        constexpr uint_least32_t column() const noexcept {
+            return column_v;
+        }
+;
+        constexpr const char* file_name() const noexcept {
+            return file_name_v;
+        }
+;
+        constexpr const char* function_name() const noexcept {
+            return function_name_v;
+        }
+;
 
     private:
         uint_least32_t line_v;

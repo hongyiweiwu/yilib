@@ -23,17 +23,50 @@ namespace std {
             using char_type = charT;
             using iter_type = InputIterator;
 
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, bool& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, long& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, long long& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned short& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned int& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned long& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned long long& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, float& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, double& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, long double& v) const { return do_get(in, end, str, err, v); }
-            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, void*& v) const { return do_get(in, end, str, err, v); }
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, bool& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, long& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, long long& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned short& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned int& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned long& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, unsigned long long& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, float& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, double& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, long double& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
+            iter_type get(iter_type in, iter_type end, ios_base& str, ios_base::iostate& err, void*& v) const {
+                return do_get(in, end, str, err, v);
+            }
+
 
         protected:
             virtual iter_type do_get(iter_type in, iter_type end, ios_base&, ios_base::iostate& err, bool& v) const = 0;

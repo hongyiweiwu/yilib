@@ -10,7 +10,7 @@ namespace std {
     class scoped_allocator_adaptor : public OuterAlloc {
     private:
         using OuterTraits = allocator_traits<OuterAlloc>;
-        
+
         template<class T>
         static constexpr auto outermost(T& x) noexcept {
             if constexpr (requires { x.outer_allocator(); }) {
@@ -37,16 +37,16 @@ namespace std {
         using void_pointer = typename OuterTraits::void_pointer;
         using const_void_pointer = typename OuterTraits::const_void_pointer;
 
-        using propagate_on_container_copy_assignment = bool_constant<allocator_traits<OuterAlloc>::propagate_on_container_copy_assignment::value 
+        using propagate_on_container_copy_assignment = bool_constant<allocator_traits<OuterAlloc>::propagate_on_container_copy_assignment::value
             || (allocator_traits<InnerAllocs>::propagate_on_container_copy_assignment::value || ...)>;
 
-        using propagate_on_container_move_assignment = bool_constant<allocator_traits<OuterAlloc>::propagate_on_container_move_assignment::value 
+        using propagate_on_container_move_assignment = bool_constant<allocator_traits<OuterAlloc>::propagate_on_container_move_assignment::value
             || (allocator_traits<InnerAllocs>::propagate_on_container_move_assignment::value || ...)>;
 
-        using propagate_on_container_swap = bool_constant<allocator_traits<OuterAlloc>::propagate_on_container_swap::value 
+        using propagate_on_container_swap = bool_constant<allocator_traits<OuterAlloc>::propagate_on_container_swap::value
             || (allocator_traits<InnerAllocs>::propagate_on_container_swap::value || ...)>;
 
-        using is_always_equal = bool_constant<allocator_traits<OuterAlloc>::is_always_equal::value 
+        using is_always_equal = bool_constant<allocator_traits<OuterAlloc>::is_always_equal::value
             || (allocator_traits<InnerAllocs>::is_always_equal::value || ...)>;
 
         template<class Tp> struct rebind {
@@ -128,7 +128,7 @@ namespace std {
 
         scoped_allocator_adaptor select_on_container_copy_construction() const {
             return scoped_allocator_adaptor(
-                OuterTraits::select_on_container_copy_construction(), 
+                OuterTraits::select_on_container_copy_construction(),
                 allocator_traits<InnerAllocs>::select_on_container_copy_construction()...);
         }
     };

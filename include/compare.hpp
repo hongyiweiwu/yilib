@@ -272,40 +272,55 @@ namespace std {
     constexpr bool is_gteq(partial_ordering cmp) noexcept { return cmp >= 0; }
 
     /* 17.11.3 Class template common_comparison_category */
-    template<class ...Ts> struct common_comparison_category {};
-    template<class ...Ts> struct common_comparison_category<partial_ordering, Ts...> {
+    template<class ...Ts>
+    struct common_comparison_category {};
+
+    template<class ...Ts>
+    struct common_comparison_category<partial_ordering, Ts...> {
         using returned_type = typename common_comparison_category<Ts...>::type;
         using type = conditional_t<is_void_v<returned_type>, void, partial_ordering>;
     };
-    template<class ...Ts> struct common_comparison_category<weak_ordering, Ts...> { 
+
+    template<class ...Ts>
+    struct common_comparison_category<weak_ordering, Ts...> { 
         using returned_type = typename common_comparison_category<Ts...>::type;
         using type = conditional_t<is_void_v<returned_type>, void, conditional_t<is_same_v<partial_ordering, returned_type>, partial_ordering, weak_ordering>>;
     };
-    template<class ...Ts> struct common_comparison_category<strong_ordering, Ts...> {
+
+    template<class ...Ts>
+    struct common_comparison_category<strong_ordering, Ts...> {
         using type = typename common_comparison_category<Ts...>::type;
     };
-    template<class T, class ...Ts> struct common_comparison_category<T, Ts...> {
+
+    template<class T, class ...Ts>
+    struct common_comparison_category<T, Ts...> {
         using type = void;
     };
-    template<> struct common_comparison_category<> {
+
+    template<>
+    struct common_comparison_category<> {
         using type = strong_ordering;
     };
 
-    template<class ...Ts> using common_comparison_category_t = typename common_comparison_category<Ts...>::type;
+    template<class ...Ts>
+    using common_comparison_category_t = typename common_comparison_category<Ts...>::type;
 
     /* 17.11.4 Concept three-way_comparable */
     namespace __internal {
-        template<class T, class Cat> concept compares_as = same_as<common_comparison_category_t<T, Cat>, Cat>;
+        template<class T, class Cat>
+        concept compares_as = same_as<common_comparison_category_t<T, Cat>, Cat>;
     }
 
-    template<class T, class Cat = partial_ordering> concept three_way_comparable = 
+    template<class T, class Cat = partial_ordering> 
+    concept three_way_comparable = 
         __internal::weakly_equality_comparable_with<T, T>
         && __internal::partially_ordered_with<T, T>
         && requires (const remove_reference_t<T>& t1, const remove_reference_t<T>& t2) {
             { t1 <=> t2 } -> __internal::compares_as<Cat>;
         };
 
-    template<class T, class U, class Cat = partial_ordering> concept three_way_comparable_with =
+    template<class T, class U, class Cat = partial_ordering>
+    concept three_way_comparable_with =
         three_way_comparable<T, Cat>
         && three_way_comparable<U, Cat>
         && common_reference_with<const remove_reference_t<T>&, const remove_reference_t<U>&>
@@ -318,15 +333,21 @@ namespace std {
         };
 
     namespace __internal {
-        template<class T, class U> struct __compare_three_way_result {};
-        template<class T, class U> requires requires { declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>(); }
+        template<class T, class U>
+        struct __compare_three_way_result {};
+
+        template<class T, class U>
+        requires requires { declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>(); }
         struct __compare_three_way_result<T, U> {
             using type = decltype(declval<const remove_reference_t<T>&>() <=> declval<const remove_reference_t<U>&>());
         };
     }
 
-    template<class T, class U = T> struct compare_three_way_result : __internal::__compare_three_way_result<T, U> {};
-    template<class T, class U = T> using compare_three_way_result_t = typename compare_three_way_result<T, U>::type;
+    template<class T, class U = T>
+    struct compare_three_way_result : __internal::__compare_three_way_result<T, U> {};
+
+    template<class T, class U = T>
+    using compare_three_way_result_t = typename compare_three_way_result<T, U>::type;
 
     namespace __internal {
 /* Creates a concept named __builtin_ptr_NAME that verifies if the given two types use the built-in pointer comparison when performing the 
@@ -348,7 +369,8 @@ namespace std {
     }
 
     struct compare_three_way {
-        template<class T, class U> requires three_way_comparable_with<T, U> || __internal::builtin_ptr_three_way<T, U>
+        template<class T, class U>
+        requires three_way_comparable_with<T, U> || __internal::builtin_ptr_three_way<T, U>
         constexpr auto operator()(T&& t, U&& u) const noexcept(noexcept(__internal::forward<T>(t) <=> __internal::forward<U>(u))) {
             if constexpr (__internal::builtin_ptr_three_way<T, U>) {
                 return static_cast<const volatile void*>(t) <=> static_cast<const volatile void*>(u);
@@ -440,7 +462,8 @@ namespace std {
         using ::std::__internal::always_false;
 
         // All xxx_order structs are defined in a context where their actual std-qualified versions are deleted.
-        template<class E, class F> constexpr weak_ordering weak_order(E&&, F&&) = delete;
+        template<class E, class F>
+        constexpr weak_ordering weak_order(E&&, F&&) = delete;
 
         struct weak_order_fn {
         private:
@@ -492,7 +515,8 @@ namespace std {
         using ::std::__internal::always_false;
 
         // All xxx_order structs are defined in a context where their actual std-qualified versions are deleted.
-        template<class E, class F> constexpr partial_ordering partial_order(E&&, F&&) = delete;
+        template<class E, class F>
+        constexpr partial_ordering partial_order(E&&, F&&) = delete;
 
         struct partial_order_fn {
         private:

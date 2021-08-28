@@ -12,18 +12,29 @@ namespace std {
     inline constexpr allocator_arg_t allocator_arg;
 
     /* 20.10.8 uses_allocator */
-    template<class T, class Alloc> struct uses_allocator : false_type {};
-    template<class T, class Alloc> requires requires { typename T::allocator_type; } && is_convertible_v<Alloc, typename T::allocator_type>
-        struct uses_allocator<T, Alloc> : true_type {};
-    template<class T, class Alloc> inline constexpr bool uses_allocator_v = uses_allocator<T, Alloc>::value;
-    
+    template<class T, class Alloc>
+    struct uses_allocator : false_type {};
+
+    template<class T, class Alloc>
+    requires requires { typename T::allocator_type; } && is_convertible_v<Alloc, typename T::allocator_type>
+    struct uses_allocator<T, Alloc> : true_type {};
+
+    template<class T, class Alloc>
+    inline constexpr bool uses_allocator_v = uses_allocator<T, Alloc>::value;
+
     namespace __internal {
-        template<class T> struct __is_specialized_of_pair : false_type {};
-        template<class T1, class T2> struct __is_specialized_of_pair<pair<T1, T2>> : true_type {};
-        template<class T> struct is_specialized_of_pair : __is_specialized_of_pair<remove_cv_t<T>> {};
+        template<class T>
+        struct __is_specialized_of_pair : false_type {};
+
+        template<class T1, class T2>
+        struct __is_specialized_of_pair<pair<T1, T2>> : true_type {};
+
+        template<class T>
+        struct is_specialized_of_pair : __is_specialized_of_pair<remove_cv_t<T>> {};
     }
 
-    template<class T, class Alloc, class ...Args> requires (!__internal::is_specialized_of_pair<T>::value)
+    template<class T, class Alloc, class ...Args>
+    requires (!__internal::is_specialized_of_pair<T>::value)
     constexpr auto uses_allocator_construction_args(const Alloc& alloc, Args&& ...args) noexcept {
         if constexpr (!uses_allocator_v<T, Alloc> && is_constructible_v<T, Args...>) {
             return forward_as_tuple(forward<Args>(args)...);
@@ -36,7 +47,8 @@ namespace std {
         }
     }
 
-    template<class T, class Alloc, class Tuple1, class Tuple2> requires __internal::is_specialized_of_pair<T>::value
+    template<class T, class Alloc, class Tuple1, class Tuple2>
+    requires __internal::is_specialized_of_pair<T>::value
     constexpr auto uses_allocator_construction_args(const Alloc& alloc, piecewise_construct_t, Tuple1&& x, Tuple2&& y) noexcept {
         using T1 = typename T::first_type;
         using T2 = typename T::second_type;
@@ -52,22 +64,26 @@ namespace std {
         );
     }
 
-    template<class T, class Alloc> requires __internal::is_specialized_of_pair<T>::value
+    template<class T, class Alloc>
+    requires __internal::is_specialized_of_pair<T>::value
     constexpr auto uses_allocator_construction_args(const Alloc& alloc) noexcept {
         return uses_allocator_construction_args<T>(alloc, piecewise_construct, forward_as_tuple(), forward_as_tuple());
     }
 
-    template<class T, class Alloc, class U, class V> requires __internal::is_specialized_of_pair<T>::value
+    template<class T, class Alloc, class U, class V>
+    requires __internal::is_specialized_of_pair<T>::value
     constexpr auto uses_allocator_construction_args(const Alloc& alloc, U&& u, V&& v) noexcept {
         return uses_allocator_construction_args<T>(alloc, piecewise_construct, forward_as_tuple(forward<U>(u)), forward_as_tuple(forward<V>(v)));
     }
 
-    template<class T, class Alloc, class U, class V> requires __internal::is_specialized_of_pair<T>::value
+    template<class T, class Alloc, class U, class V>
+    requires __internal::is_specialized_of_pair<T>::value
     constexpr auto uses_allocator_construction_args(const Alloc& alloc, const pair<U, V>& pr) noexcept {
         return uses_allocator_construction_args<T>(alloc, piecewise_construct, forward_as_tuple(pr.first), forward_as_tuple(pr.second));
     }
 
-    template<class T, class Alloc, class U, class V> requires __internal::is_specialized_of_pair<T>::value
+    template<class T, class Alloc, class U, class V>
+    requires __internal::is_specialized_of_pair<T>::value
     constexpr auto uses_allocator_construction_args(const Alloc& alloc, pair<U, V>&& pr) noexcept {
         return uses_allocator_construction_args<T>(alloc, piecewise_construct, forward_as_tuple(move(pr).first), forward_as_tuple(move(pr).second));
     }

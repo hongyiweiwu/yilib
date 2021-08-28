@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+PointerAlignment: Left
+NamespaceIndentation: All
+AccessModifierOffset: -4
+ColumnLimit: 180
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeConceptDeclarations: true
+IndentRequires: false
+SpaceAfterTemplateKeyword: false
+AllowShortFunctionsOnASingleLine: Empty
+IndentCaseBlocks: true
+IndentCaseLabels: true
+SpacesInAngles: false

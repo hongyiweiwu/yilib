@@ -5,35 +5,80 @@
 #include "cstddef.hpp"
 
 namespace std {
-    template<class charT> struct char_traits;
-    template<> struct char_traits<char>;
-    template<> struct char_traits<char8_t>;
-    template<> struct char_traits<char16_t>;
-    template<> struct char_traits<char32_t>;
-    template<> struct char_traits<wchar_t>;
+    template<class charT>
+    struct char_traits;
 
-    template<class T> class allocator;
+    template<>
+    struct char_traits<char>;
 
-    template<class charT, class traits = char_traits<charT>> class basic_ios;
-    template<class charT, class traits = char_traits<charT>> class basic_streambuf;
-    template<class charT, class traits = char_traits<charT>> class basic_istream;
-    template<class charT, class traits = char_traits<charT>> class basic_ostream;
-    template<class charT, class traits = char_traits<charT>> class basic_iostream;
+    template<>
+    struct char_traits<char8_t>;
 
-    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>> class basic_stringbuf;
-    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>> class basic_istringstream;
-    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>> class basic_ostringstream;
-    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>> class basic_stringstream;
+    template<>
+    struct char_traits<char16_t>;
 
-    template<class charT, class traits = char_traits<charT>> class basic_filebuf;
-    template<class charT, class traits = char_traits<charT>> class basic_ifstream;
-    template<class charT, class traits = char_traits<charT>> class basic_ofstream;
-    template<class charT, class traits = char_traits<charT>> class basic_fstream;
-    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>> class basic_syncbuf;
-    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>> class basic_osyncstream;
+    template<>
+    struct char_traits<char32_t>;
 
-    template<class charT, class traits = char_traits<charT>> class istreambuf_iterator;
-    template<class charT, class traits = char_traits<charT>> class ostreambuf_iterator;
+    template<>
+    struct char_traits<wchar_t>;
+
+    template<class T>
+    class allocator;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_ios;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_streambuf;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_istream;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_ostream;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_iostream;
+
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_stringbuf;
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_istringstream;
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_ostringstream;
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_stringstream;
+
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_filebuf;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_ifstream;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_ofstream;
+
+    template<class charT, class traits = char_traits<charT>>
+    class basic_fstream;
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_syncbuf;
+
+    template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT>>
+    class basic_osyncstream;
+
+
+    template<class charT, class traits = char_traits<charT>>
+    class istreambuf_iterator;
+
+    template<class charT, class traits = char_traits<charT>>
+    class ostreambuf_iterator;
 
     using ios = basic_ios<char>;
     using wios = basic_ios<wchar_t>;
@@ -74,7 +119,8 @@ namespace std {
     using wsyncbuf = basic_syncbuf<wchar_t>;
     using wosyncstream = basic_osyncstream<wchar_t>;
 
-    template<class state> requires is_default_constructible_v<state>
+    template<class state>
+    requires is_default_constructible_v<state>
         && is_copy_constructible_v<state> && is_copy_assignable_v<state>
         && is_nothrow_destructible_v<state>
     class fpos;

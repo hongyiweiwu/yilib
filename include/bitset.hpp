@@ -14,7 +14,7 @@
 #include "ios.hpp"
 
 namespace std {
-    template<std::size_t N> 
+    template<std::size_t N>
     class bitset {
     private:
         /* The number of bits each element in the storage array can store. */
@@ -28,7 +28,9 @@ namespace std {
 
         /* Returns a pair consisted of which block and which index inside the block the indicated bit belongs to. */
         static constexpr pair<std::size_t, std::size_t> bit_location(std::size_t pos) {
-            if (pos >= N) throw out_of_range("Invalid index.");
+            if (pos >= N) {
+                throw out_of_range("Invalid index.");
+            }
             return make_pair(pos / storage_block_size, pos % storage_block_size);
         }
 
@@ -42,8 +44,9 @@ namespace std {
         class reference {
             friend class bitset;
             reference() noexcept : bs(nullptr), idx(0) {}
-            reference(bitset<N>* bitset, std::size_t index) noexcept requires (index < N)
-                : bs(bitset), idx(index) {}
+
+            reference(bitset<N>* bitset, std::size_t index) noexcept
+            requires (index < N) : bs(bitset), idx(index) {}
 
             bitset* bs;
             std::size_t idx;
@@ -61,8 +64,14 @@ namespace std {
                 return *this;
             }
 
-            bool operator~() const noexcept { return bs->flip(idx)[idx]; }
-            operator bool() const noexcept { return bs->operator[](idx); }
+            bool operator~() const noexcept {
+                return bs->flip(idx)[idx];
+            }
+
+            operator bool() const noexcept {
+                return bs->operator[](idx);
+            }
+
             reference& flip() noexcept {
                 bs->flip(idx);
                 return *this;
@@ -74,7 +83,7 @@ namespace std {
         constexpr bitset(unsigned long long val) noexcept : storage{val} {}
 
         template<class charT, class traits, class Allocator>
-        explicit bitset(const basic_string<charT, traits, Allocator>& str, 
+        explicit bitset(const basic_string<charT, traits, Allocator>& str,
                         typename basic_string<charT, traits, Allocator>::size_type pos = 0,
                         typename basic_string<charT, traits, Allocator>::size_type n = basic_string<charT, traits, Allocator>::npos,
                         charT zero = charT('0'),
@@ -95,7 +104,7 @@ namespace std {
         }
 
         template<class charT>
-        explicit bitset(const charT* str, 
+        explicit bitset(const charT* str,
                         typename basic_string<charT>::size_type n = basic_string<charT>::npos,
                         charT zero = charT('0'),
                         charT one = charT('1')) : bitset(
@@ -126,7 +135,7 @@ namespace std {
 
         // TODO: Implement.
         bitset<N>& operator<<=(std::size_t) noexcept {
-            
+
         }
 
         // TODO: Implement.
@@ -160,8 +169,8 @@ namespace std {
             return *this;
         }
 
-        bitset<N>& reset(std::size_t pos) { 
-            return set(pos, false); 
+        bitset<N>& reset(std::size_t pos) {
+            return set(pos, false);
         }
 
         bitset<N> operator~() const noexcept {
@@ -196,20 +205,26 @@ namespace std {
         }
 
         reference operator[](std::size_t pos) {
-            if (pos >= N) throw out_of_range("Invalid index.");
-            return reference(this, pos); 
+            if (pos >= N) {
+                throw out_of_range("Invalid index.");
+            }
+            return reference(this, pos);
         }
 
         unsigned long to_ulong() const {
             if constexpr (sizeof(unsigned long) * CHAR_BIT < N) {
                 throw overflow_error("Given bitset cannot fit into an unsigned long.");
-            } else return storage[0];
+            } else {
+                return storage[0];
+            }
         }
 
         unsigned long long to_ullong() const {
             if constexpr (sizeof(unsigned long long) * CHAR_BIT < N) {
                 throw overflow_error("Given bitset cannot fit into an unsigned long long.");
-            } else return storage[0];
+            } else {
+                return storage[0];
+            }
         }
 
         template<class charT = char, class traits = char_traits<charT>, class Allocator = allocator<charT>>
@@ -234,8 +249,11 @@ namespace std {
             return c;
         }
 
-        constexpr std::size_t size() const noexcept { return N; }
-        bool operator==(const bitset<N>& rhs) const noexcept { 
+        constexpr std::size_t size() const noexcept {
+            return N;
+        }
+
+        bool operator==(const bitset<N>& rhs) const noexcept {
             for (std::size_t i = 0; i < storage_blocks; i++) {
                 if (storage[i] != rhs.storage[i]) return false;
             }
@@ -243,30 +261,59 @@ namespace std {
             return true;
         }
 
-        bool test(std::size_t pos) const { return this->operator[](pos); }
-        bool all() const noexcept { return count() == size(); }
-        bool any() const noexcept { return count() != 0; }
-        bool none() const noexcept { return count() == 0; }
-        bitset<N> operator<<(std::size_t pos) const noexcept { return bitset<N>(*this) <<= pos; }
-        bitset<N> operator>>(std::size_t pos) const noexcept { return bitset<N>(*this) >>= pos; }
-    };
+        bool test(std::size_t pos) const {
+            return this->operator[](pos);
+        }
 
-    template<std::size_t N> struct hash<bitset<N>> : hash<__internal::__enabled_hash_t> {
-        std::size_t operator()(const bitset<N>& key) const { 
-            return hash<string>()(key.to_string()); 
+        bool all() const noexcept {
+            return count() == size();
+        }
+
+        bool any() const noexcept {
+            return count() != 0;
+        }
+
+        bool none() const noexcept {
+            return count() == 0;
+        }
+
+        bitset<N> operator<<(std::size_t pos) const noexcept {
+            return bitset<N>(*this) <<= pos;
+        }
+
+        bitset<N> operator>>(std::size_t pos) const noexcept {
+            return bitset<N>(*this) >>= pos;
         }
     };
 
-    template<std::size_t N> bitset<N> operator&(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) &= rhs; }
-    template<std::size_t N> bitset<N> operator|(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) |= rhs; }
-    template<std::size_t N> bitset<N> operator^(const bitset<N>& lhs, const bitset<N>& rhs) noexcept { return bitset<N>(lhs) ^= rhs; }
+    template<std::size_t N>
+    struct hash<bitset<N>> : hash<__internal::__enabled_hash_t> {
+        std::size_t operator()(const bitset<N>& key) const {
+            return hash<string>()(key.to_string());
+        }
+    };
 
-    template<class charT, class traits, size_t N> 
+    template<std::size_t N>
+    bitset<N> operator&(const bitset<N>& lhs, const bitset<N>& rhs) noexcept {
+        return bitset<N>(lhs) &= rhs;
+    }
+
+    template<std::size_t N>
+    bitset<N> operator|(const bitset<N>& lhs, const bitset<N>& rhs) noexcept {
+        return bitset<N>(lhs) |= rhs;
+    }
+
+    template<std::size_t N>
+    bitset<N> operator^(const bitset<N>& lhs, const bitset<N>& rhs) noexcept {
+        return bitset<N>(lhs) ^= rhs;
+    }
+
+    template<class charT, class traits, size_t N>
     basic_istream<charT, traits>& operator>>(basic_istream<charT, traits>& is, bitset<N>& x) {
         is.__formatted_input_function([&](ios_base::iostate& err) {
             basic_string<charT, traits> str;
             str.reserve(N);
-            
+
             while (str.size() < N) {
                 const typename traits::int_type cint = is.rdbuf()->sgetc();
                 if (traits::eq_int_type(cint, traits::eof())) {
@@ -294,7 +341,7 @@ namespace std {
         return is;
     }
 
-    template<class charT, class traits, size_t N> 
+    template<class charT, class traits, size_t N>
     basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const bitset<N>& x) {
         return os << x.template to_string<charT, traits, allocator<charT>>(
             use_facet<ctype<charT>>(os.getloc()).widen('0'),

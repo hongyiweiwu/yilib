@@ -405,7 +405,7 @@ namespace std {
         basic_istream& getline(char_type* s, streamsize n) {
             return getline(s, n, this->widen('\n'));
         }
-        
+
         basic_istream& getline(char_type* s, streamsize n, char_type delim) {
             ios_base::iostate err = ios_base::goodbit;
             gcnt = 0;

@@ -25,8 +25,9 @@ namespace std {
         void notify_one() noexcept;
         void notify_all() noexcept;
         void wait(unique_lock<mutex>& lock);
+
         template<class Predicate>
-        void wait(unique_lock<mutex>& lock, Predicate pred) { 
+        void wait(unique_lock<mutex>& lock, Predicate pred) {
             while (!pred()) {
                 wait(lock);
             }
@@ -41,15 +42,21 @@ namespace std {
             const std::timespec abs_time_spec = { .tv_sec = secs.count(), .tv_nsec = ns.count() };
             const int ec = pthread_cond_timedwait(&handle, lock.mutex()->native_handle(), &abs_time_spec);
 
-            if (ec == ETIMEDOUT) return cv_status::timeout;
-            else if (ec) terminate();
-            else return cv_status::no_timeout;
+            if (ec == ETIMEDOUT) {
+                return cv_status::timeout;
+            } else if (ec) {
+                terminate();
+            } else {
+                return cv_status::no_timeout;
+            }
         }
 
         template<class Clock, class Duration, class Predicate>
         bool wait_until(unique_lock<mutex>& lock, const chrono::time_point<Clock, Duration>& abs_time, Predicate pred) {
             while (!pred()) {
-                if (wait_until(lock, abs_time) == cv_status::timeout) return pred();
+                if (wait_until(lock, abs_time) == cv_status::timeout) {
+                    return pred();
+                }
             }
             return true;
         }
@@ -57,8 +64,8 @@ namespace std {
         template<class Rep, class Period>
         cv_status wait_for(unique_lock<mutex>& lock, const chrono::duration<Rep, Period>& rel_time) {
             const chrono::seconds sec = chrono::duration_cast<chrono::seconds>(rel_time);
-            const std::timespec rel_time_spec = { 
-                .tv_sec = sec.count(), 
+            const std::timespec rel_time_spec = {
+                .tv_sec = sec.count(),
                 .tv_nsec = chrono::duration_cast<chrono::microseconds>(rel_time - sec).count()
             };
             const int ec = pthread_cond_timedwait_relative_np(
@@ -67,15 +74,21 @@ namespace std {
                 &rel_time_spec
             );
 
-            if (ec == ETIMEDOUT) return cv_status::timeout;
-            else if (ec) terminate();
-            else return cv_status::no_timeout;
+            if (ec == ETIMEDOUT) {
+                return cv_status::timeout;
+            } else if (ec) {
+                terminate();
+            } else {
+                return cv_status::no_timeout;
+            }
         }
 
         template<class Rep, class Period, class Predicate>
         bool wait_for(unique_lock<mutex>& lock, const chrono::duration<Rep, Period>& rel_time, Predicate pred) {
             while (!pred()) {
-                if (wait_for(lock, rel_time) == cv_status::timeout) return pred();
+                if (wait_for(lock, rel_time) == cv_status::timeout) {
+                    return pred();
+                }
             }
             return true;
         }
@@ -166,7 +179,9 @@ namespace std {
         template<__internal::basic_lockable Lock, class Predicate>
         bool wait(Lock& lock, stop_token stoken, Predicate pred) {
             while (!stoken.stop_requested()) {
-                if (pred()) return true;
+                if (pred()) {
+                    return true;
+                }
                 wait(lock);
             }
             return pred();
@@ -175,8 +190,11 @@ namespace std {
         template<__internal::basic_lockable Lock, class Clock, class Duration, class Predicate>
         bool wait_until(Lock& lock, stop_token stoken, const chrono::time_point<Clock, Duration>& abs_time, Predicate pred) {
             while (!stoken.stop_requested()) {
-                if (pred()) return true;
-                if (wait_until(lock, abs_time) == cv_status::timeout) return pred();
+                if (pred()) {
+                    return true;
+                } else if (wait_until(lock, abs_time) == cv_status::timeout) {
+                    return pred();
+                }
             }
 
             return pred();
@@ -185,8 +203,11 @@ namespace std {
         template<__internal::basic_lockable Lock, class Rep, class Period, class Predicate>
         bool wait_for(Lock& lock, stop_token stoken, const chrono::duration<Rep, Period>& rel_time, Predicate pred) {
             while (!stoken.stop_requested()) {
-                if (pred()) return true;
-                if (wait_for(lock, rel_time) == cv_status::timeout) return pred();
+                if (pred()) {
+                    return true;
+                } else if (wait_for(lock, rel_time) == cv_status::timeout) {
+                    return pred();
+                }
             }
 
             return pred();

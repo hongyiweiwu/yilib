@@ -9,15 +9,14 @@
 
 namespace std {
     /* 17.12.3 Coroutine traits */
-    namespace __internal {
-        template<class R, class Void, class ...ArgTypes> requires is_void_v<Void>
-        struct __coroutine_traits {};
-        template<class R, class ...ArgTypes> struct __coroutine_traits<R, void_t<typename R::promise_type>, ArgTypes...> {
-            using promise_type = typename R::promises_type;
-        };
-    }
+    template<class R, class ...ArgTypes>
+    struct coroutine_traits {};
 
-    template<class R, class ...ArgTypes> struct coroutine_traits : __internal::__coroutine_traits<R, void, ArgTypes...> {};
+    template<class R, class ...ArgTypes>
+    requires requires { typename R::promise_type; }
+    struct coroutine_traits<R, ArgTypes...> {
+        using promise_type = typename R::promise_type;
+    };
 
     // Forward declaration
     template<class Promise = void>
@@ -33,7 +32,10 @@ namespace std {
         constexpr coroutine_handle(nullptr_t) noexcept : ptr(nullptr) {}
         coroutine_handle& operator=(nullptr_t) noexcept;
 
-        constexpr void* address() const noexcept { return ptr; }
+        constexpr void* address() const noexcept {
+            return ptr;
+        }
+
         static constexpr coroutine_handle from_address(void* addr) {
             return coroutine_handle(addr);
         }
@@ -99,12 +101,17 @@ namespace std {
 
     /* 17.12.5 No-op coroutines */ 
     struct noop_coroutine_promise {};
-    constexpr std::size_t alignment = alignof(noop_coroutine_promise);
-    template<> struct coroutine_handle<noop_coroutine_promise> : coroutine_handle<> {
+
+    template<>
+    struct coroutine_handle<noop_coroutine_promise> : coroutine_handle<> {
         friend coroutine_handle<noop_coroutine_promise> noop_coroutine() noexcept;
 
-        constexpr explicit operator bool() const noexcept { return true; }
-        constexpr bool done() const noexcept { return false; }
+        constexpr explicit operator bool() const noexcept {
+            return true;
+        }
+        constexpr bool done() const noexcept {
+            return false;
+        }
 
         constexpr void operator()() const noexcept {}
         constexpr void resume() const noexcept {}
@@ -114,7 +121,9 @@ namespace std {
         noop_coroutine_promise& promise() const noexcept;
 #endif
 
-        constexpr void* address() const noexcept { return ptr; }
+        constexpr void* address() const noexcept {
+            return ptr;
+        }
     private:
 #if __has_intrinsics_for(builtin_coro_noop)
         coroutine_handle() noexcept;
@@ -127,13 +136,19 @@ namespace std {
 
     /* 17.12.6 Trivial awaitables */
     struct suspend_never {
-        constexpr bool await_ready() const noexcept { return true; }
+        constexpr bool await_ready() const noexcept {
+            return true;
+        }
+
         constexpr void await_suspend(coroutine_handle<>) const noexcept {}
         constexpr void await_resume() const noexcept {}
     };
 
     struct suspend_always {
-        constexpr bool await_ready() const noexcept { return false; }
+        constexpr bool await_ready() const noexcept {
+            return false;
+        }
+
         constexpr void await_suspend(coroutine_handle<>) const noexcept {}
         constexpr void await_resume() const noexcept {}
     };

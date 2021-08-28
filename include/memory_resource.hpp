@@ -19,7 +19,7 @@ namespace std::pmr {
         virtual ~memory_resource() = default;
 
         memory_resource& operator=(const memory_resource&) = default;
-        
+
         [[nodiscard]] void* allocate(std::size_t bytes, std::size_t alignment = max_align);
         void deallocate(void* p, std::size_t bytes, std::size_t alignment = max_align);
 
@@ -36,7 +36,7 @@ namespace std::pmr {
     /* 20.12.3 Class template polymorphic_allocator */
     // Forward declaration. Formally declared below and implemented in the corresponding cpp file.
     memory_resource* get_default_resource() noexcept;
-    
+
     template<class Tp = byte>
     class polymorphic_allocator {
     private:
@@ -70,12 +70,13 @@ namespace std::pmr {
         [[nodiscard]] void* allocate_bytes(std::size_t nbytes, std::size_t alignment = alignof(std::max_align_t)) {
             return memory_rsrc->allocate(nbytes, alignment);
         }
-        
+
         void deallocate_bytes(void* p, std::size_t nbytes, std::size_t alignment = alignof(std::max_align_t)) {
             memory_rsrc->deallocate(p, nbytes, alignment);
         }
 
-        template<class T> [[nodiscard]] T* allocate_object(std::size_t n = 1) {
+        template<class T>
+        [[nodiscard]] T* allocate_object(std::size_t n = 1) {
             if (numeric_limits<std::size_t>::max() / sizeof(T) < n) {
                 throw bad_array_new_length();
             } else {
@@ -83,11 +84,13 @@ namespace std::pmr {
             }
         }
 
-        template<class T> void deallocate_object(T* p, std::size_t n = 1) {
+        template<class T>
+        void deallocate_object(T* p, std::size_t n = 1) {
             deallocate_bytes(p, n * sizeof(T), alignof(T));
         }
 
-        template<class T, class ...CtorArgs> [[nodiscard]] T* new_object(CtorArgs&& ...ctor_args) {
+        template<class T, class ...CtorArgs>
+        [[nodiscard]] T* new_object(CtorArgs&& ...ctor_args) {
             T* p = allocate_object<T>();
             try {
                 construct(p, forward<CtorArgs>(ctor_args)...);
@@ -99,24 +102,34 @@ namespace std::pmr {
             return p;
         }
 
-        template<class T> void delete_object(T* p) {
+        template<class T>
+        void delete_object(T* p) {
             destroy(p);
             deallocate_object(p);
         }
 
         template<class T, class ...Args>
-        void construct(T* p, Args&& ...args) requires requires { uninitialized_construct_using_allocator(p, *this, forward<Args>(args)...); } {
+        void construct(T* p, Args&& ...args)
+        requires requires { uninitialized_construct_using_allocator(p, *this, forward<Args>(args)...); } {
             uninitialized_construct_using_allocator(p, *this, forward<Args>(args)...);
         }
 
-        template<class T> void destroy(T* p) { p->~T(); }
+        template<class T>
+        void destroy(T* p) { 
+            p->~T();
+        }
 
-        polymorphic_allocator select_on_container_copy_construction() const { return polymorphic_allocator(); }
+        polymorphic_allocator select_on_container_copy_construction() const {
+            return polymorphic_allocator();
+        }
 
-        memory_resource* resource() const { return memory_rsrc; }
+        memory_resource* resource() const {
+            return memory_rsrc;
+        }
     };
 
-    template<class T1, class T2> bool operator==(const polymorphic_allocator<T1>& a, const polymorphic_allocator<T2>& b) noexcept {
+    template<class T1, class T2>
+    bool operator==(const polymorphic_allocator<T1>& a, const polymorphic_allocator<T2>& b) noexcept {
         return *a.resource() == *b.resource();
     }
 

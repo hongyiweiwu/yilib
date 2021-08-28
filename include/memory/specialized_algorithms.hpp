@@ -20,7 +20,7 @@ namespace std {
         /* TODO: Uncomment after implementing <ranges>.
         template<class R>
         concept no_throw_input_range = range<R> && no_throw_input_iterator<iterator_t<R>> && no_throw_sentinel_for<sentinel_t<R>, iterator_t<R>>; */
-    
+
         template<class I>
         concept no_throw_forward_iterator = no_throw_input_iterator<I> && forward_iterator<I> && no_throw_sentinel_for<I, I>;
 
@@ -119,7 +119,7 @@ namespace std {
 
     namespace ranges {
         struct __construct_at_fn {
-            template<class T, class ...Args> 
+            template<class T, class ...Args>
             requires requires (void* ptr, Args&& ...args) { ::new (ptr) T(forward<Args>(args)...); }
             constexpr T* operator()(T* p, Args&& ...args) const {
                 return std::construct_at(p, forward<Args>(args)...);
@@ -143,10 +143,10 @@ namespace std {
             location->~T();
         }
     }
-    
-    namespace ranges {            
-        struct __destroy_at_fn {   
-            template<destructible T> 
+
+    namespace ranges {
+        struct __destroy_at_fn {
+            template<destructible T>
             constexpr void operator()(T* location) const noexcept {
                 return std::destroy_at(location);
             }

@@ -71,10 +71,14 @@ namespace std {
         public:
             __ctrl_ptr(T* ptr) noexcept : __ctrl(), ptr(ptr) {}
 
-            bool is_null() const noexcept override { return !ptr; }
+            bool is_null() const noexcept override {
+                return !ptr;
+            }
             // We don't have to check for nullptr here, because no shared_ptr can be constructed with a nullptr without a deleter, which will
             // use the overload from __ctrl_ptr_with_deleter.
-            void delete_content() noexcept override { delete ptr; }
+            void delete_content() noexcept override {
+                delete ptr;
+            }
         };
 
         template<class T, class D>
@@ -85,9 +89,11 @@ namespace std {
             __ctrl_ptr_with_deleter(T* ptr, D&& deleter) noexcept
                 : __ctrl_ptr<T>(ptr), deleter(move(deleter)) {}
 
-            D* get_deleter() const noexcept override { return addressof(deleter); }
+            D* get_deleter() const noexcept override {
+                return addressof(deleter);
+            }
 
-            void delete_content() noexcept override { 
+            void delete_content() noexcept override {
                 deleter(__ctrl_ptr<T>::ptr);
             }
         };
@@ -113,7 +119,9 @@ namespace std {
         struct __ctrl_obj : public __ctrl {
         public:
             /* Tag used in constructors to specify that the constructor shouldn't construct the object in storage. */
-            struct noop_t { explicit noop_t() = default; };
+            struct noop_t {
+                explicit noop_t() = default;
+            };
         private:
             aligned_storage_t<sizeof(T), alignof(T)> storage;
             bool is_freed;
@@ -139,8 +147,8 @@ namespace std {
                 return __atomic_load_n(&is_freed, __ATOMIC_SEQ_CST);
             }
 
-            remove_extent_t<T>* get_object_ptr() noexcept { 
-                return launder(reinterpret_cast<remove_extent_t<T>*>(&storage)); 
+            remove_extent_t<T>* get_object_ptr() noexcept {
+                return launder(reinterpret_cast<remove_extent_t<T>*>(&storage));
             }
         };
 
@@ -152,8 +160,7 @@ namespace std {
             using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<__ctrl_ptr_with_deleter_alloc>;
 
             template<class ...Args>
-            __ctrl_obj_with_alloc(Alloc&& a, Args&& ...args) noexcept 
-                : __ctrl_obj<T>(typename __ctrl_obj<T>::noop_t{}), a(move(a)) {
+            __ctrl_obj_with_alloc(Alloc&& a, Args&& ...args) noexcept : __ctrl_obj<T>(typename __ctrl_obj<T>::noop_t{}), a(move(a)) {
                 if constexpr (!is_array_v<T>) {
                     // It's the responsible of the caller to initialize arrays.
                     using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<remove_cv_t<T>>;
@@ -184,15 +191,14 @@ namespace std {
     }
 
     // Forward declaration. Implemented directly below.
-    template<class T> class weak_ptr;
-    template<class T> class enabled_shared_from_this;
+    template<class T>
+    class weak_ptr;
 
-    namespace __internal {
-        template<class T> auto __enable_shared_from_this_test(enabled_shared_from_this<T>&) -> true_type;
-        template<class ...> auto __enable_shared_from_this_test(...) -> false_type;
-    }
+    template<class T>
+    class enable_shared_from_this;
 
-    template<class T> class shared_ptr {
+    template<class T>
+    class shared_ptr {
     public:
         using element_type = remove_extent_t<T>;
         using weak_type = weak_ptr<T>;
@@ -205,8 +211,12 @@ namespace std {
 
         /* If U has an unambiguous and accessible base class that is a specialization of std::enable_shared_from_this, replaces the weak_this member
          * of the pointer with a newly constructed alias shared_ptr that shares a control block with this, but "owns" ptr. */
-        template<class U> void __enable_shared_from_this(U* ptr) noexcept {
-            if constexpr (is_object_v<U> && decltype(__internal::__enable_shared_from_this_test(declval<U&>()))::value) {
+        template<class U>
+        void prepare_shared_from_this(U* ptr) noexcept {
+            /* A template lambda that only participates in overload resolution if the parameter derives from enable_shared_from_this. */
+            constexpr auto test = []<class V>(enable_shared_from_this<V>&) {};
+
+            if constexpr (is_object_v<U> && requires (U& u) { test(u); }) {
                 if (ptr != nullptr && ptr->weak_this.expired()) {
                     ptr->weak_this = shared_ptr<remove_cv_t<U>>(*this, const_cast<remove_cv_t<U>*>(ptr));
                 }
@@ -219,15 +229,31 @@ namespace std {
             std::swap(ctrl, r.ctrl);
         }
 
-        void reset() noexcept { shared_ptr().swap(*this); }
-        template<class Y> void reset(Y* p) { shared_ptr(p).swap(*this); }
-        template<class Y, class D> void reset(Y* p, D d) { shared_ptr(p, d).swap(*this); }
-        template<class Y, class D, class A> void reset(Y* p, D d, A a) { shared_ptr(p, d, a).swap(*this); }
+        void reset() noexcept {
+            shared_ptr().swap(*this);
+        }
+
+        template<class Y>
+        void reset(Y* p) {
+            shared_ptr(p).swap(*this);
+        }
+
+        template<class Y, class D>
+        void reset(Y* p, D d) {
+            shared_ptr(p, d).swap(*this);
+        }
+
+        template<class Y, class D, class A>
+        void reset(Y* p, D d, A a) {
+            shared_ptr(p, d, a).swap(*this);
+        }
 
         /* 20.11.3.6 Observers */
-        element_type* get() const noexcept { return ptr; }
+        element_type* get() const noexcept {
+            return ptr;
+        }
 
-        T& operator*() const noexcept { 
+        T& operator*() const noexcept {
             if constexpr (is_void_v<T> || is_array_v<T>) {
                 static_assert(__internal::always_false<T>, "*shared_ptr<T> can only be called when T is not an array type or cv void.");
             } else {
@@ -255,62 +281,70 @@ namespace std {
             return ctrl ? ctrl->get_shared_count() : 0;
         }
 
-        explicit operator bool() const noexcept { return get() != nullptr; }
+        explicit operator bool() const noexcept {
+            return get() != nullptr;
+        }
 
-        template<class U> bool owner_before(const shared_ptr<U>& b) const noexcept {
+        template<class U>
+        bool owner_before(const shared_ptr<U>& b) const noexcept {
             return ctrl < b.ctrl;
         }
 
-        template<class U> bool owner_before(const weak_ptr<U>& b) const noexcept {
+        template<class U>
+        bool owner_before(const weak_ptr<U>& b) const noexcept {
             return ctrl < b.ctrl;
         }
-        
+
         /* 20.11.3.2 Constructors */
         constexpr shared_ptr() noexcept : ptr(nullptr), ctrl(nullptr) {}
         constexpr shared_ptr(nullptr_t) noexcept : ptr(nullptr), ctrl(nullptr) {}
 
-        template<class Y> requires __internal::is_complete<Y>::value && is_array_v<T>
+        template<class Y>
+        requires __internal::is_complete<Y>::value && is_array_v<T>
             && ((is_unbounded_array_v<T> && is_convertible_v<Y(*)[], T*> && requires (Y* p) { { delete[] p } noexcept; })
                 || (is_bounded_array_v<T> && is_convertible_v<Y(*)[extent_v<T>], T*> && requires (Y* p) { { delete[] p } noexcept; }))
         explicit shared_ptr(Y* p) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, void (*)(element_type*)>(p, [](element_type* p) { delete[] p; });
-                __enable_shared_from_this(p);
+                prepare_shared_from_this(p);
             } catch (const exception& e) {
                 delete[] p;
                 throw;
             }
         }
 
-        template<class Y> requires __internal::is_complete<Y>::value && (!is_array_v<T>)
+        template<class Y>
+        requires __internal::is_complete<Y>::value && (!is_array_v<T>)
             && is_convertible_v<Y*, T*> && requires (Y* p) { { delete p } noexcept; }
         explicit shared_ptr(Y* p) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr<T>(p);
-                __enable_shared_from_this(p);
+                prepare_shared_from_this(p);
             } catch (const exception& e) {
                 delete p;
                 throw;
             }
         }
 
-        template<class Y, class D> requires is_nothrow_move_constructible_v<D> 
-            && ((is_unbounded_array_v<T> && is_nothrow_convertible_v<Y(*)[], T*>) 
+        template<class Y, class D>
+        requires is_nothrow_move_constructible_v<D>
+            && ((is_unbounded_array_v<T> && is_nothrow_convertible_v<Y(*)[], T*>)
                 || (is_bounded_array_v<T> && is_nothrow_convertible_v<Y(*)[extent_v<T>], T*>)
                 || (is_nothrow_convertible_v<Y*, T*>))
             && requires (Y* p, D d) { { d(p) } noexcept; }
         shared_ptr(Y* p, D d) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(p, move(d));
-                __enable_shared_from_this(p);
+                prepare_shared_from_this(p);
             } catch (const exception& e) {
                 d(p);
                 throw;
             }
         }
 
-        template<class Y, class D, class A> requires is_nothrow_move_constructible_v<D> 
-            && ((is_unbounded_array_v<T> && is_nothrow_convertible_v<Y(*)[], T*>) 
+        template<class Y, class D, class A>
+        requires is_nothrow_move_constructible_v<D>
+            && ((is_unbounded_array_v<T> && is_nothrow_convertible_v<Y(*)[], T*>)
                 || (is_bounded_array_v<T> && is_nothrow_convertible_v<Y(*)[extent_v<T>], T*>)
                 || (is_nothrow_convertible_v<Y*, T*>))
             && requires (Y* p, D d) { { d(p) } noexcept; }
@@ -323,14 +357,15 @@ namespace std {
                 allocator_traits<allocator_type>::construct(alloc, ptr, p, move(d), move(a));
 
                 ctrl = ptr;
-                __enable_shared_from_this(p);
+                prepare_shared_from_this(p);
             } catch (const exception& e) {
                 d(p);
                 throw;
             }
         }
 
-        template<class D> requires is_nothrow_move_constructible_v<D> && requires (nullptr_t p, D d) { { d(p) } noexcept; }
+        template<class D>
+        requires is_nothrow_move_constructible_v<D> && requires (nullptr_t p, D d) { { d(p) } noexcept; }
         shared_ptr(nullptr_t p, D d) : ptr(p) {
             try {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(p, move(d));
@@ -340,7 +375,8 @@ namespace std {
             }
         }
 
-        template<class D, class A> requires is_nothrow_move_constructible_v<D> && requires (nullptr_t p, D d) { { d(p) } noexcept; }
+        template<class D, class A>
+        requires is_nothrow_move_constructible_v<D> && requires (nullptr_t p, D d) { { d(p) } noexcept; }
         shared_ptr(nullptr_t p, D d, A a) : ptr(p) {
             try {
                 using allocator_type = typename __internal::__ctrl_ptr_with_deleter_alloc<T, A, D>::allocator_type;
@@ -356,22 +392,33 @@ namespace std {
             }
         }
 
-        template<class Y> shared_ptr(const shared_ptr<Y>& r, element_type* p) noexcept
-            : ptr(p), ctrl(r.ctrl) { if (ctrl) ctrl->increment_shared_count(); }
-
-        template<class Y> shared_ptr(shared_ptr<Y>&& r, element_type* p) noexcept
-            : ptr(p), ctrl(r.ctrl) { 
-                r.p = nullptr;
-                r.ctrl = nullptr;
+        template<class Y>
+        shared_ptr(const shared_ptr<Y>& r, element_type* p) noexcept
+            : ptr(p), ctrl(r.ctrl) {
+            if (ctrl) {
+                ctrl->increment_shared_count();
             }
-
-        shared_ptr(const shared_ptr& r) noexcept : ptr(r.ptr), ctrl(r.ctrl) {
-            if (ctrl) ctrl->increment_shared_count();
         }
 
-        template<class Y> requires is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>)
+        template<class Y>
+        shared_ptr(shared_ptr<Y>&& r, element_type* p) noexcept
+            : ptr(p), ctrl(r.ctrl) {
+            r.p = nullptr;
+            r.ctrl = nullptr;
+        }
+
+        shared_ptr(const shared_ptr& r) noexcept : ptr(r.ptr), ctrl(r.ctrl) {
+            if (ctrl) {
+                ctrl->increment_shared_count();
+            }
+        }
+
+        template<class Y>
+        requires is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>)
         shared_ptr(const shared_ptr<Y>& r) noexcept : ptr(r.ptr), ctrl(r.ctrl) {
-            if (ctrl) ctrl->increment_shared_count();
+            if (ctrl) {
+                ctrl->increment_shared_count();
+            }
         }
 
         shared_ptr(shared_ptr&& r) noexcept : ptr(r.ptr), ctrl(r.ctrl) {
@@ -379,19 +426,24 @@ namespace std {
             r.ctrl = nullptr;
         }
 
-        template<class Y> requires is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>)
+        template<class Y>
+        requires is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>)
         shared_ptr(shared_ptr<Y>&& r) noexcept : ptr(r.ptr), ctrl(r.ctrl) {
             r.ptr = nullptr;
             r.ctrl = nullptr;
         }
 
-        template<class Y> requires is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>)
+        template<class Y>
+        requires is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>)
         explicit shared_ptr(const weak_ptr<Y>& r) : ptr(r.ptr), ctrl(r.ctrl) {
-            if (r.expired()) throw std::bad_weak_ptr();
+            if (r.expired()) {
+                throw std::bad_weak_ptr();
+            }
             ctrl->increment_shared_count();
         }
 
-        template<class Y, class D> requires (is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>))
+        template<class Y, class D>
+        requires (is_convertible_v<Y*, T*> || (is_bounded_array_v<Y> && is_same_v<remove_cv_t<T>, remove_cv_t<remove_all_extents_t<Y>>[]>))
             && is_convertible_v<typename unique_ptr<Y, D>::pointer, element_type*>
         shared_ptr(unique_ptr<Y, D>&& r) {
             if (!r.get()) {
@@ -400,11 +452,11 @@ namespace std {
             } else if constexpr (!is_reference_v<D>) {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(ptr, r.get_deleter());
                 ptr = r.release();
-                __enable_shared_from_this(ptr);
+                prepare_shared_from_this(ptr);
             } else {
                 ctrl = new __internal::__ctrl_ptr_with_deleter<T, D>(ptr, ref(r.get_deleter()));
                 ptr = r.release();
-                __enable_shared_from_this(ptr);
+                prepare_shared_from_this(ptr);
             }
         }
 
@@ -416,7 +468,7 @@ namespace std {
             result.ctrl = ctrl;
 
             if (enable_shared_from_this) {
-                result.__enable_shared_from_this(result.ptr);
+                result.prepare_shared_from_this(result.ptr);
             }
 
             return result;
@@ -424,16 +476,19 @@ namespace std {
 
         /* 20.11.3.3 Destructor */
         ~shared_ptr() {
-            if (ctrl) ctrl->decrement_shared_count();
+            if (ctrl) {
+                ctrl->decrement_shared_count();
+            }
         }
 
         /* 20.11.3.4 Assignment */
-        shared_ptr& operator=(const shared_ptr& r) noexcept { 
-            shared_ptr(r).swap(*this); 
+        shared_ptr& operator=(const shared_ptr& r) noexcept {
+            shared_ptr(r).swap(*this);
             return *this;
         }
 
-        template<class Y> shared_ptr& operator=(const shared_ptr<Y>& r) noexcept {
+        template<class Y>
+        shared_ptr& operator=(const shared_ptr<Y>& r) noexcept {
             shared_ptr(r).swap(*this);
             return *this;
         }
@@ -443,12 +498,14 @@ namespace std {
             return *this;
         }
 
-        template<class Y> shared_ptr& operator=(shared_ptr<Y>&& r) noexcept {
+        template<class Y>
+        shared_ptr& operator=(shared_ptr<Y>&& r) noexcept {
             shared_ptr(move(r)).swap(*this);
             return *this;
         }
 
-        template<class Y, class D> shared_ptr& operator=(unique_ptr<Y, D>&& r) {
+        template<class Y, class D>
+        shared_ptr& operator=(unique_ptr<Y, D>&& r) {
             shared_ptr(move(r)).swap(*this);
             return *this;
         }
@@ -457,17 +514,22 @@ namespace std {
         friend D* get_deleter(const shared_ptr& p) noexcept;
     };
 
-    template<class T> shared_ptr(weak_ptr<T>) -> shared_ptr<T>;
-    template<class T, class D> shared_ptr(unique_ptr<T, D>) -> shared_ptr<T>;
+    template<class T>
+    shared_ptr(weak_ptr<T>) -> shared_ptr<T>;
+
+    template<class T, class D>
+    shared_ptr(unique_ptr<T, D>) -> shared_ptr<T>;
 
     /* 20.11.3.7 Creation */
     // TODO: Implement support for U[].
-    template<class T, class ...Args> requires (!is_array_v<T>)
+    template<class T, class ...Args>
+    requires (!is_array_v<T>)
     shared_ptr<T> make_shared(Args&&... args) {
         return shared_ptr<T>::__make_shared(new __internal::__ctrl_obj<T>(forward<Args>(args)...), true);
     }
 
-    template<class T, class A, class ...Args> requires (!is_array_v<T>)
+    template<class T, class A, class ...Args>
+    requires (!is_array_v<T>)
     shared_ptr<T> allocate_shared(const A& a, Args&& ...args) {
         using allocator_type = typename __internal::__ctrl_obj_with_alloc<T, A>::allocator_type;
         allocator_type alloc = a;
@@ -477,13 +539,15 @@ namespace std {
         return shared_ptr<T>::__make_shared(ctrl, true);
     }
 
-    template<class T> requires is_bounded_array_v<T>
+    template<class T>
+    requires is_bounded_array_v<T>
     shared_ptr<T> make_shared() {
         // The array should be value initialized in the ctrl_obj constructor.
         return shared_ptr<T>::__make_shared(new __internal::__ctrl_obj<T>());
     }
 
-    template<class T, class A> requires is_bounded_array_v<T>
+    template<class T, class A>
+    requires is_bounded_array_v<T>
     shared_ptr<T> allocate_shared(const A& a) {
         using allocator_type = typename __internal::__ctrl_obj_with_alloc<T, A>::allocator_type;
         allocator_type alloc = a;
@@ -493,7 +557,8 @@ namespace std {
         return shared_ptr<T>::__make_shared(ctrl);
     }
 
-    template<class T> requires is_bounded_array_v<T>
+    template<class T>
+    requires is_bounded_array_v<T>
     shared_ptr<T> make_shared(const remove_extent_t<T>& u) {
         auto ctrl = new __internal::__ctrl_obj<T>();
 
@@ -504,7 +569,8 @@ namespace std {
         return shared_ptr<T>::__make_shared(ctrl);
     }
 
-    template<class T, class A> requires is_bounded_array_v<T>
+    template<class T, class A>
+    requires is_bounded_array_v<T>
     shared_ptr<T> make_shared(const A& a, const remove_extent_t<T>& u) {
         using allocator_type = typename __internal::__ctrl_obj_with_alloc<T, A>::allocator_type;
         allocator_type alloc = a;
@@ -517,9 +583,12 @@ namespace std {
         return shared_ptr<T>::__make_shared(ctrl);
     }
 
-    template<class T> requires (!is_unbounded_array_v<T>)
+    template<class T>
+    requires (!is_unbounded_array_v<T>)
     shared_ptr<T> make_shared_for_overwrite() {
-        if constexpr (is_array_v<T>) return make_shared<T>();
+        if constexpr (is_array_v<T>) {
+            return make_shared<T>();
+        }
 
         auto ctrl = new __internal::__ctrl_obj<T>(typename __internal::__ctrl_obj<T>::noop_t{});
         ::new (static_cast<void*>(ctrl->get_object_ptr())) T;
@@ -527,9 +596,12 @@ namespace std {
         return shared_ptr<T>::__make_shared(ctrl);
     }
 
-    template<class T, class A> requires (!is_bounded_array_v<T>)
+    template<class T, class A>
+    requires (!is_bounded_array_v<T>)
     shared_ptr<T> allocate_shared_for_overwrite(const A& a) {
-        if constexpr (is_array_v<T>) return allocate_shared<T>(a);
+        if constexpr (is_array_v<T>) {
+            return allocate_shared<T>(a);
+        }
 
         auto ctrl = new __internal::__ctrl_obj<T>(typename __internal::__ctrl_obj<T>::noop_t{});
         ::new (static_cast<void*>(ctrl->get_object_ptr())) T;
@@ -538,30 +610,47 @@ namespace std {
     }
 
     /* 20.11.3.8 Comparison */
-    template<class T, class U> bool operator==(const shared_ptr<T>& a, const shared_ptr<U>& b) noexcept { return a.get() == b.get(); }
-    template<class T> bool operator==(const shared_ptr<T>& a, nullptr_t) noexcept { return !a; }
-    template<class T, class U> strong_ordering operator<=>(const shared_ptr<T>& a, const shared_ptr<T>& b) noexcept {
+    template<class T, class U>
+    bool operator==(const shared_ptr<T>& a, const shared_ptr<U>& b) noexcept {
+        return a.get() == b.get();
+    }
+
+    template<class T>
+    bool operator==(const shared_ptr<T>& a, nullptr_t) noexcept {
+        return !a;
+    }
+
+    template<class T, class U>
+    strong_ordering operator<=>(const shared_ptr<T>& a, const shared_ptr<T>& b) noexcept {
         return compare_three_way()(a.get(), b.get());
     }
-    template<class T> strong_ordering operator<=>(const shared_ptr<T>& a, nullptr_t) noexcept {
+
+    template<class T>
+    strong_ordering operator<=>(const shared_ptr<T>& a, nullptr_t) noexcept {
         return compare_three_way()(a.get(), nullptr);
     }
 
     /* 20.11.3.9 Specialized algorithms */
-    template<class T> void swap(shared_ptr<T>& a, shared_ptr<T>& b) noexcept { a.swap(b); }
+    template<class T>
+    void swap(shared_ptr<T>& a, shared_ptr<T>& b) noexcept {
+        a.swap(b);
+    }
 
     /* 20.11.3.10 Casts */
-    template<class T, class U> requires requires { static_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { static_cast<T*>((U*) nullptr); }
     shared_ptr<T> static_pointer_cast(const shared_ptr<U>& r) noexcept {
         return shared_ptr<T>(r, static_cast<typename shared_ptr<T>::element_type*>(r.get()));
     }
 
-    template<class T, class U> requires requires { static_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { static_cast<T*>((U*) nullptr); }
     shared_ptr<T> static_pointer_cast(shared_ptr<U>&& r) noexcept {
         return shared_ptr<T>(move(r), static_cast<typename shared_ptr<T>::element_type*>(r.get()));
     }
 
-    template<class T, class U> requires requires { dynamic_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { dynamic_cast<T*>((U*) nullptr); }
     shared_ptr<T> dynamic_pointer_cast(const shared_ptr<U>& r) noexcept {
         if (auto ptr = static_cast<typename shared_ptr<T>::element_type*>(r.get()); ptr) {
             return shared_ptr<T>(r, ptr);
@@ -570,7 +659,8 @@ namespace std {
         }
     }
 
-    template<class T, class U> requires requires { dynamic_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { dynamic_cast<T*>((U*) nullptr); }
     shared_ptr<T> dynamic_pointer_cast(shared_ptr<U>&& r) noexcept {
         if (auto ptr = static_cast<typename shared_ptr<T>::element_type*>(r.get()); ptr) {
             return shared_ptr<T>(move(r), ptr);
@@ -580,23 +670,27 @@ namespace std {
     }
 
 
-    template<class T, class U> requires requires { const_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { const_cast<T*>((U*) nullptr); }
     shared_ptr<T> const_pointer_cast(const shared_ptr<U>& r) noexcept {
         return shared_ptr<T>(r, const_cast<typename shared_ptr<T>::element_type*>(r.get()));
     }
 
-    template<class T, class U> requires requires { const_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { const_cast<T*>((U*) nullptr); }
     shared_ptr<T> const_pointer_cast(shared_ptr<U>&& r) noexcept {
         return shared_ptr<T>(move(r), const_cast<typename shared_ptr<T>::element_type*>(r.get()));
     }
 
 
-    template<class T, class U> requires requires { reinterpret_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { reinterpret_cast<T*>((U*) nullptr); }
     shared_ptr<T> reinterpret_pointer_cast(const shared_ptr<U>& r) noexcept {
         return shared_ptr<T>(r, reinterpret_cast<typename shared_ptr<T>::element_type*>(r.get()));
     }
 
-    template<class T, class U> requires requires { reinterpret_cast<T*>((U*) nullptr); }
+    template<class T, class U>
+    requires requires { reinterpret_cast<T*>((U*) nullptr); }
     shared_ptr<T> reinterpret_pointer_cast(shared_ptr<U>&& r) noexcept {
         return shared_ptr<T>(move(r), reinterpret_cast<typename shared_ptr<T>::element_type*>(r.get()));
     }
@@ -609,7 +703,7 @@ namespace std {
 
     /* 20.11.3.12 I/O */
     template<class E, class T, class Y>
-    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const shared_ptr<Y>& p) { 
-        return os << p.get(); 
+    basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, const shared_ptr<Y>& p) {
+        return os << p.get();
     }
 }

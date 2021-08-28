@@ -13,13 +13,13 @@ namespace std {
     private:
         /* Returns 1 if the argument is nonnegative, -1 otherwise. */
         template<std::intmax_t X>
-        static consteval int sign() {
+        static constexpr int sign() {
             return X > 0 ? 1 : X < 0 ? -1 : 0;
         }
 
         /* Returns the absolute value of the given argument. */
         template<std::intmax_t X>
-        static consteval std::intmax_t abs() {
+        static constexpr std::intmax_t abs() {
             return X >= 0 ? X : -X;
         }
 
@@ -29,8 +29,14 @@ namespace std {
         using type = ratio<num, den>;
     };
 
-    /* 20.16.4 Ratio arithmetic */
     namespace __internal {
+        template<class T>
+        struct is_specialization_of_ratio : false_type {};
+
+        template<std::intmax_t N, std::intmax_t D>
+        struct is_specialization_of_ratio<ratio<N, D>> : true_type {};
+
+        /* 20.16.4 Ratio arithmetic */
         template<std::intmax_t x, std::intmax_t y>
         requires (!(y > 0 && x > numeric_limits<std::intmax_t>::max() - y)) && (!(y < 0 && x < numeric_limits<std::intmax_t>::min() - y))
         static consteval std::intmax_t no_overflow_addition() noexcept {

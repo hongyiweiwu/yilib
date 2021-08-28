@@ -5,7 +5,8 @@
 
 namespace std {
     /* 20.10.11 addressof */
-    template<class T> constexpr T* addressof(T& r) noexcept {
+    template<class T>
+    constexpr T* addressof(T& r) noexcept {
         if constexpr (is_object_v<T>) {
             // And we cast back to the desired T* type.
             return reinterpret_cast<T*>(
@@ -21,41 +22,68 @@ namespace std {
         }
     }
 
-    template<class T> const T* addressof(const T&&) = delete;
+    template<class T>
+    const T* addressof(const T&&) = delete;
 
     /* 20.10.3 Pointer traits */
-    namespace __internal {
-        template<class Ptr> struct __pointer_element_type {};
-        template<class Ptr> requires requires { typename Ptr::element_type; }
-        struct __pointer_element_type<Ptr> { using type = typename Ptr::element_type; };
-        template<template<class, class...> class SomePointer, class T, class ...Args> requires (!requires { typename SomePointer<T, Args...>::element_type; })
-        struct __pointer_element_type<SomePointer<T, Args...>> { using type = T; };
+    template<class Ptr>
+    struct pointer_traits {
+    private:
+        template<class Pointer>
+        struct get_element_type {};
 
-        template<class Ptr> auto __pointer_element_difference_type() -> ptrdiff_t;
-        template<class Ptr> requires requires { typename Ptr::difference_type; }
-        auto __pointer_element_difference_type() -> typename Ptr::difference_type;
+        template<class Pointer>
+        requires requires { typename Pointer::element_type; }
+        struct get_element_type<Pointer> {
+            using type = typename Pointer::element_type;
+        };
 
-        template<class Ptr, class U> struct __pointer_rebind_type {};
-        template<class Ptr, class U> requires requires { typename Ptr::template rebind<U>; }
-        struct __pointer_rebind_type<Ptr, U> { using type = typename Ptr::template rebind<U>; };
-        template<template<class, class...> class SomePointer, class U, class T, class ...Args> requires (!requires { typename SomePointer<T, Args...>::template rebind<U>; })
-        struct __pointer_rebind_type<SomePointer<T, Args...>, U> { using type = SomePointer<U, Args...>; };
-    }
+        template<template<class, class...> class SomePointer, class T, class ...Args>
+        requires (!requires { typename SomePointer<T, Args...>::element_type; })
+        struct get_element_type<SomePointer<T, Args...>> {
+            using type = T;
+        };
 
-    template<class Ptr> struct pointer_traits {
+        template<class Pointer>
+        struct get_difference_type {};
+
+        template<class Pointer>
+        requires requires { typename Ptr::difference_type; }
+        struct get_difference_type<Pointer> {
+            using type = typename Ptr::difference_type;
+        };
+
+        template<class Pointer, class U>
+        struct get_rebind_type {};
+
+        template<class Pointer, class U>
+        requires requires { typename Pointer::template rebind<U>; }
+        struct get_rebind_type<Pointer, U> {
+            using type = typename Pointer::template rebind<U>;
+        };
+
+        template<template<class, class...> class SomePointer, class U, class T, class ...Args>
+        requires (!requires { typename SomePointer<T, Args...>::template rebind<U>; })
+        struct get_rebind_type<SomePointer<T, Args...>, U> {
+            using type = SomePointer<U, Args...>;
+        };
+    public:
         using pointer = Ptr;
-        using element_type = typename __internal::__pointer_element_type<Ptr>::type;
-        using difference_type = decltype(__internal::__pointer_element_difference_type<Ptr>());
+        using element_type = typename get_element_type<Ptr>::type;
+        using difference_type = typename get_difference_type<Ptr>::type;
 
-        template<class U> using rebind = typename __internal::__pointer_rebind_type<Ptr, U>::type;
+        template<class U>
+        using rebind = typename get_rebind_type<Ptr, U>::type;
     };
 
-    template<class T> struct pointer_traits<T*> {
+    template<class T>
+    struct pointer_traits<T*> {
         using pointer = T*;
         using element_type = T;
         using difference_type = ptrdiff_t;
 
-        template<class U> using rebind = U*;
+        template<class U>
+        using rebind = U*;
 
         static constexpr pointer pointer_to(conditional_t<is_void_v<element_type>, char&, element_type&> r) noexcept {
             return addressof(r);
@@ -63,10 +91,14 @@ namespace std {
     };
 
     /* 20.10.4 Pointer conversion */
-    template<class T> requires (!is_function_v<T>)
-    constexpr T* to_address(T* p) noexcept { return p; }
+    template<class T>
+    requires (!is_function_v<T>)
+    constexpr T* to_address(T* p) noexcept {
+        return p;
+    }
 
-    template<class Ptr> auto to_address(const Ptr& p) noexcept {
+    template<class Ptr>
+    auto to_address(const Ptr& p) noexcept {
         if constexpr (requires (const Ptr* p) { pointer_traits<Ptr>::to_address(p); }) {
             return pointer_traits<Ptr>::to_address(p);
         } else {
@@ -80,7 +112,12 @@ namespace std {
     // it from the standard.
     enum class pointer_safety { relaxed, preferred, strict };
     void declare_reachable(void* p);
-    template<class T> T* undeclare_reachable(T* p) { return p; }
+
+    template<class T>
+    T* undeclare_reachable(T* p) {
+        return p;
+    }
+
     void declare_no_pointers(char* p, std::size_t n);
     void undeclare_no_pointers(char* p, std::size_t n);
     pointer_safety get_pointer_safety() noexcept;
@@ -88,6 +125,9 @@ namespace std {
     /* 20.10.6 Pointer alignment */
     void* align(std::size_t alignment, std::size_t size, void*& ptr, std::size_t& space);
 
-    template<std::size_t N, class T> requires (N != 0) && ((N & (N - 1)) == 0) // N is a power of two.
-    [[nodiscard]] constexpr T* assume_aligned(T* ptr) { return ptr; }
+    template<std::size_t N, class T>
+    requires (N != 0) && ((N & (N - 1)) == 0) // N is a power of two.
+    [[nodiscard]] constexpr T* assume_aligned(T* ptr) {
+        return ptr;
+    }
 }

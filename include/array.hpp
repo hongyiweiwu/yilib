@@ -140,7 +140,8 @@ namespace std {
         }
     };
 
-    template<class T, class ...U> requires (is_same_v<T, U> && ...)
+    template<class T, class ...U>
+    requires (is_same_v<T, U> && ...)
     array(T, U...) -> array<T, 1 + sizeof...(U)>;
 
     template<class T>
@@ -289,14 +290,16 @@ namespace std {
     }
 
     /* 22.3.7.4 Specialized algorithms */
-    template<class T, std::size_t N> requires (N == 0) || is_swappable_v<T>
+    template<class T, std::size_t N>
+    requires (N == 0) || is_swappable_v<T>
     constexpr void swap(array<T, N>& x, array<T, N>& y) noexcept(noexcept(x.swap(y))) {
         x.swap(y);
     }
 
 
     /* 22.3.7.6 Array creation functions */
-    template<class T, std::size_t N> requires (!is_array_v<T>) && is_copy_constructible_v<T>
+    template<class T, std::size_t N>
+    requires (!is_array_v<T>) && is_copy_constructible_v<T>
     constexpr array<remove_cv_t<T>, N> to_array(T (&a)[N]) {
         constexpr auto helper = []<std::size_t ...I>(T (&a)[N], index_sequence<I...>) {
             return array<remove_cv_t<T>, N>{{ a[I]... }};
@@ -305,7 +308,8 @@ namespace std {
         return helper(a);
     }
 
-    template<class T, std::size_t N> requires (!is_array_v<T>) && is_move_constructible_v<T>
+    template<class T, std::size_t N>
+    requires (!is_array_v<T>) && is_move_constructible_v<T>
     constexpr array<remove_cv_t<T>, N> to_array(T (&&a)[N]) {
         constexpr auto helper = []<std::size_t ...I>(T (&&a)[N], index_sequence<I...>) {
             return array<remove_cv_t<T>, N>{{ move(a[I])... }};
@@ -317,27 +321,32 @@ namespace std {
     template<class T, std::size_t N>
     struct tuple_size<array<T, N>> : integral_constant<std::size_t, N> {};
 
-    template<std::size_t I, class T, std::size_t N> requires (I < N)
+    template<std::size_t I, class T, std::size_t N>
+    requires (I < N)
     struct tuple_element<I, array<T, N>> {
         using type = T;
     };
 
-    template<std::size_t I, class T, std::size_t N> requires (I < N)
+    template<std::size_t I, class T, std::size_t N>
+    requires (I < N)
     constexpr T& get(array<T, N>& arr) noexcept {
         return arr[I];
     }
 
-    template<std::size_t I, class T, std::size_t N> requires (I < N)
+    template<std::size_t I, class T, std::size_t N>
+    requires (I < N)
     constexpr T&& get(array<T, N>&& arr) noexcept {
         return move(arr[I]);
     }
 
-    template<std::size_t I, class T, std::size_t N> requires (I < N)
+    template<std::size_t I, class T, std::size_t N>
+    requires (I < N)
     constexpr const T& get(const array<T, N>& arr) noexcept {
         return arr[I];
     }
 
-    template<std::size_t I, class T, std::size_t N> requires (I < N)
+    template<std::size_t I, class T, std::size_t N>
+    requires (I < N)
     constexpr const T&& get(const array<T, N>&& arr) noexcept {
         return move(arr[I]);
     }

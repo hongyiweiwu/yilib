@@ -12,6 +12,7 @@ namespace std {
     // Forward declaration. Implementation given below.
     class error_code;
     class error_condition;
+
     /* 19.5.3 Class error_category */
     class error_category {
     public:
@@ -32,21 +33,28 @@ namespace std {
     const error_category& generic_category() noexcept;
     const error_category& system_category() noexcept;
 
-    template<class T> struct is_error_code_enum : public false_type {};
-    template<class T> inline constexpr bool is_error_code_enum_v = is_error_code_enum<T>::value;
+    template<class T>
+    struct is_error_code_enum : public false_type {};
+
+    template<class T>
+    inline constexpr bool is_error_code_enum_v = is_error_code_enum<T>::value;
 
     /* 19.5.4 Class error_code */
     class error_code {
     public:
         error_code() noexcept;
         error_code(int val, const error_category& cat) noexcept;
-        template<class ErrorCodeEnum> requires is_error_code_enum_v<ErrorCodeEnum>
+
+        template<class ErrorCodeEnum>
+        requires is_error_code_enum_v<ErrorCodeEnum>
         error_code(ErrorCodeEnum e) noexcept : val(static_cast<int>(e)), cat(&generic_category()) {}
 
         void assign(int val, const error_category& cat) noexcept;
-        template<class ErrorCodeEnum> requires is_error_code_enum_v<ErrorCodeEnum>
+
+        template<class ErrorCodeEnum>
+        requires is_error_code_enum_v<ErrorCodeEnum>
         error_code& operator=(ErrorCodeEnum e) noexcept {
-            val = (static_cast<int>(e));
+            val = static_cast<int>(e);
             cat = &generic_category();
             return *this;
         }
@@ -64,19 +72,26 @@ namespace std {
         const error_category* cat;
     };
 
-    template<class T> struct is_error_condition_enum : public false_type {};
-    template<class T> inline constexpr bool is_error_condition_enum_v = is_error_condition_enum<T>::value;
+    template<class T>
+    struct is_error_condition_enum : public false_type {};
+
+    template<class T>
+    inline constexpr bool is_error_condition_enum_v = is_error_condition_enum<T>::value;
 
     /* 19.5.5 Class error_condition */
     class error_condition {
     public:
         error_condition() noexcept;
         error_condition(int val, const error_category& cat) noexcept;
-        template<class ErrorConditionEnum> requires is_error_condition_enum_v<ErrorConditionEnum>
+
+        template<class ErrorConditionEnum>
+        requires is_error_condition_enum_v<ErrorConditionEnum>
         error_condition(ErrorConditionEnum e) noexcept : val(static_cast<int>(e)), cat(&generic_category()) {}
 
         void assign(int val, const error_category& cat) noexcept;
-        template<class ErrorConditionEnum> requires is_error_condition_enum_v<ErrorConditionEnum>
+
+        template<class ErrorConditionEnum>
+        requires is_error_condition_enum_v<ErrorConditionEnum>
         error_condition& operator=(ErrorConditionEnum e) noexcept {
             val = (static_cast<int>(e));
             cat = &generic_category();
@@ -192,8 +207,8 @@ namespace std {
         wrong_protocol_type = EPROTOTYPE
     };
 
-    template<> struct is_error_condition_enum<errc> : true_type {};
-
+    template<>
+    struct is_error_condition_enum<errc> : true_type {};
 
     error_code make_error_code(errc e) noexcept;
 
@@ -212,11 +227,13 @@ namespace std {
     strong_ordering operator<=>(const error_condition& lhs, const error_condition& rhs) noexcept;
 
     /* 19.5.7 Hash support */
-    template<> struct hash<error_code> : hash<__internal::__enabled_hash_t> {
+    template<>
+    struct hash<error_code> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const error_code& code) const noexcept;
     };
 
-    template<> struct hash<error_condition> : hash<__internal::__enabled_hash_t> {
+    template<>
+    struct hash<error_condition> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const error_condition& cond) const noexcept;
     };
 }

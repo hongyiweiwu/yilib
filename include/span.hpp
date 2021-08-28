@@ -12,7 +12,7 @@ namespace std {
     inline constexpr std::size_t dynamic_extent = numeric_limits<std::size_t>::max();
 
     /* 22.7.3 Class template span */
-    template<class ElementType, std::size_t Extent = dynamic_extent> 
+    template<class ElementType, std::size_t Extent = dynamic_extent>
     requires __internal::is_complete<ElementType>::value && (!is_abstract_v<ElementType>)
     class span {
     private:
@@ -44,15 +44,16 @@ namespace std {
         using reverse_iterator = std::reverse_iterator<iterator>;
         static constexpr size_type extent = Extent;
 
-        constexpr span() noexcept requires (Extent == dynamic_extent) || (Extent == 0)
+        constexpr span() noexcept
+        requires (Extent == dynamic_extent) || (Extent == 0)
             : d(nullptr), s(0) {}
 
-        template<contiguous_iterator It> 
+        template<contiguous_iterator It>
         requires is_convertible_v<remove_reference_t<iter_reference_t<It>>(*)[], element_type(*)[]>
         constexpr explicit(extent != dynamic_extent) span(It first, size_type count) noexcept
             : d(to_address(first)), s(count) {}
 
-        template<contiguous_iterator It, sized_sentinel_for<It> End> 
+        template<contiguous_iterator It, sized_sentinel_for<It> End>
         requires is_convertible_v<remove_reference_t<iter_reference_t<It>>(*)[], element_type(*)[]> && (!is_convertible_v<End, std::size_t>)
         constexpr explicit(extent != dynamic_extent) span(It first, End last) noexcept(noexcept(last - first))
             : d(to_address(first)), s(last - first) {}
@@ -61,7 +62,7 @@ namespace std {
         constexpr span(type_identity_t<element_type> (&arr)[N]) noexcept
         requires (extent == dynamic_extent || extent == N) && is_convertible_v<remove_pointer_t<decltype(data(arr))>(*)[], element_type(*)[]>
             : d(arr), s(N) {}
-        
+
         template<class T, std::size_t N>
         constexpr span(array<T, N>& arr) noexcept
         requires (extent == dynamic_extent || extent == N) && is_convertible_v<remove_pointer_t<decltype(data(arr))>(*)[], element_type(*)[]>
@@ -82,7 +83,7 @@ namespace std {
         constexpr span(const span& other) noexcept = default;
 
         template<class OtherElementType, std::size_t OtherExtent>
-        requires (extent == dynamic_extent || OtherExtent == dynamic_extent || extent == OtherExtent) 
+        requires (extent == dynamic_extent || OtherExtent == dynamic_extent || extent == OtherExtent)
             && is_convertible_v<OtherElementType(*)[], element_type(*)[]>
         constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent) span(const span<OtherElementType, OtherExtent>& s) noexcept
             : d(s.data()), s(s.size()) {}
@@ -91,7 +92,7 @@ namespace std {
 
         constexpr span& operator=(const span& other) noexcept = default;
 
-        template<std::size_t Count> 
+        template<std::size_t Count>
         requires (Count <= Extent)
         constexpr span<element_type, Count> first() const {
             return {data(), Count};
@@ -105,21 +106,21 @@ namespace std {
 
         template<std::size_t Offset, std::size_t Count = dynamic_extent>
         requires (Offset <= Extent) && (Count == dynamic_extent || Count <= Extent - Offset)
-        constexpr span<element_type, Count != dynamic_extent ? Count : (Extent != dynamic_extent ? Extent - Offset : dynamic_extent)> 
+        constexpr span<element_type, Count != dynamic_extent ? Count : (Extent != dynamic_extent ? Extent - Offset : dynamic_extent)>
         subspan() const {
-            return {data() + Offset, Count != dynamic_extent ? Count : size() - Offset};
+            return { data() + Offset, Count != dynamic_extent ? Count : size() - Offset };
         }
 
         constexpr span<element_type, dynamic_extent> first(size_type count) const {
-            return {data(), count};
+            return { data(), count };
         }
 
         constexpr span<element_type, dynamic_extent> last(size_type count) const {
-            return {data() + (size() - count), count};
+            return { data() + (size() - count), count };
         }
 
         constexpr span<element_type, dynamic_extent> subspan(size_type offset, size_type count = dynamic_extent) const {
-            return {data() + offset, count == dynamic_extent ? size() - offset : count};
+            return { data() + offset, count == dynamic_extent ? size() - offset : count };
         }
 
         constexpr size_type size() const noexcept {
@@ -188,7 +189,7 @@ namespace std {
 
     template<class ElementType, std::size_t Extent>
     inline constexpr bool ranges::enable_view<span<ElementType, Extent>> = Extent == 0 || Extent == dynamic_extent;
-    
+
     template<class ElementType, std::size_t Extent>
     inline constexpr bool ranges::enable_borrowed_range<span<ElementType, Extent>> = true;
 
@@ -196,13 +197,13 @@ namespace std {
     template<class ElementType, std::size_t Extent>
     span<const byte, Extent == dynamic_extent ? dynamic_extent : sizeof(ElementType) * Extent>
     as_bytes(span<ElementType, Extent> s) noexcept {
-        return {reinterpret_cast<const byte*>(s.data()), s.size_bytes()};
+        return { reinterpret_cast<const byte*>(s.data()), s.size_bytes() };
     }
 
     template<class ElementType, std::size_t Extent>
     requires (!is_const_v<ElementType>)
     span<byte, Extent == dynamic_extent ? dynamic_extent : sizeof(ElementType) * Extent>
     as_writable_bytes(span<ElementType, Extent> s) noexcept {
-        return {reinterpret_cast<byte*>(s.data()), s.size_bytes()};
+        return { reinterpret_cast<byte*>(s.data()), s.size_bytes() };
     }
 }

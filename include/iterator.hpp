@@ -13,35 +13,41 @@
 
 namespace std {
     namespace __internal {
-        template<class T> using with_reference = T&;
+        template<class T>
+        using with_reference = T&;
 
-        template<class T> concept can_reference = requires { typename with_reference<T>; };
+        template<class T>
+        concept can_reference = requires { typename with_reference<T>; };
 
-        template<class T> concept dereferenceable = requires (T& t) {
-            { *t } -> can_reference;
-        };
+        template<class T>
+        concept dereferenceable = requires (T& t) { { *t } -> can_reference; };
     }
 
     // Forward declaration, implemented below.
-    template<class> struct iterator_traits;
+    template<class>
+    struct iterator_traits;
 
     /* 23.3.2.1 Incrementable traits */
-    template<class> struct incrementable_traits {};
+    template<class>
+    struct incrementable_traits {};
 
-    template<class T> requires is_object_v<T>
+    template<class T>
+    requires is_object_v<T>
     struct incrementable_traits<T*> {
         using difference_type = std::ptrdiff_t;
     };
 
-    template<class I> 
+    template<class I>
     struct incrementable_traits<const I> : incrementable_traits<I> {};
 
-    template<class T> requires requires { typename T::difference_type; }
+    template<class T>
+    requires requires { typename T::difference_type; }
     struct incrementable_traits<T> {
         using difference_type = typename T::difference_type;
     };
 
-    template<class T> requires (!requires { typename T::difference_type; } && requires (const T& a, const T& b) { { a - b} -> integral; })
+    template<class T>
+    requires (!requires { typename T::difference_type; } && requires (const T& a, const T& b) { { a - b} -> integral; })
     struct incrementable_traits<T> {
         using difference_type = make_signed_t<decltype(declval<T>() - declval<T>())>;
     };
@@ -54,26 +60,32 @@ namespace std {
     >;
 
     /* 23.3.2.2 Indirectly readable traits */
-    template<class> struct indirectly_readable_traits {};
-    
-    template<class T> requires is_object_v<T>
+    template<class>
+    struct indirectly_readable_traits {};
+
+    template<class T>
+    requires is_object_v<T>
     struct indirectly_readable_traits<T*> {
         using value_type = remove_cv_t<T>;
     };
 
-    template<class I> requires is_array_v<I>
+    template<class I>
+    requires is_array_v<I>
     struct indirectly_readable_traits<I> {
         using value_type = remove_cv_t<remove_extent_t<I>>;
     };
 
-    template<class I> struct indirectly_readable_traits<const I> : indirectly_readable_traits<I> {};
+    template<class I>
+    struct indirectly_readable_traits<const I> : indirectly_readable_traits<I> {};
 
-    template<class T> requires requires { typename T::value_type; } && is_object_v<typename T::value_type>
+    template<class T>
+    requires requires { typename T::value_type; } && is_object_v<typename T::value_type>
     struct indirectly_readable_traits<T> {
         using value_type = remove_cv_t<typename T::value_type>;
     };
 
-    template<class T> requires requires { typename T::element_type; } && is_object_v<typename T::element_type> 
+    template<class T>
+    requires requires { typename T::element_type; } && is_object_v<typename T::element_type>
     struct indirectly_readable_traits<T> {
         using value_type = remove_cv_t<typename T::element_type>;
     };
@@ -91,14 +103,16 @@ namespace std {
 
     namespace __internal {
         /* Models a LegacyIterator for definition of iterator_traits. This is slightly different than the named requirement with the same name. */
-        template<class I> concept __iterator_traits_legacy_iterator = copyable<I> && requires (I i) {
+        template<class I>
+        concept __iterator_traits_legacy_iterator = copyable<I> && requires (I i) {
             { *i } -> can_reference;
             { ++i } -> same_as<I&>;
             { *i++ } -> can_reference;
         };
 
         /* Models a LegacyInputIterator for definition of iterator_traits. This is slightly different than the named requirement with the same name. */
-        template<class I> concept __iterator_traits_legacy_input_iterator = __iterator_traits_legacy_iterator<I> && equality_comparable<I> && requires (I i) {
+        template<class I>
+        concept __iterator_traits_legacy_input_iterator = __iterator_traits_legacy_iterator<I> && equality_comparable<I> && requires (I i) {
             typename incrementable_traits<I>::difference_type;
             typename indirectly_readable_traits<I>::value_type;
             typename common_reference_t<iter_reference_t<I>&&, typename indirectly_readable_traits<I>::value_type&>;
@@ -107,7 +121,8 @@ namespace std {
         };
 
         /* Models a LegacyForwardIterator for definition of iterator_traits. This is slightly different than the named requirement with the same name. */
-        template<class I> concept __iterator_traits_legacy_forward_iterator = __iterator_traits_legacy_input_iterator<I> && constructible_from<I>
+        template<class I>
+        concept __iterator_traits_legacy_forward_iterator = __iterator_traits_legacy_input_iterator<I> && constructible_from<I>
             && is_lvalue_reference_v<iter_reference_t<I>>
             && same_as<remove_cvref_t<iter_reference_t<I>>, typename indirectly_readable_traits<I>::value_type>
             && requires (I i) {
@@ -116,14 +131,16 @@ namespace std {
             };
 
         /* Models a LegacyBidirectionalIterator for definition of iterator_traits. This is slightly different than the named requirement with the same name. */
-        template<class I> concept __iterator_traits_legacy_bidirectional_iterator = __iterator_traits_legacy_forward_iterator<I> && requires (I i) {
+        template<class I>
+        concept __iterator_traits_legacy_bidirectional_iterator = __iterator_traits_legacy_forward_iterator<I> && requires (I i) {
             { --i } -> same_as<I&>;
             { i-- } -> convertible_to<const I&>;
             { *i-- } -> same_as<iter_reference_t<I>>;
         };
 
         /* Models a LegacyRandomAccessIterator for definition of iterator_traits. This is slightly different than the named requirement with the same name. */
-        template<class I> concept __iterator_traits_legacy_random_access_iterator = __iterator_traits_legacy_bidirectional_iterator<I> && totally_ordered<I>
+        template<class I>
+        concept __iterator_traits_legacy_random_access_iterator = __iterator_traits_legacy_bidirectional_iterator<I> && totally_ordered<I>
             && requires (I i, typename incrementable_traits<I>::difference_type n) {
                 { i += n } -> same_as<I&>;
                 { i -= n } -> same_as<I&>;
@@ -143,15 +160,18 @@ namespace std {
     struct random_access_iterator_tag;
     struct contiguous_iterator_tag;
 
-    template<class I> struct iterator_traits {};
-    
-    template<class I> requires requires {
+    template<class I>
+    struct iterator_traits {};
+
+    template<class I>
+    requires requires {
         typename I::difference_type;
         typename I::value_type;
         typename I::pointer;
         typename I::reference;
         typename I::iterator_category;
-    } struct iterator_traits<I> {
+    }
+    struct iterator_traits<I> {
         using difference_type = typename I::difference_type;
         using value_type = typename I::difference_type;
         using pointer = typename I::pointer;
@@ -160,7 +180,8 @@ namespace std {
         using __primary_template = void;
     };
 
-    template<class I> requires requires {
+    template<class I>
+    requires requires {
         typename I::difference_type;
         typename I::value_type;
         typename I::reference;
@@ -175,7 +196,8 @@ namespace std {
         using __primary_template = void;
     };
 
-    template<class I> requires (!requires {
+    template<class I>
+    requires (!requires {
         typename I::difference_type;
         typename I::value_type;
         typename I::reference;
@@ -221,7 +243,8 @@ namespace std {
         using __primary_template = void;
     };
 
-    template<class I> requires (!requires {
+    template<class I>
+    requires (!requires {
         typename I::difference_type;
         typename I::value_type;
         typename I::reference;
@@ -243,7 +266,8 @@ namespace std {
         using __primary_template = void;
     };
 
-    template<class T> requires is_object_v<T>
+    template<class T>
+    requires is_object_v<T>
     struct iterator_traits<T*> {
         using iterator_concept = contiguous_iterator_tag;
         using iterator_category = random_access_iterator_tag;
@@ -263,13 +287,13 @@ namespace std {
                 template<class E>
                 static constexpr bool use_adl_iter_move = (is_class_v<E> || is_enum_v<E>) && requires (E&& e) { iter_move(forward<E>(e)); };
             public:
-                template<class E> 
+                template<class E>
                 requires use_adl_iter_move<E>
                 constexpr decltype(auto) operator()(E&& e) const noexcept(noexcept(iter_move(forward<E>(e)))) {
                     return iter_move(forward<E>(e));
                 }
 
-                template<class E> 
+                template<class E>
                 requires (!use_adl_iter_move<E>) && requires (E&& e) { *forward<E>(e); }
                 constexpr decltype(auto) operator()(E&& e) const noexcept(noexcept(*forward<E>(e))) {
                     if constexpr (is_lvalue_reference_v<decltype(*forward<E>(e))>) {
@@ -288,7 +312,7 @@ namespace std {
         /* 23.3.3.2 ranges::iter_swap */
         namespace __iter_swap_internal {
             template<class X, class Y>
-            constexpr iter_value_t<X> iter_exchange_move(X&& x, Y&& y) 
+            constexpr iter_value_t<X> iter_exchange_move(X&& x, Y&& y)
             noexcept(noexcept(iter_value_t<X>(iter_move(x))) && noexcept(*x = iter_move(y))) {
                 iter_value_t<X> old_value(iter_move(x));
                 *x = iter_move(y);
@@ -339,7 +363,7 @@ namespace std {
         }
     }
 
-    template<__internal::dereferenceable T> 
+    template<__internal::dereferenceable T>
     requires requires (T& t) {
         { ranges::iter_move(t) } -> __internal::can_reference;
     }
@@ -379,8 +403,8 @@ namespace std {
         { *in } -> same_as<iter_reference_t<remove_cvref_t<In>>>;
         { ranges::iter_move(in) } -> same_as<iter_rvalue_reference_t<remove_cvref_t<In>>>;
     } && common_reference_with<iter_reference_t<remove_cvref_t<In>>&&, iter_value_t<remove_cvref_t<In>>&>
-     && common_reference_with<iter_reference_t<remove_cvref_t<In>>&&, iter_rvalue_reference_t<remove_cvref_t<In>>&&>
-     && common_reference_with<iter_rvalue_reference_t<remove_cvref_t<In>>&&, const iter_value_t<remove_cvref_t<In>>&>;
+        && common_reference_with<iter_reference_t<remove_cvref_t<In>>&&, iter_rvalue_reference_t<remove_cvref_t<In>>&&>
+        && common_reference_with<iter_rvalue_reference_t<remove_cvref_t<In>>&&, const iter_value_t<remove_cvref_t<In>>&>;
 
     template<indirectly_readable T>
     using iter_common_reference_t = common_reference_t<iter_reference_t<T>, iter_value_t<T>&>;
@@ -394,8 +418,8 @@ namespace std {
     };
 
     template<class I>
-    concept weakly_incrementable = default_initializable<I> && movable<I> &&
-        requires (I i) {
+    concept weakly_incrementable = default_initializable<I> && movable<I>
+        && requires (I i) {
             typename iter_difference_t<I>;
             requires signed_integral<iter_difference_t<I>>;
             { ++i } -> same_as<I&>;
@@ -403,10 +427,8 @@ namespace std {
         };
 
     template<class I>
-    concept incrementable = regular<I> && weakly_incrementable<I> &&
-        requires (I i) {
-            { i++ } -> same_as<I>;
-        };
+    concept incrementable = regular<I> && weakly_incrementable<I>
+        && requires (I i) { { i++ } -> same_as<I>; };
 
     template<class I>
     concept input_or_output_iterator = requires (I i) {
@@ -505,7 +527,8 @@ namespace std {
         && strict_weak_order<F&, iter_reference_t<I1>, iter_reference_t<I2>>
         && strict_weak_order<F&, iter_common_reference_t<I1>, iter_common_reference_t<I2>>;
 
-    template<class F, class ...Is> requires (indirectly_readable<Is> && ...) && invocable<F, iter_reference_t<Is>...>
+    template<class F, class ...Is>
+    requires (indirectly_readable<Is> && ...) && invocable<F, iter_reference_t<Is>...>
     using indirect_result_t = invoke_result_t<F, iter_reference_t<Is>...>;
 
     template<indirectly_readable I, indirectly_regular_unary_invocable<I> Proj>
@@ -553,7 +576,7 @@ namespace std {
     concept permutable = forward_iterator<I> && indirectly_movable_storable<I, I> && indirectly_swappable<I, I>;
 
     template<class I1, class I2, class Out, class R = ranges::less, class P1 = identity, class P2 = identity>
-    concept mergeable = input_iterator<I1> && input_iterator<I2> && weakly_incrementable<Out> 
+    concept mergeable = input_iterator<I1> && input_iterator<I2> && weakly_incrementable<Out>
         && indirectly_copyable<I1, Out> && indirectly_copyable<I2, Out> && indirectly_strict_weak_order<R, projected<I1, P1>, projected<I2, P2>>;
 
     template<class I, class R = ranges::less, class P = identity>
@@ -598,8 +621,8 @@ namespace std {
         };
 
         template<class I>
-        concept legacy_forward_iterator = legacy_input_iterator<I> && is_default_constructible_v<I> 
-            && ((is_same_v<typename iterator_traits<I>::reference, typename iterator_traits<I>::value_type&> && legacy_output_iterator<I>) 
+        concept legacy_forward_iterator = legacy_input_iterator<I> && is_default_constructible_v<I>
+            && ((is_same_v<typename iterator_traits<I>::reference, typename iterator_traits<I>::value_type&> && legacy_output_iterator<I>)
                 || (is_same_v<typename iterator_traits<I>::reference, const typename iterator_traits<I>::value_type&> && !legacy_output_iterator<I>))
             && requires (I i) {
                 { i++ } -> same_as<I>;
@@ -614,7 +637,7 @@ namespace std {
         };
 
         template<class I>
-        concept legacy_random_access_iterator = legacy_bidirectional_iterator<I> 
+        concept legacy_random_access_iterator = legacy_bidirectional_iterator<I>
             && requires (I i, I a, I b, I& r, typename iterator_traits<I>::difference_type n) {
                 { r += n } -> same_as<I&>;
                 { a + n } -> same_as<I>;
@@ -691,7 +714,7 @@ namespace std {
                             i--;
                         }
                     }
-                }   
+                }
             }
 
             template<input_or_output_iterator I, sentinel_for<I> S>
@@ -759,7 +782,7 @@ namespace std {
                     return i;
                 }
             }
-            
+
             /* TODO: Uncomment after <ranges> is implemented.
             template<range R>
             constexpr range_difference_t<R> distance(R&& r) const {
@@ -831,12 +854,13 @@ namespace std {
     }
 
     /* 23.5.1 Reverse iterators */
-    template<class Iterator> requires __internal::legacy_bidirectional_iterator<Iterator> || bidirectional_iterator<Iterator>
+    template<class Iterator>
+    requires __internal::legacy_bidirectional_iterator<Iterator> || bidirectional_iterator<Iterator>
     class reverse_iterator {
     public:
         using iterator_type = Iterator;
         using iterator_concept = conditional_t<random_access_iterator<Iterator>, random_access_iterator_tag, bidirectional_iterator_tag>;
-        using iterator_category = conditional_t<derived_from<typename iterator_traits<Iterator>::iterator_category, random_access_iterator_tag>, 
+        using iterator_category = conditional_t<derived_from<typename iterator_traits<Iterator>::iterator_category, random_access_iterator_tag>,
             random_access_iterator_tag, typename iterator_traits<Iterator>::iterator_category>;
         using value_type = iter_value_t<Iterator>;
         using difference_type = iter_difference_t<Iterator>;
@@ -845,8 +869,12 @@ namespace std {
 
         constexpr reverse_iterator() : current() {}
         constexpr explicit reverse_iterator(Iterator x) : current(x) {}
-        template<class U> constexpr reverse_iterator(const reverse_iterator<U>& u) : current(u.current) {}
-        template<class U> constexpr reverse_iterator& operator=(const reverse_iterator<U>& u) {
+
+        template<class U>
+        constexpr reverse_iterator(const reverse_iterator<U>& u) : current(u.current) {}
+
+        template<class U>
+        constexpr reverse_iterator& operator=(const reverse_iterator<U>& u) {
             current = u.base();
             return *this;
         }
@@ -860,7 +888,8 @@ namespace std {
             return *--tmp;
         }
 
-        constexpr pointer operator->() const requires is_pointer_v<Iterator> || requires (const Iterator i) { i.operator->(); } {
+        constexpr pointer operator->() const
+        requires is_pointer_v<Iterator> || requires (const Iterator i) { i.operator->(); } {
             if constexpr (is_pointer_v<Iterator>) {
                 return prev(current);
             } else {
@@ -890,42 +919,42 @@ namespace std {
             return tmp;
         }
 
-        constexpr reverse_iterator operator+(difference_type n) const 
-            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+        constexpr reverse_iterator operator+(difference_type n) const
+        requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
             return reverse_iterator(current - n);
         }
 
-        constexpr reverse_iterator& operator+=(difference_type n) 
-            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+        constexpr reverse_iterator& operator+=(difference_type n)
+        requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
             current -= n;
             return *this;
         }
 
-        constexpr reverse_iterator operator-(difference_type n) const 
-            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+        constexpr reverse_iterator operator-(difference_type n) const
+        requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
             return reverse_iterator(current + n);
         }
 
-        constexpr reverse_iterator& operator-=(difference_type n) 
-            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+        constexpr reverse_iterator& operator-=(difference_type n)
+        requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
             current += n;
             return *this;
         }
 
         constexpr auto operator[](difference_type n) const -> decltype(this->current[-n - 1])
-            requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
+        requires __internal::legacy_random_access_iterator<Iterator> || random_access_iterator<Iterator> {
             return current[-n - 1];
         }
 
-        friend constexpr iter_rvalue_reference_t<Iterator> iter_move(const reverse_iterator& i) 
-            noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(ranges::iter_move(--declval<Iterator&>()))) {
+        friend constexpr iter_rvalue_reference_t<Iterator> iter_move(const reverse_iterator& i)
+        noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(ranges::iter_move(--declval<Iterator&>()))) {
             Iterator tmp = i.base();
             return ranges::iter_move(--tmp);
         }
 
         template<indirectly_swappable<Iterator> Iterator2>
-        friend constexpr void iter_swap(const reverse_iterator& x, const reverse_iterator<Iterator2>& y) 
-            noexcept(is_nothrow_copy_constructible_v<Iterator> && is_nothrow_copy_constructible_v<Iterator2> && noexcept(ranges::iter_swap(--declval<Iterator&>(), --declval<Iterator2&>()))) {
+        friend constexpr void iter_swap(const reverse_iterator& x, const reverse_iterator<Iterator2>& y)
+        noexcept(is_nothrow_copy_constructible_v<Iterator> && is_nothrow_copy_constructible_v<Iterator2> && noexcept(ranges::iter_swap(--declval<Iterator&>(), --declval<Iterator2&>()))) {
             Iterator xtmp = x.base();
             Iterator ytmp = y.base();
             ranges::iter_swap(--xtmp, --ytmp);
@@ -935,42 +964,48 @@ namespace std {
         Iterator current;
     };
 
-    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+    template<class Iterator1, class Iterator2>
+    requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         { x.base() == y.base() } -> convertible_to<bool>;
     }
     constexpr bool operator==(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         return x.base() == y.base();
     }
 
-    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+    template<class Iterator1, class Iterator2>
+    requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         { x.base() != y.base() } -> convertible_to<bool>;
     }
     constexpr bool operator!=(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         return x.base() != y.base();
     }
 
-    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+    template<class Iterator1, class Iterator2>
+    requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         { x.base() < y.base() } -> convertible_to<bool>;
     }
     constexpr bool operator<(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         return x.base() < y.base();
     }
 
-    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+    template<class Iterator1, class Iterator2>
+    requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         { x.base() > y.base() } -> convertible_to<bool>;
     }
     constexpr bool operator>(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         return x.base() > y.base();
     }
 
-    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+    template<class Iterator1, class Iterator2>
+    requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         { x.base() <= y.base() } -> convertible_to<bool>;
     }
     constexpr bool operator<=(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         return x.base() <= y.base();
     }
 
-    template<class Iterator1, class Iterator2> requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
+    template<class Iterator1, class Iterator2>
+    requires requires (const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
         { x.base() >= y.base() } -> convertible_to<bool>;
     }
     constexpr bool operator>=(const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y) {
@@ -997,7 +1032,8 @@ namespace std {
         return reverse_iterator<Iterator>(i);
     }
 
-    template<class Iterator1, class Iterator2> requires (!sized_sentinel_for<Iterator1, Iterator2>)
+    template<class Iterator1, class Iterator2>
+    requires (!sized_sentinel_for<Iterator1, Iterator2>)
     inline constexpr bool disable_sized_sentinel_for<reverse_iterator<Iterator1>, reverse_iterator<Iterator2>> = true;
 
     /* 23.5.2 Insert iterators */
@@ -1143,10 +1179,12 @@ namespace std {
 
         constexpr explicit move_sentinel(S s) : last(move(s)) {}
 
-        template<class S2> requires convertible_to<const S2&, S>
+        template<class S2>
+        requires convertible_to<const S2&, S>
         constexpr move_sentinel(const move_sentinel<S2>& s) : last(s) {}
 
-        template<class S2> requires assignable_from<S&, const S2&>
+        template<class S2>
+        requires assignable_from<S&, const S2&>
         constexpr move_sentinel& operator=(const move_sentinel<S2>& s) {
             last = s.last;
             return *this;
@@ -1157,14 +1195,15 @@ namespace std {
         }
     };
 
-    template<class Iter> requires __internal::legacy_input_iterator<Iter> || input_iterator<Iter>
+    template<class Iter>
+    requires __internal::legacy_input_iterator<Iter> || input_iterator<Iter>
     class move_iterator {
     private:
         Iter current;
     public:
         using iterator_type = Iter;
         using iterator_concept = input_iterator_tag;
-        using iterator_category = conditional_t<derived_from<typename iterator_traits<Iter>::iterator_category, random_access_iterator_tag>, 
+        using iterator_category = conditional_t<derived_from<typename iterator_traits<Iter>::iterator_category, random_access_iterator_tag>,
             random_access_iterator_tag, typename iterator_traits<Iter>::iterator_category>;
         using value_type = iter_value_t<Iter>;
         using difference_type = iter_difference_t<Iter>;
@@ -1178,13 +1217,14 @@ namespace std {
         template<convertible_to<Iter> U>
         constexpr move_iterator(const move_iterator<U>& u) : current(u.base()) {}
 
-        template<convertible_to<Iter> U> 
+        template<convertible_to<Iter> U>
         constexpr move_iterator& operator=(const move_iterator<U>& u) {
             current = u.base();
             return *this;
         }
 
-        constexpr iterator_type base() const & requires copy_constructible<Iter> {
+        constexpr iterator_type base() const &
+        requires copy_constructible<Iter> {
             return current;
         }
 
@@ -1211,40 +1251,48 @@ namespace std {
             }
         }
 
-        constexpr move_iterator& operator--() requires __internal::legacy_bidirectional_iterator<Iter> || bidirectional_iterator<Iter> {
+        constexpr move_iterator& operator--()
+        requires __internal::legacy_bidirectional_iterator<Iter> || bidirectional_iterator<Iter> {
             current--;
             return *this;
         }
 
-        constexpr move_iterator operator--(int) requires __internal::legacy_bidirectional_iterator<Iter> || bidirectional_iterator<Iter> {
+        constexpr move_iterator operator--(int)
+        requires __internal::legacy_bidirectional_iterator<Iter> || bidirectional_iterator<Iter> {
             move_iterator tmp = *this;
             current--;
             return tmp;
         }
 
-        constexpr move_iterator operator+(difference_type n) const requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+        constexpr move_iterator operator+(difference_type n) const
+        requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
             return move_iterator(current + n);
         }
 
-        constexpr move_iterator& operator+=(difference_type n) requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+        constexpr move_iterator& operator+=(difference_type n)
+        requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
             current += n;
             return *this;
         }
 
-        constexpr move_iterator operator-(difference_type n) const requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+        constexpr move_iterator operator-(difference_type n) const
+        requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
             return move_iterator(current - n);
         }
 
-        constexpr move_iterator& operator-=(difference_type n) requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+        constexpr move_iterator& operator-=(difference_type n)
+        requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
             current -= n;
             return *this;
         }
 
-        constexpr reference operator[](difference_type n) const requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
+        constexpr reference operator[](difference_type n) const
+        requires __internal::legacy_random_access_iterator<Iter> || random_access_iterator<Iter> {
             return ranges::iter_move(current + n);
         }
 
-        template<sentinel_for<Iter> S> requires requires (const move_iterator& x, const move_sentinel<S>& y) { { x.base() == y.base() } -> convertible_to<bool>; }
+        template<sentinel_for<Iter> S>
+        requires requires (const move_iterator& x, const move_sentinel<S>& y) { { x.base() == y.base() } -> convertible_to<bool>; }
         friend constexpr bool operator==(const move_iterator& x, const move_sentinel<S>& y) {
             return x.base() == y.base();
         }
@@ -1269,27 +1317,32 @@ namespace std {
         }
     };
 
-    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() == y.base() } -> convertible_to<bool>; }
+    template<class Iter1, class Iter2>
+    requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() == y.base() } -> convertible_to<bool>; }
     constexpr bool operator==(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
         return x.base() == y.base();
     }
 
-    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() < y.base() } -> convertible_to<bool>; }
+    template<class Iter1, class Iter2>
+    requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() < y.base() } -> convertible_to<bool>; }
     constexpr bool operator<(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
         return x.base() < y.base();
     }
 
-    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { y.base() < x.base() } -> convertible_to<bool>; }
+    template<class Iter1, class Iter2>
+    requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { y.base() < x.base() } -> convertible_to<bool>; }
     constexpr bool operator>(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
         return y < x;
     }
 
-    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { y.base() < x.base() } -> convertible_to<bool>; }
+    template<class Iter1, class Iter2>
+    requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { y.base() < x.base() } -> convertible_to<bool>; }
     constexpr bool operator<=(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
         return !(y < x);
     }
 
-    template<class Iter1, class Iter2> requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() < y.base() } -> convertible_to<bool>; }
+    template<class Iter1, class Iter2>
+    requires requires (const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) { { x.base() < y.base() } -> convertible_to<bool>; }
     constexpr bool operator>=(const move_iterator<Iter1>& x, const move_iterator<Iter2>& y) {
         return !(x < y);
     }
@@ -1304,7 +1357,8 @@ namespace std {
         return x.base() - y.base();
     }
 
-    template<class Iter> requires requires (iter_difference_t<Iter> n, const move_iterator<Iter>& x) { { x + n } -> same_as<Iter>; }
+    template<class Iter>
+    requires requires (iter_difference_t<Iter> n, const move_iterator<Iter>& x) { { x + n } -> same_as<Iter>; }
     constexpr move_iterator<Iter> operator+(iter_difference_t<Iter> n, const move_iterator<Iter>& x) {
         return x + n;
     }
@@ -1315,7 +1369,8 @@ namespace std {
     }
 
     /* 23.5.4 Common iterators */
-    template<input_or_output_iterator I, sentinel_for<I> S> requires (!same_as<I, S> && copyable<I>)
+    template<input_or_output_iterator I, sentinel_for<I> S>
+    requires (!same_as<I, S> && copyable<I>)
     class common_iterator {
     private:
         struct storage {
@@ -1386,11 +1441,13 @@ namespace std {
         constexpr common_iterator(I i) : s(move(i)) {}
         constexpr common_iterator(S s) : s(move(s)) {}
 
-        template<class I2, class S2> requires convertible_to<const I2&, I> && convertible_to<const S2&, S>
+        template<class I2, class S2>
+        requires convertible_to<const I2&, I> && convertible_to<const S2&, S>
         constexpr common_iterator(const common_iterator<I2, S2>& x) : s(x.s) {}
 
 
-        template<class I2, class S2> requires convertible_to<const I2&, I> && convertible_to<const S2&, S>
+        template<class I2, class S2>
+        requires convertible_to<const I2&, I> && convertible_to<const S2&, S>
             && assignable_from<I&, const I2&> && assignable_from<S&, const S2&>
         constexpr common_iterator& operator=(const common_iterator<I2, S2>& x) {
             s = x.s;
@@ -1401,7 +1458,8 @@ namespace std {
             return *s.i;
         }
 
-        decltype(auto) operator*() const requires __internal::dereferenceable<const I> {
+        decltype(auto) operator*() const
+        requires __internal::dereferenceable<const I> {
             return *s.i;
         }
 
@@ -1416,8 +1474,9 @@ namespace std {
         };
 
     public:
-        decltype(auto) operator->() const requires indirectly_readable<const I> &&
-            (requires (const I& i) { i.operator->(); } || is_reference_v<iter_reference_t<I>> || constructible_from<iter_value_t<I>, iter_reference_t<I>>) {
+        decltype(auto) operator->() const
+        requires indirectly_readable<const I>
+            && (requires (const I& i) { i.operator->(); } || is_reference_v<iter_reference_t<I>> || constructible_from<iter_value_t<I>, iter_reference_t<I>>) {
             if constexpr (is_pointer_v<I> || requires { s.i.operator->(); }) {
                 return s.i;
             } else if (is_reference_v<iter_reference_t<I>>) {
@@ -1443,7 +1502,8 @@ namespace std {
             }
         }
 
-        template<class I2, sentinel_for<I> S2> requires sentinel_for<S, I2>
+        template<class I2, sentinel_for<I> S2>
+        requires sentinel_for<S, I2>
         friend bool operator==(const common_iterator& x, const common_iterator<I2, S2>& y) {
             if (static_cast<std::size_t>(x.s.curr_member) == static_cast<std::size_t>(y.s.curr_member)) {
                 return true;
@@ -1454,7 +1514,8 @@ namespace std {
             }
         }
 
-        template<class I2, sentinel_for<I> S2> requires sentinel_for<S, I2> && equality_comparable_with<I, I2>
+        template<class I2, sentinel_for<I> S2>
+        requires sentinel_for<S, I2> && equality_comparable_with<I, I2>
         friend bool operator==(const common_iterator& x, const common_iterator<I2, S2>& y) {
             if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Sentinel) {
                 return true;
@@ -1467,7 +1528,8 @@ namespace std {
             }
         }
 
-        template<sized_sentinel_for<I> I2, sized_sentinel_for<I> S2> requires sized_sentinel_for<S, I2>
+        template<sized_sentinel_for<I> I2, sized_sentinel_for<I> S2>
+        requires sized_sentinel_for<S, I2>
         friend iter_difference_t<I2> operator-(const common_iterator& x, const common_iterator<I2, S2>& y) {
             if (x.s.curr_member == common_iterator::storage::Sentinel && y.s.curr_member == common_iterator<I2, S2>::storage::Sentinel) {
                 return 0;
@@ -1480,12 +1542,15 @@ namespace std {
             }
         }
 
-        friend iter_rvalue_reference_t<I> iter_move(const common_iterator& i) noexcept(noexcept(ranges::iter_move(declval<const I&>()))) requires input_iterator<I> {
+        friend iter_rvalue_reference_t<I> iter_move(const common_iterator& i)
+        noexcept(noexcept(ranges::iter_move(declval<const I&>())))
+        requires input_iterator<I> {
             return ranges::iter_move(i.s.i);
         }
 
         template<indirectly_swappable<I> I2, class S2>
-        friend void iter_swap(const common_iterator& x, const common_iterator<I2, S2>& y) noexcept(noexcept(ranges::iter_swap(declval<const I&>(), declval<const I2&>()))) {
+        friend void iter_swap(const common_iterator& x, const common_iterator<I2, S2>& y)
+        noexcept(noexcept(ranges::iter_swap(declval<const I&>(), declval<const I2&>()))) {
             ranges::iter_swap(x.s.i, y.s.i);
         }
     };
@@ -1536,20 +1601,24 @@ namespace std {
 
         constexpr counted_iterator() = default;
         constexpr counted_iterator(I x, iter_difference_t<I> n) : current(move(x)), length(n) {}
-        template<class I2> requires convertible_to<const I2&, I>
+
+        template<class I2>
+        requires convertible_to<const I2&, I>
         constexpr counted_iterator(const counted_iterator<I2>& x) : current(x.current), length(x.length) {}
 
-        template<class I2> requires assignable_from<I&, const I2&>
+        template<class I2>
+        requires assignable_from<I&, const I2&>
         constexpr counted_iterator& operator=(const counted_iterator<I2>& x) {
             current = x.current;
             length = x.length;
             return *this;
         }
 
-        constexpr I base() const & requires copy_constructible<I> {
+        constexpr I base() const &
+        requires copy_constructible<I> {
             return current;
         }
-        
+
         constexpr I base() && {
             return move(current);
         }
@@ -1562,7 +1631,8 @@ namespace std {
             return *current;
         }
 
-        constexpr decltype(auto) operator*() const requires __internal::dereferenceable<const I> {
+        constexpr decltype(auto) operator*() const
+        requires __internal::dereferenceable<const I> {
             return *current;
         }
 
@@ -1582,39 +1652,46 @@ namespace std {
             }
         }
 
-        constexpr counted_iterator operator++(int) requires forward_iterator<I> {
+        constexpr counted_iterator operator++(int)
+        requires forward_iterator<I> {
             counted_iterator tmp = *this;
             *this++;
             return tmp;
         }
 
-        constexpr counted_iterator& operator--() requires bidirectional_iterator<I> {
+        constexpr counted_iterator& operator--()
+        requires bidirectional_iterator<I> {
             current--;
             length++;
             return *this;
         }
 
-        constexpr counted_iterator operator--(int) requires bidirectional_iterator<I> {
+        constexpr counted_iterator operator--(int)
+        requires bidirectional_iterator<I> {
             counted_iterator tmp = *this;
             *this--;
             return tmp;
         }
 
-        constexpr counted_iterator operator+(iter_difference_t<I> n) const requires random_access_iterator<I> {
+        constexpr counted_iterator operator+(iter_difference_t<I> n) const
+        requires random_access_iterator<I> {
             return counted_iterator(current + n, length - n);
         }
 
-        friend constexpr counted_iterator operator+(iter_difference_t<I> n, const counted_iterator& x) requires random_access_iterator<I> {
+        friend constexpr counted_iterator operator+(iter_difference_t<I> n, const counted_iterator& x)
+        requires random_access_iterator<I> {
             return x + n;
         }
 
-        constexpr counted_iterator& operator+=(iter_difference_t<I> n) requires random_access_iterator<I> {
+        constexpr counted_iterator& operator+=(iter_difference_t<I> n)
+        requires random_access_iterator<I> {
             current += n;
             length -= n;
             return *this;
         }
 
-        constexpr counted_iterator operator-(iter_difference_t<I> n) const requires random_access_iterator<I> {
+        constexpr counted_iterator operator-(iter_difference_t<I> n) const
+        requires random_access_iterator<I> {
             return counted_iterator(current - n, length + n);
         }
 
@@ -1631,13 +1708,15 @@ namespace std {
             return y.length;
         }
 
-        constexpr counted_iterator& operator-=(iter_difference_t<I> n) requires random_access_iterator<I> {
+        constexpr counted_iterator& operator-=(iter_difference_t<I> n)
+        requires random_access_iterator<I> {
             current -= n;
             length += n;
             return *this;
         }
 
-        constexpr decltype(auto) operator[](iter_difference_t<I> n) const requires random_access_iterator<I> {
+        constexpr decltype(auto) operator[](iter_difference_t<I> n) const
+        requires random_access_iterator<I> {
             return current[n];
         }
 
@@ -1655,13 +1734,15 @@ namespace std {
             return y.length <=> x.length;
         }
 
-        friend constexpr iter_rvalue_reference_t<I> iter_move(const counted_iterator& i) noexcept(noexcept(ranges::iter_move(i.current)))
+        friend constexpr iter_rvalue_reference_t<I> iter_move(const counted_iterator& i)
+        noexcept(noexcept(ranges::iter_move(i.current)))
         requires input_iterator<I> {
             return ranges::iter_move(i.current);
         }
 
         template<indirectly_swappable<I> I2>
-        friend constexpr void iter_swap(const counted_iterator& x, const counted_iterator<I2>& y) noexcept(noexcept(ranges::iter_swap(x.current, y.current))) {
+        friend constexpr void iter_swap(const counted_iterator& x, const counted_iterator<I2>& y)
+        noexcept(noexcept(ranges::iter_swap(x.current, y.current))) {
             return ranges::iter_swap(x.current, y.current);
         }
     };
@@ -1752,7 +1833,7 @@ namespace std {
         ostream_iterator(ostream_type& s) : out_stream(addressof(s)), delim(nullptr) {}
 
         ostream_iterator(ostream_type& s, const charT* delimiter) : out_stream(addressof(s)), delim(delimiter) {}
-        
+
         ostream_iterator(const ostream_iterator& x) = default;
         ~ostream_iterator() = default;
         ostream_iterator& operator=(const ostream_iterator&) = default;
@@ -1842,11 +1923,11 @@ namespace std {
         bool equal(const istreambuf_iterator& b) const {
             if (!sbuf || !b.sbuf) {
                 return sbuf == b.sbuf;
-            } 
-            
+            }
+
             const bool a_is_eof = traits::eq_int_type(traits::eof(), sbuf->sgetc());
             const bool b_is_eof = traits::eq_int_type(traits::eof(), b.sbuf->sgetc());
-            
+
             return a_is_eof == b_is_eof;
         }
 
@@ -1931,12 +2012,12 @@ namespace std {
     constexpr auto end(C& c) -> decltype(c.end()) {
         return c.end();
     }
- 
+
     template<class C>
     constexpr auto end(const C& c) -> decltype(c.end()) {
         return c.end();
     }
- 
+
     template<class T, std::size_t N>
     constexpr T* end(T (&array)[N]) noexcept {
         return array + N;
@@ -2017,7 +2098,7 @@ namespace std {
         return static_cast<common_type_t<std::ptrdiff_t, make_signed_t<decltype(c.size())>>>(c.size());
     }
 
-    template<class T, std::ptrdiff_t N> 
+    template<class T, std::ptrdiff_t N>
     constexpr std::ptrdiff_t ssize(const T (&)[N]) noexcept {
         return N;
     }
@@ -2060,14 +2141,14 @@ namespace std {
     /* Implementation */
     namespace ranges::__iter_swap_internal {
         template<class X, class Y>
-        constexpr bool iter_swap_fn::use_ranges_swap() noexcept { 
-            return !use_adl_iter_swap<X, Y>() && indirectly_readable<X> 
+        constexpr bool iter_swap_fn::use_ranges_swap() noexcept {
+            return !use_adl_iter_swap<X, Y>() && indirectly_readable<X>
                 && indirectly_readable<Y> && swappable_with<X&, Y&>;
         }
 
         template<class X, class Y>
-        constexpr bool iter_swap_fn::use_iter_exchange_move() noexcept { 
-            return !use_ranges_swap<X, Y>() && indirectly_movable_storable<X, Y> 
+        constexpr bool iter_swap_fn::use_iter_exchange_move() noexcept {
+            return !use_ranges_swap<X, Y>() && indirectly_movable_storable<X, Y>
                 && indirectly_movable_storable<Y, X>;
         }
     }

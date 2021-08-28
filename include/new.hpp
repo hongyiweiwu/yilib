@@ -24,7 +24,9 @@ namespace std {
 
     enum class align_val_t : std::size_t {};
 
-    struct nothrow_t { explicit nothrow_t() = default; };
+    struct nothrow_t {
+        explicit nothrow_t() = default;
+    };
     extern const nothrow_t nothrow;
 
     using new_handler = void (*)();
@@ -33,7 +35,8 @@ namespace std {
 
     /* 17.6.5 Pointer optimization barrier */
 #if __has_intrinsics_for(builtin_launder)
-    template<class T> requires (!is_function_v<T>) && (!is_void_v<T>)
+    template<class T>
+    requires (!is_function_v<T>) && (!is_void_v<T>)
     [[nodiscard]] constexpr T* launder(T* p) noexcept {
         return __builtin_launder(p);
     }

@@ -15,7 +15,9 @@
 namespace std {
     // Forward declaration. Declared below.
     class stop_source;
-    template<class Callback> class stop_callback;
+
+    template<class Callback>
+    class stop_callback;
 
     namespace __internal {
         /* Base class of stop_callback. It simply provides a virtual method which all stop_callbacks override to invoke the callback. Since stop_callback
@@ -83,7 +85,8 @@ namespace std {
             __stop_callback_list_entry* register_callback(__stop_callback_base* callback) noexcept;
 
             friend class std::stop_source;
-            template<class Callback> friend class std::stop_callback;
+            template<class Callback>
+            friend class std::stop_callback;
         };
     }
 
@@ -109,7 +112,8 @@ namespace std {
         friend bool operator==(const stop_token& lhs, const stop_token& rhs) noexcept;
 
         friend class stop_source;
-        template<class Callback> friend class stop_callback;
+        template<class Callback>
+        friend class stop_callback;
     };
 
     [[nodiscard]] bool operator==(const stop_token& lhs, const stop_token& rhs) noexcept;
@@ -152,12 +156,14 @@ namespace std {
     public:
         using callback_type = Callback;
 
-        template<class C> requires invocable<C> && destructible<C> && constructible_from<Callback, C>
+        template<class C>
+        requires invocable<C> && destructible<C> && constructible_from<Callback, C>
         explicit stop_callback(const stop_token& st, C&& cb) noexcept(is_nothrow_constructible_v<Callback, C>)
             : callback(forward<C>(cb)), state(st.state), callback_list_entry(nullptr) {
             try {
-                if (st.stop_requested()) forward<C>(cb)();
-                else if (st.state) {
+                if (st.stop_requested()) {
+                    forward<C>(cb)();
+                } else if (st.state) {
                     state->increment_refcount();
                     callback_list_entry = state->register_callback(this);
                 }
@@ -166,12 +172,14 @@ namespace std {
             }
         }
 
-        template<class C> requires invocable<C> && destructible<C> && constructible_from<Callback, C>
+        template<class C>
+        requires invocable<C> && destructible<C> && constructible_from<Callback, C>
         explicit stop_callback(stop_token&& st, C&& cb) noexcept(is_nothrow_constructible_v<Callback, C>)
             : callback(forward<C>(cb)), callback_list_entry(nullptr) {
             try {
-                if (st.stop_requested()) forward<C>(cb)();
-                else if (st.state) {
+                if (st.stop_requested()) {
+                    forward<C>(cb)();
+                } else if (st.state) {
                     state = st.state;
                     state->increment_refcount();
                     callback_list_entry = state->register_callback(this);
@@ -202,7 +210,9 @@ namespace std {
         stop_callback& operator=(const stop_callback&) = delete;
         stop_callback& operator=(stop_callback&&) = delete;
 
-        void execute() override { callback(); }
+        void execute() override {
+            callback();
+        }
 
     private:
         Callback callback;
@@ -210,5 +220,6 @@ namespace std {
         __internal::__stop_callback_list_entry* callback_list_entry;
     };
 
-    template<class Callback> stop_callback(stop_token, Callback) -> stop_callback<Callback>;
+    template<class Callback>
+    stop_callback(stop_token, Callback) -> stop_callback<Callback>;
 }

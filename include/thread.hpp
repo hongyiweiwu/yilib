@@ -19,11 +19,11 @@ namespace std {
         /* This is the callable passed into the pthread constructor. The "ptr" argument should be a pointer to a tuple containing
          * a Callable and its arguments. This function will simply call the Callable with the supplied arguments. */
         template<class ...T>
-        void __thread_executor(void* ptr) {
+        static void execute_thread(void* ptr) {
             static constexpr auto helper = []<std::size_t ...I>(tuple<T...>* tp, index_sequence<I...>) {
                 invoke(get<I>(move(*tp))...);
             };
-                
+
             const unique_ptr<tuple<T...>> wrapped_ptr(static_cast<tuple<T...>*>(ptr));
             try {
                 helper(wrapped_ptr.get(), index_sequence_for<T...>());
@@ -63,20 +63,20 @@ namespace std {
             && is_invocable_v<decay_t<F>, decay_t<Args>...>
         explicit thread(F&& f, Args&& ...args) : handle() {
             tuple<decay_t<F>, decay_t<Args>...>* tp = new tuple<decay_t<F>, decay_t<Args>...>(__internal::decay_copy(forward<F>(f)), __internal::decay_copy(forward<Args>(args))...);
-            const int ec = pthread_create(&handle, nullptr, &__internal::__thread_executor<decay_t<F>, decay_t<Args>...>, tp);
+            const int ec = pthread_create(&handle, nullptr, &__internal::execute_thread<decay_t<F>, decay_t<Args>...>, tp);
             if (ec != 0) {
                 throw system_error(ec, system_category());
                 delete tp;
             }
         }
-        
+
         ~thread();
         thread(const thread&) = delete;
         thread(thread&&) noexcept;
         thread& operator=(const thread&) = delete;
         thread& operator=(thread&&) noexcept;
 
-        void swap(thread&) noexcept;  
+        void swap(thread&) noexcept;
         bool joinable() const noexcept;
         void join();
         void detach();
@@ -97,7 +97,8 @@ namespace std {
         return out << id.identifier;
     }
 
-    template<> struct hash<thread::id> : hash<__internal::__enabled_hash_t> {
+    template<>
+    struct hash<thread::id> : hash<__internal::__enabled_hash_t> {
         std::size_t operator()(const thread::id& id) const;
     };
 
@@ -109,7 +110,8 @@ namespace std {
         using native_handle_type = thread::native_handle_type;
 
         jthread() noexcept;
-        template<class F, class ...Args> requires (!is_same_v<remove_cvref_t<F>, jthread>)
+        template<class F, class ...Args>
+        requires (!is_same_v<remove_cvref_t<F>, jthread>)
             && is_constructible_v<decay_t<F>, F> && ((is_constructible_v<decay_t<Args>, Args>) && ...)
             && is_move_constructible_v<decay_t<F>> && ((is_move_constructible_v<decay_t<Args>>) && ...)
             && (is_invocable_v<decay_t<F>, decay_t<Args>...> || is_invocable_v<decay_t<F>, stop_token, decay_t<Args>...>)
@@ -117,21 +119,21 @@ namespace std {
             int ec;
             if constexpr (is_invocable_v<decay_t<F>, stop_token, decay_t<Args>...>) {
                 tuple<decay_t<F>, stop_token, decay_t<Args>...>* tp = new tuple<decay_t<F>, stop_token, decay_t<Args>...>(__internal::decay_copy(forward<F>(f)), get_stop_token(), __internal::decay_copy(forward<Args>(args))...);
-                ec = pthread_create(&handle, nullptr, &__internal::__thread_executor<decay_t<F>, stop_token, decay_t<Args>...>, tp);
+                ec = pthread_create(&handle, nullptr, &__internal::execute_thread<decay_t<F>, stop_token, decay_t<Args>...>, tp);
                 if (ec != 0) {
                     delete tp;
                     throw system_error(ec, system_category());
                 }
             } else {
                 tuple<decay_t<F>, decay_t<Args>...>* tp = new tuple<decay_t<F>, decay_t<Args>...>(__internal::decay_copy(forward<F>(f)), __internal::decay_copy(forward<Args>(args))...);
-                ec = pthread_create(&handle, nullptr, &__internal::__thread_executor<decay_t<F>, decay_t<Args>...>, tp);
+                ec = pthread_create(&handle, nullptr, &__internal::execute_thread<decay_t<F>, decay_t<Args>...>, tp);
                 if (ec != 0) {
                     delete tp;
                     throw system_error(ec, system_category());
                 }
             }
         }
-        
+
         ~jthread();
         jthread(const jthread&) = delete;
         jthread(jthread&&) noexcept;
@@ -152,7 +154,7 @@ namespace std {
         friend void swap(jthread& lhs, jthread& rhs) noexcept;
 
         [[nodiscard]] static unsigned int hardware_concurrency() noexcept;
-    
+
     private:
         pthread_t handle;
         stop_source ssource;
@@ -163,7 +165,7 @@ namespace std {
     namespace this_thread {
         thread::id get_id() noexcept;
         void yield() noexcept;
-        
+
         template<class Clock, class Duration>
         void sleep_until(const chrono::time_point<Clock, Duration>& abs_time) {
             return sleep_for(abs_time - chrono::steady_clock::now());
@@ -172,8 +174,8 @@ namespace std {
         template<class Rep, class Period>
         void sleep_for(const chrono::duration<Rep, Period>& rel_time) {
             const chrono::seconds sec = chrono::duration_cast<chrono::seconds>(rel_time);
-            std::timespec rel_time_spec = { 
-                .tv_sec = sec.count(), 
+            std::timespec rel_time_spec = {
+                .tv_sec = sec.count(),
                 .tv_nsec = chrono::duration_cast<chrono::microseconds>(rel_time - sec).count()
             };
 

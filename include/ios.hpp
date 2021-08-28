@@ -13,13 +13,20 @@
 
 namespace std {
     /* 29.5.4 Class template fpos */
-    template<class stateT> requires is_default_constructible_v<stateT>
+    template<class stateT>
+    requires is_default_constructible_v<stateT>
         && is_copy_constructible_v<stateT> && is_copy_assignable_v<stateT>
         && is_nothrow_destructible_v<stateT>
     class fpos {
     public:
-        stateT state() const { return st; }
-        void state(stateT s) { st = s; }
+        stateT state() const {
+            return st;
+        }
+
+        void state(stateT s) {
+            st = s;
+        }
+
     private:
         stateT st;
     };
@@ -130,7 +137,7 @@ namespace std {
 
         ios_base(const ios_base&) = delete;
         ios_base& operator=(const ios_base&) = delete;
-        
+
         /* 29.5.3.5 Static members */
         static bool sync_with_stdio(bool sync = true);
 
@@ -168,22 +175,49 @@ namespace std {
         using traits_type = traits;
 
         /* 29.5.5.4 Flags functions */
-        explicit operator bool() const { return (rdstate() & (badbit | failbit)) == 0; }
-        bool operator!() const { return !operator bool(); }
-        iostate rdstate() const { return ios_base::rdstate; }
-        void clear(iostate state = goodbit) {
-            ios_base::rdstate = state | (rdbuf() ? goodbit : badbit);
-            if ((ios_base::rdstate & exceptions()) != 0)
-                throw failure("Error when calling clear() in basic_ios.");
+        explicit operator bool() const {
+            return (rdstate() & (badbit | failbit)) == 0;
         }
 
-        void setstate(iostate state) override { clear(rdstate() | state); }
-        bool good() const { return rdstate() == goodbit; }
-        bool eof() const { return (rdstate() & eofbit) != 0; }
-        bool fail() const { return (rdstate() & (badbit | failbit)) != 0; };
-        bool bad() const { return (rdstate() & badbit) != 0; }
+        bool operator!() const {
+            return !operator bool();
+        }
 
-        iostate exceptions() const { return ios_base::exception; }
+        iostate rdstate() const {
+            return ios_base::rdstate;
+        }
+
+        void clear(iostate state = goodbit) {
+            ios_base::rdstate = state | (rdbuf() ? goodbit : badbit);
+            if ((ios_base::rdstate & exceptions()) != 0) {
+                throw failure("Error when calling clear() in basic_ios.");
+            }
+        }
+
+        void setstate(iostate state) override {
+            clear(rdstate() | state);
+        }
+
+        bool good() const {
+            return rdstate() == goodbit;
+        }
+
+        bool eof() const {
+            return (rdstate() & eofbit) != 0;
+        }
+
+        bool fail() const {
+            return (rdstate() & (badbit | failbit)) != 0;
+        }
+;
+        bool bad() const {
+            return (rdstate() & badbit) != 0;
+        }
+
+        iostate exceptions() const {
+            return ios_base::exception;
+        }
+
         void exceptions(iostate except) {
             clear(rdstate());
             ios_base::exception = except;
@@ -194,14 +228,20 @@ namespace std {
         virtual ~basic_ios() = default;
 
         /* 29.5.5.3 Members */
-        basic_ostream<charT, traits>* tie() const { return tiestr; }
+        basic_ostream<charT, traits>* tie() const {
+            return tiestr;
+        }
+
         basic_ostream<charT, traits>* tie(basic_ostream<charT, traits>* tiestr) {
             basic_ostream<charT, traits>* old = this->tiestr;
             this->tiestr = tiestr;
             return old;
         }
 
-        basic_streambuf<charT, traits>* rdbuf() const { return buf; }
+        basic_streambuf<charT, traits>* rdbuf() const {
+            return buf;
+        }
+
         basic_streambuf<charT, traits>* rdbuf(basic_streambuf<charT, traits>* sb) {
             basic_streambuf<charT, traits> old = this->buf;
             this->buf = sb;
@@ -209,10 +249,13 @@ namespace std {
         }
 
         basic_ios& copyfmt(const basic_ios& rhs) {
-            if (this == addressof(rhs)) return *this;
+            if (this == addressof(rhs)) {
+                return *this;
+            }
 
-            for (int i = rhs.callback_count - 1; i >= 0; i--)
+            for (int i = rhs.callback_count - 1; i >= 0; i--) {
                 (*rhs.callbacks[i])(erase_event, *this, rhs.callback_indices[i]);
+            }
 
             fmtfl = rhs.flags();
             prec = rhs.precision();
@@ -249,14 +292,18 @@ namespace std {
             tiestr = rhs.tie();
             fillch = rhs.fill();
 
-            for (int i = callback_count - 1; i >= 0; i--)
+            for (int i = callback_count - 1; i >= 0; i--) {
                 (*callbacks[i])(copyfmt_event, *this, callback_indices[i]);
+            }
 
             exceptions(rhs.exceptions());
         }
 
-        char_type fill() const { return fillch; }
-        char_type fill(char_type ch) { 
+        char_type fill() const {
+            return fillch;
+        }
+
+        char_type fill(char_type ch) {
             char_type old = fillch;
             fillch = ch;
             return old;
@@ -268,8 +315,13 @@ namespace std {
             return old;
         }
 
-        char narrow(char_type c, char dfault) const { return use_facet<ctype<char_type>>(getloc()).narrow(c, dfault); }
-        char_type widen(char c) const { return use_facet<ctype<char_type>>(getloc()).widen(c); }
+        char narrow(char_type c, char dfault) const {
+            return use_facet<ctype<char_type>>(getloc()).narrow(c, dfault);
+        }
+
+        char_type widen(char c) const {
+            return use_facet<ctype<char_type>>(getloc()).widen(c);
+        }
 
         basic_ios(const basic_ios&) = delete;
         basic_ios& operator=(const basic_ios&) = delete;
@@ -300,12 +352,16 @@ namespace std {
             fillch = widen(' ');
         }
 
-        void move(basic_ios& rhs) { return move(std::move(rhs)); }
+        void move(basic_ios& rhs) {
+            return move(std::move(rhs));
+        }
+
         void move(basic_ios&& rhs) {
             std::swap(rhs);
             buf = nullptr;
             rhs.tiestr = nullptr;
         }
+
         void swap(basic_ios& rhs) noexcept {
             std::swap(fmtfl, rhs.fmtfl);
             std::swap(prec, rhs.prec);
@@ -330,7 +386,10 @@ namespace std {
             std::swap(tiestr, rhs.tiestr);
             std::swap(fillch, rhs.fillch);
         }
-        void set_rdbuf(basic_streambuf<charT, traits>* sb) { buf = sb; }
+
+        void set_rdbuf(basic_streambuf<charT, traits>* sb) {
+            buf = sb;
+        }
 
     private:
         basic_streambuf<charT, traits>* buf;
