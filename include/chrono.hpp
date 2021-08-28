@@ -39,7 +39,7 @@ namespace std {
     namespace chrono {
         /* 27.5 Class template duration */
         template<class Rep, class Period = ratio<1>>
-        requires ::std::__internal::is_specialization_of_ratio<Period>::value && (Period::num > 0)
+        requires std::__internal::is_specialization_of_ratio<Period>::value && (Period::num > 0)
         class duration {
         public:
             using rep = Rep;
@@ -142,7 +142,7 @@ namespace std {
         struct is_specialization_of_duration : false_type {};
 
         template<class Rep, class Period>
-        struct is_specialization_of_duration<::std::chrono::duration<Rep, Period>> : true_type {};
+        struct is_specialization_of_duration<std::chrono::duration<Rep, Period>> : true_type {};
 
         template<class T>
         concept clock = requires {
@@ -152,7 +152,7 @@ namespace std {
             requires is_specialization_of_ratio<typename T::period>::value;
 
             typename T::duration;
-            requires is_same_v<typename T::duration, ::std::chrono::duration<typename T::rep, typename T::period>>;
+            requires is_same_v<typename T::duration, std::chrono::duration<typename T::rep, typename T::period>>;
 
             typename T::time_point;
             { T::is_steady } -> same_as<const bool>;
@@ -184,7 +184,7 @@ namespace std {
 
     namespace chrono {
         template<class T>
-        struct is_clock : bool_constant<::std::__internal::clock<T>> {};
+        struct is_clock : bool_constant<std::__internal::clock<T>> {};
 
         template<class T>
         inline constexpr bool is_clock_v = is_clock<T>::value;
@@ -194,8 +194,8 @@ namespace std {
         struct local_t;
 
         template<class Clock, class Duration = typename Clock::duration>
-        requires ::std::__internal::is_specialization_of_duration<Duration>::value
-            && (::std::__internal::clock<Clock> || is_same_v<Clock, local_t>)
+        requires std::__internal::is_specialization_of_duration<Duration>::value
+            && (std::__internal::clock<Clock> || is_same_v<Clock, local_t>)
         class time_point {
         public:
             using clock = Clock;
@@ -294,7 +294,7 @@ namespace std {
         }
 
         template<class Rep1, class Period, class Rep2>
-        requires is_convertible_v<const Rep2&, common_type_t<Rep1, Rep2>> && (!::std::__internal::is_specialization_of_duration<Rep2>::value)
+        requires is_convertible_v<const Rep2&, common_type_t<Rep1, Rep2>> && (!std::__internal::is_specialization_of_duration<Rep2>::value)
         constexpr duration<common_type_t<Rep1, Rep2>, Period>
         operator/(const duration<Rep1, Period>& d, const Rep2& s) {
             using return_type = duration<common_type_t<Rep1, Rep2>, Period>;
@@ -309,7 +309,7 @@ namespace std {
         }
 
         template<class Rep1, class Period, class Rep2>
-        requires is_convertible_v<const Rep2&, common_type_t<Rep1, Rep2>> && (!::std::__internal::is_specialization_of_duration<Rep2>::value)
+        requires is_convertible_v<const Rep2&, common_type_t<Rep1, Rep2>> && (!std::__internal::is_specialization_of_duration<Rep2>::value)
         constexpr duration<common_type_t<Rep1, Rep2>, Period>
         operator%(const duration<Rep1, Period>& d, const Rep2& s) {
             using return_type = duration<common_type_t<Rep1, Rep2>, Period>;
@@ -360,7 +360,7 @@ namespace std {
 
         /* 27.5.8 Conversions */
         template<class ToDuration, class Rep, class Period>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr ToDuration duration_cast(const duration<Rep, Period>& d) {
             using CF = ratio_divide<Period, typename ToDuration::period>;
             using CR = common_type_t<typename ToDuration::rep, Rep, std::intmax_t>;
@@ -377,7 +377,7 @@ namespace std {
         }
 
         template<class ToDuration, class Rep, class Period>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr ToDuration floor(const duration<Rep, Period>& d) {
             const ToDuration t = duration_cast<ToDuration>(d);
             if (t > d) {
@@ -388,7 +388,7 @@ namespace std {
         }
 
         template<class ToDuration, class Rep, class Period>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr ToDuration ceil(const duration<Rep, Period>& d) {
             const ToDuration t = duration_cast<ToDuration>(d);
             if (t < d) {
@@ -399,7 +399,7 @@ namespace std {
         }
 
         template<class ToDuration, class Rep, class Period>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value && treat_as_floating_point_v<typename ToDuration::rep>
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value && treat_as_floating_point_v<typename ToDuration::rep>
         constexpr ToDuration round(const duration<Rep, Period>& d) {
             const ToDuration lower = floor<ToDuration>(d);
             const ToDuration upper = lower + ToDuration(1);
@@ -551,25 +551,25 @@ namespace std {
         }
 
         template<class ToDuration, class Clock, class Duration>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr time_point<Clock, ToDuration> time_point_cast(const time_point<Clock, Duration>& t) {
             return time_point<Clock, ToDuration>(duration_cast<ToDuration>(t.time_since_epoch()));
         }
 
         template<class ToDuration, class Clock, class Duration>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr time_point<Clock, ToDuration> floor(const time_point<Clock, Duration>& tp) {
             return time_point<Clock, ToDuration>(floor<ToDuration>(tp.time_since_epoch()));
         }
 
         template<class ToDuration, class Clock, class Duration>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr time_point<Clock, ToDuration> ceil(const time_point<Clock, Duration>& tp) {
             return time_point<Clock, ToDuration>(ceil<ToDuration>(tp.time_since_epoch()));
         }
 
         template<class ToDuration, class Clock, class Duration>
-        requires ::std::__internal::is_specialization_of_duration<ToDuration>::value
+        requires std::__internal::is_specialization_of_duration<ToDuration>::value
         constexpr time_point<Clock, ToDuration> round(const time_point<Clock, Duration>& tp) {
             return time_point<Clock, ToDuration>(round<ToDuration>(tp.time_since_epoch()));
         }
@@ -581,19 +581,33 @@ namespace std {
             return d >= d.zero() ? d : -d;
         }
 
-        class system_clock {
+        namespace __internal {
+            /* The base class for clocks. In implementations of all classes satisfying the Clock concept, a type alias `time_point` is required to be provided as `chrono::time_point<clock_name>`.
+             * However, during the declaration of this alias, the template is instantiated, but at that point the `time_point` hasn't been admitted as a type alias yet, so the concept checking fails.
+             * This base provides a dummy `time_point` alias to allow concept checking to pass. The child classes should then override the `time_point` alias as needed. */
+            class __clock_base {
+            protected:
+                using time_point = int;
+                constexpr static time_point now() noexcept {
+                    return 0;
+                }
+            };
+        }
+
+        class system_clock : private __internal::__clock_base {
         public:
             using rep = long long;
             using period = nano;
             using duration = duration<rep, period>;
-            using time_point = chrono::time_point<system_clock>;
 
             static constexpr bool is_steady = false;
 
-            static time_point now() noexcept;
+            static chrono::time_point<system_clock> now() noexcept;
 
-            static time_t to_time_t(const time_point& t) noexcept;
-            static time_point from_time_t(time_t t) noexcept;
+            static std::time_t to_time_t(const chrono::time_point<system_clock>& t) noexcept;
+            static chrono::time_point<system_clock> from_time_t(std::time_t t) noexcept;
+
+            using time_point = chrono::time_point<system_clock>;
         };
 
         template<class Duration>
@@ -602,11 +616,29 @@ namespace std {
         using sys_seconds = sys_time<seconds>;
         using sys_days = sys_time<days>;
 
-        struct steady_clock {
-            static time_point<steady_clock> now() noexcept {
-                return {};
-            }
-        };
-    }
+        /* TODO: Implement. */
+        template<class charT, class traits, class Duration>
+        requires treat_as_floating_point_v<typename Duration::rep> && (Duration(1) < days(1))
+        basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const sys_time<Duration>& tp);
 
+        template<class charT, class traits>
+        basic_ostream<charT, traits>& operator<<(basic_ostream<charT, traits>& os, const sys_days& dp);
+
+        template<class charT, class traits, class Duration, class Alloc = allocator<charT>>
+        basic_istream<charT, traits>& from_stream(basic_istream<charT, traits>& is, const charT* fmt, sys_time<Duration>& tp, basic_string<charT, traits, Alloc>* abbrev = nullptr, minutes* offset = nullptr);
+
+        struct steady_clock : private __internal::__clock_base {
+            using rep = long long;
+            using period = nano;
+            using duration = duration<rep, period>;
+
+            static constexpr bool is_steady = true;
+
+            static chrono::time_point<steady_clock> now() noexcept;
+
+            using time_point = chrono::time_point<steady_clock>;
+        };
+
+        using high_resolution_clock = system_clock;
+    }
 }

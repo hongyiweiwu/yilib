@@ -25,7 +25,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `functional` | | | &check; | | |
 | `utility` | &check; | | | | |
 | `ctime` | &check; | | | | |
-| `chrono` | | | | &check; | |
+| `chrono` | | | &check; | | |
 | `cstddef` | &check; | | | | |
 | `initializer_list` | &check; | | | | |
 | `tuple` | &check; | | | | |
