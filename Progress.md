@@ -75,7 +75,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `algorithm` | | | | &check; | |
 | `execution` | | | | &check; | |
 | `cmath` | | &check; | | | Blocked due to unimplemented special math functions. |
-| `complex` | | | | &check; | |
+| `complex` | | &check; | | | Blocked due to unimplemented `stringstream`. |
 | `valarray` | | | | &check; | |
 | `random` | | | | &check; | |
 | `numeric` | | | &check; | | |
