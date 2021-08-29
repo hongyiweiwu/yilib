@@ -2,6 +2,7 @@
 #include "system_error.hpp"
 #include "mutex.hpp"
 #include "exception.hpp"
+#include "util/at_thread_exits.hpp"
 
 #include "pthread.h"
 
@@ -22,24 +23,24 @@ namespace std {
     void condition_variable_any::notify_one() noexcept { cv.notify_one(); }
     void condition_variable_any::notify_any() noexcept { cv.notify_all(); }
 
-    namespace __internal {
-        struct __notify_all_at_thread_exit_struct {
-        private:
-            condition_variable& cond;
-            std::mutex* mtx;
-        public:
-            constexpr __notify_all_at_thread_exit_struct(condition_variable& cond, std::mutex* mtx)
-                : cond(cond), mtx(mtx) {}
-            ~__notify_all_at_thread_exit_struct();
-        };
-    }
-
-    __internal::__notify_all_at_thread_exit_struct::~__notify_all_at_thread_exit_struct() {
-        mtx->unlock();
-        cond.notify_all();
-    } 
-
     void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk) {
-        const thread_local static __internal::__notify_all_at_thread_exit_struct destructor(cond, lk.release());
+        __internal::at_thread_exit_fn_block::initialize_key();
+
+        struct notify_all_at_thread_exit_fn_block : public __internal::at_thread_exit_fn_block {
+            condition_variable* const cond;
+            std::mutex* const mtx;
+
+            notify_all_at_thread_exit_fn_block(condition_variable& cond, unique_lock<mutex> lk)
+                : __internal::at_thread_exit_fn_block({ .callback = callback, .next = nullptr }), cond(&cond), mtx(lk.release()) {}
+
+            static void callback(void* p) {
+                notify_all_at_thread_exit_fn_block* const ptr = static_cast<notify_all_at_thread_exit_fn_block*>(p);
+                ptr->mtx->unlock();
+                ptr->cond->notify_all();
+                delete ptr;
+            }
+        };
+
+        __internal::at_thread_exit_fn_block::push_front(new notify_all_at_thread_exit_fn_block(cond, move(lk)));
     }
 }
