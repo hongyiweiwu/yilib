@@ -3,6 +3,7 @@
 #include "istream.hpp"
 #include "ostream.hpp"
 #include "cmath.hpp"
+#include "type_traits.hpp"
 
 #include "complex.h"
 #undef complex
