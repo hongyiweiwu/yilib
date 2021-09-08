@@ -359,8 +359,8 @@ namespace std {
         unique_lock& operator=(const unique_lock&) = delete;
 
         unique_lock(unique_lock&& u) noexcept : pm(u.pm), owns(u.owns) {
-            u.pm == 0;
-            u.owns == false;
+            u.pm = 0;
+            u.owns = false;
         }
 
         unique_lock& operator=(unique_lock&& u) {
