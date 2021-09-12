@@ -52,20 +52,22 @@ namespace std {
             template<class T>
             void swap(T&, T&) = delete;
 
+            template<class T, std::size_t N>
+            void swap(T(&)[N], T(&)[N]) = delete;
+
             struct swap_fn {
             private:
                 template<class T, class U>
                 static constexpr bool user_swap_usable = (is_class_v<remove_cvref_t<T>> || is_enum_v<remove_cvref_t<T>>) && (is_class_v<remove_cvref_t<U>> || is_enum_v<remove_cvref_t<U>>)
-                    && requires (T&& e1, U&& e2) { (void) swap(e1, e2); };
+                    && requires (T&& e1, U&& e2) { (void) swap(forward<T>(e1), forward<U>(e2)); };
 
-                template<class T, class U>
-                static constexpr bool array_swappable = !user_swap_usable<T, U> && is_array_v<T> && is_array_v<U> && (extent_v<T> == extent_v<U>)
-                    && requires (T&& e1, U&&e2, const swap_fn& swap) { swap(*e1, *e2); };
+                template<class T, class U, std::size_t N>
+                static constexpr bool array_swappable = !user_swap_usable<T(&)[N], U(&)[N]> && requires (T (&e1)[N], T (&e2)[N], const swap_fn& swap) { swap(*e1, *e2); };
 
                 template<class T>
-                static constexpr bool exchangeable = (!user_swap_usable<T&, T&>) && (!array_swappable<T&, T&>)
+                static constexpr bool exchangeable = (!user_swap_usable<T&, T&>)
                     && assignable_from<T&, T>
-                    // move_constructible<T, T> spelled out
+                    // move_constructible<T> spelled out
                     && is_nothrow_destructible_v<T> && is_constructible_v<T, T> && convertible_to<T, T>;
 
             public:
@@ -78,7 +80,7 @@ namespace std {
                 }
 
                 template<class T, class U, std::size_t N>
-                requires array_swappable<T(&)[N], U(&)[N]>
+                requires array_swappable<T, U, N>
                 constexpr void operator()(T(&e1)[N], U(&e2)[N]) const noexcept(noexcept((*this)(*e1, *e2))) {
                     // ranges::swap_ranges spelled out
                     for (std::size_t i = 0; i < N; i++) {
@@ -195,7 +197,7 @@ namespace std {
     /* 18.7 Callable concepts */
     template<class F, class ...Args>
     concept invocable = requires (F&& f, Args&& ...args) {
-        __internal::__INVOKE(forward<F>(f), forward<Args>(args)...);
+        __internal::__INVOKE(static_cast<int*>(nullptr), forward<F>(f), forward<Args>(args)...);
     };
 
     template<class F, class ...Args>

@@ -31,7 +31,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `tuple` | &check; | | | | |
 | `any` | &check; | | | | |
 | `optional` | &check; | | | | |
-| `variant` | | | | &check; | |
+| `variant` | &check; | | | | |
 | `compare` | &check; | | | | |
 | `version` | &check; | | | | |
 | `source_location` | | &check; | | | Blocked due to lack of intrinsic support from GCC. |

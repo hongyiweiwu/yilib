@@ -38,10 +38,14 @@ namespace std::__internal {
         };
     };
 
-    template<class T, T N> consteval T __max() noexcept {
+    template<class T, T N>
+    consteval T __max() noexcept {
         return N;
     }
-    template<class T, T N1, T ...N> consteval T __max() noexcept {
+
+    template<class T, T N1, T ...N>
+    requires (sizeof...(N) >= 1)
+    consteval T __max() noexcept {
         constexpr T remaining_max = __max<T, N...>();
         return remaining_max > N1 ? remaining_max : N1;
     }

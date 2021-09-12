@@ -11,8 +11,9 @@
 namespace std {
     /* 20.14.5 Function template invoke */
     template<class F, class ...Args> 
-    constexpr invoke_result_t<F, Args...> invoke(F&& f, Args&& ...args) noexcept(is_nothrow_invocable_v<F, Args...>) {
-        return __internal::__INVOKE(forward<F>(f), forward<Args>(args)...);
+    constexpr invoke_result_t<F, Args...>
+    invoke(F&& f, Args&& ...args) noexcept(is_nothrow_invocable_v<F, Args...>) {
+        return __internal::__INVOKE(static_cast<int*>(nullptr), forward<F>(f), forward<Args>(args)...);
     }
 
     /* 20.14.6 reference_wrapper */
