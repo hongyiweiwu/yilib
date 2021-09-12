@@ -713,11 +713,10 @@ namespace std {
 
             template<class R>
             constexpr R operator()(Visitor&& vis, Variants&& ...vars) {
-                using ReturnType = decltype(visit(forward<Visitor>(vis), forward<Variants>(vars)...));
-                if constexpr (is_void_v<ReturnType>) {
-                    visit(forward<Visitor>(vis), forward<Variants>(vars)...);
+                if constexpr (is_void_v<return_t>) {
+                    operator()(forward<Visitor>(vis), forward<Variants>(vars)...);
                 } else {
-                    return visit(forward<Visitor>(vis), forward<Variants>(vars)...);
+                    return operator()(forward<Visitor>(vis), forward<Variants>(vars)...);
                 }
             }
 
