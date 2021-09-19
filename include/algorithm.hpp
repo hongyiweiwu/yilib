@@ -7,6 +7,27 @@
 #include "compare.hpp"
 
 namespace std {
+    namespace ranges {
+        /* 25.5 Algorithm result types */
+        template<class I, class O>
+        struct in_out_result {
+            [[no_unique_address]] I in;
+            [[no_unique_address]] O out;
+
+            template<class I2, class O2>
+            requires convertible_to<const I&, I2> && convertible_to<const O&, O2>
+            constexpr operator in_out_result<I2, O2>() const & {
+                return {in, out};
+            }
+
+            template<class I2, class O2>
+            requires convertible_to<I, I2> && convertible_to<O, O2>
+            constexpr operator in_out_result<I2, O2>() && {
+                return {move(in), move(out)};
+            }
+        };
+    }
+
     /* 25.6.5 Find */
     template<__internal::legacy_input_iterator InputIterator, class T>
     constexpr InputIterator find(InputIterator first, InputIterator last, const T& value) {

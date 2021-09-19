@@ -2055,6 +2055,8 @@ namespace std {
     /* 23.5.5 Default sentinel */
     struct default_sentinel_t {};
 
+    inline constexpr default_sentinel_t default_sentinel;
+
     /* 23.5.7 Unreachable sentinel */
     struct unreachable_sentinel_t {
         template<weakly_incrementable I>
