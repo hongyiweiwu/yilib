@@ -71,7 +71,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `queue` | | | | &check; | |
 | `span` | &check; | | | | |
 | `iterator` | &check; | | | | |
-| `ranges` | | | | &check; | |
+| `ranges` | | | &check; | | |
 | `algorithm` | | | | &check; | |
 | `execution` | | | | &check; | |
 | `cmath` | | &check; | | | Blocked due to unimplemented special math functions. |

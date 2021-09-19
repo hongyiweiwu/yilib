@@ -8,7 +8,6 @@
 #include "functional.hpp"
 #include "compare.hpp"
 #include "initializer_list.hpp"
-#include "ranges.hpp"
 #include "new.hpp"
 
 namespace std {
@@ -697,8 +696,474 @@ namespace std {
         return x;
     }
 
-    /* 23.4.4 Range iterator operations */
     namespace ranges {
+        /* 24.3 Range access */
+        template<class T>
+        inline const bool enable_borrowed_range = false;
+
+        namespace __begin_internal {
+            void begin(auto&) = delete;
+            void begin(const auto&) = delete;
+
+            struct begin_fn {
+            private:
+                template<class T>
+                static consteval bool is_noexcept() noexcept {
+                    using unqualified_t = remove_cvref_t<T>;
+
+                    if constexpr (is_array_v<unqualified_t> && __internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                        return noexcept(declval<T>() + 0);
+                    } else if constexpr (requires (T&& t) { { __internal::decay_copy(forward<T>(t).begin()) } -> input_or_output_iterator; }) {
+                        return noexcept(__internal::decay_copy(declval<T>().begin()));
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>)
+                        && requires (T&& t) { { __internal::decay_copy(begin(forward<T>(t))) } -> input_or_output_iterator; }) {
+                        return noexcept(__internal::decay_copy(begin(declval<T>())));
+                    }
+
+                    return true;
+                }
+
+            public:
+                template<class T>
+                requires is_lvalue_reference_v<T> || enable_borrowed_range<remove_cvref_t<T>>
+                constexpr input_or_output_iterator auto operator()(T&& t) const noexcept(is_noexcept(declval<T>())) {
+                    using unqualified_t = remove_cvref_t<T>;
+
+                    if constexpr (is_array_v<unqualified_t>) {
+                        if constexpr ( __internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                            return forward<T>(t) + 0;
+                        } else {
+                            __internal::always_illformed<T>();
+                        }
+                    } else if constexpr (requires { { __internal::decay_copy(forward<T>(t).begin()) } -> input_or_output_iterator; }) {
+                        return __internal::decay_copy(forward<T>(t).begin());
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>)
+                        && requires { { __internal::decay_copy(begin(forward<T>(t))) } -> input_or_output_iterator; }) {
+                        return __internal::decay_copy(begin(forward<T>(t)));
+                    } else {
+                        __internal::always_illformed<T>();
+                    }
+                }
+            };
+        }
+
+        inline namespace __fn_objects {
+            inline constexpr __begin_internal::begin_fn begin;
+        }
+
+        namespace __end_internal {
+            void end(auto&) = delete;
+            void end(const auto&) = delete;
+
+            struct end_fn {
+            private:
+                template<class T>
+                using iterator_t = decltype(ranges::begin(declval<T&>()));
+
+                template<class T>
+                static consteval bool is_noexcept() noexcept {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_bounded_array_v<unqualified_t> && __internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                        return noexcept(declval<T>() + extent_v<T>);
+                    } else if constexpr (requires (T&& t) { { __internal::decay_copy(forward<T>(t).end()) } -> sentinel_for<iterator_t<T>>; }) {
+                        return noexcept(__internal::decay_copy(declval<T>().end()));
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>)
+                        && requires (T&& t) { { __internal::decay_copy(end(forward<T>(t))) } -> sentinel_for<iterator_t<T>>; }) {
+                        return noexcept(__internal::decay_copy(end(declval<T>())));
+                    }
+
+                    return true;
+                }
+
+            public:
+                template<class T>
+                requires is_lvalue_reference_v<T> || enable_borrowed_range<remove_cvref_t<T>>
+                constexpr sentinel_for<iterator_t<T>> auto operator()(T&& t) const noexcept(is_noexcept<T>()) {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_bounded_array_v<unqualified_t>) {
+                        if constexpr (__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                            return forward<T>(t) + extent_v<T>;
+                        } else {
+                            __internal::always_illformed<T>();
+                        }
+                    } else if constexpr (requires { { __internal::decay_copy(forward<T>(t).end()) } -> sentinel_for<iterator_t<T>>; }) {
+                        return __internal::decay_copy(forward<T>(t).end());
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>)
+                        && requires { { __internal::decay_copy(end(forward<T>(t))) } -> sentinel_for<iterator_t<T>>; }) {
+                        return __internal::decay_copy(end(forward<T>(t)));
+                    } else {
+                        __internal::always_illformed<T>();
+                    }
+                }
+            };
+        }
+
+        inline namespace __fn_objects {
+            inline constexpr __end_internal::end_fn end;
+        }
+
+        struct __cbegin_fn {
+        private:
+            template<class T>
+            using CT = conditional_t<is_lvalue_reference_v<T>, const remove_reference_t<T>&, const T>;
+
+        public:
+            template<class T>
+            constexpr input_or_output_iterator auto operator()(T&& t) const noexcept(noexcept(ranges::begin(static_cast<CT<T>&&>(t)))) {
+                return ranges::begin(static_cast<CT<T>&&>(t));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __cbegin_fn cbegin;
+        }
+
+        struct __cend_fn {
+        private:
+            template<class T>
+            using CT = conditional_t<is_lvalue_reference_v<T>, const remove_reference_t<T>&, const T>;
+
+            template<class T>
+            using iterator_t = decltype(ranges::begin(declval<T&>()));
+
+        public:
+            template<class T>
+            constexpr sentinel_for<iterator_t<T>> auto operator()(T&& t) const noexcept(noexcept(ranges::end(static_cast<CT<T>&&>(t)))) {
+                return ranges::end(static_cast<CT<T>&&>(t));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __cend_fn cend;
+        }
+
+        namespace __rbegin_internal {
+            void rbegin(auto&) = delete;
+            void rbegin(const auto&) = delete;
+
+            struct rbegin_fn {
+            private:
+                template<class T>
+                static consteval bool is_noexcept() noexcept {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_array_v<unqualified_t> && !__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                        return true;
+                    } else if constexpr (requires (T&& t) { { __internal::decay_copy(forward<T>(t).rbegin()) } -> input_or_output_iterator; }) {
+                        return noexcept(__internal::decay_copy(declval<T>().rbegin()));
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>) && requires (T&& t) { { __internal::decay_copy(rbegin(forward<T>(t))) } -> input_or_output_iterator; }) {
+                        return noexcept(__internal::decay_copy(rbegin(declval<T>())));
+                    } else if constexpr (requires (T&& t) {
+                        { ranges::begin(forward<T>(t)) } -> bidirectional_iterator;
+                        { ranges::end(forward<T>(t)) } -> bidirectional_iterator;
+                    } && is_same_v<decltype(ranges::begin(declval<T>())), decltype(ranges::end(declval<T>()))>) {
+                        return noexcept(make_reverse_iterator(ranges::end(declval<T>())));
+                    }
+
+                    return true;
+                }
+            public:
+                template<class T>
+                requires is_lvalue_reference_v<T> || enable_borrowed_range<remove_cvref_t<T>>
+                constexpr input_or_output_iterator auto operator()(T&& t) const noexcept(is_noexcept<T>()) {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_array_v<unqualified_t> && !__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                        __internal::always_illformed<T>();
+                    } else if constexpr (requires { { __internal::decay_copy(forward<T>(t).rbegin()) } -> input_or_output_iterator; }) {
+                        return __internal::decay_copy(forward<T>(t).rbegin());
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>) && requires { { __internal::decay_copy(rbegin(forward<T>(t))) } -> input_or_output_iterator; }) {
+                        return __internal::decay_copy(rbegin(forward<T>(t)));
+                    } else if constexpr (requires {
+                        { ranges::begin(forward<T>(t)) } -> bidirectional_iterator;
+                        { ranges::end(forward<T>(t)) } -> bidirectional_iterator;
+                    } && is_same_v<decltype(ranges::begin(forward<T>(t))), decltype(ranges::end(forward<T>(t)))>) {
+                        return make_reverse_iterator(ranges::end(forward<T>(t)));
+                    } else {
+                        __internal::always_illformed<T>();
+                    }
+                }
+            };
+        }
+
+        inline namespace __fn_objects {
+            inline constexpr __rbegin_internal::rbegin_fn rbegin;
+        }
+
+        namespace __rend_internal {
+            void rend(auto&) = delete;
+            void rend(const auto&) = delete;
+
+            struct rend_fn {
+            private:
+                template<class T>
+                static consteval bool is_noexcept() noexcept {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_array_v<unqualified_t> && !__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                        return true;
+                    } else if constexpr (requires (T&& t) { { __internal::decay_copy(forward<T>(t).rend()) } -> sentinel_for<decltype(ranges::rbegin(declval<T>()))>; }) {
+                        return noexcept(__internal::decay_copy(declval<T>().rend()));
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>) && requires (T&& t) { { __internal::decay_copy(rend(forward<T>(t))) } -> sentinel_for<decltype(ranges::rbegin(declval<T>()))>; }) {
+                        return noexcept(__internal::decay_copy(rend(declval<T>())));
+                    } else if constexpr (requires (T&& t) {
+                        { ranges::begin(forward<T>(t)) } -> bidirectional_iterator;
+                        { ranges::end(forward<T>(t)) } -> bidirectional_iterator;
+                        { ranges::end(forward<T>(t)) } -> same_as<decltype(ranges::begin(forward<T>(t)))>;
+                    }) {
+                        return noexcept(make_reverse_iterator(ranges::begin(declval<T>())));
+                    }
+
+                    return true;
+                }
+            public:
+                template<class T>
+                requires is_lvalue_reference_v<T> || enable_borrowed_range<remove_cvref_t<T>>
+                constexpr sentinel_for<decltype(ranges::rbegin(declval<T>()))> auto operator()(T&& t) const noexcept(is_noexcept<T>()) {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_array_v<unqualified_t> && !__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                        __internal::always_illformed<T>();
+                    } else if constexpr (requires { { __internal::decay_copy(forward<T>(t).rend()) } -> sentinel_for<decltype(ranges::rbegin(forward<T>(t)))>; }) {
+                        return __internal::decay_copy(forward<T>(t).rend());
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>) && requires { { __internal::decay_copy(rend(forward<T>(t))) } -> sentinel_for<decltype(ranges::rbegin(declval<T>()))>; }) {
+                        return __internal::decay_copy(rend(forward<T>(t)));
+                    } else if constexpr (requires {
+                        { ranges::begin(forward<T>(t)) } -> bidirectional_iterator;
+                        { ranges::end(forward<T>(t)) } -> bidirectional_iterator;
+                        { ranges::end(forward<T>(t)) } -> same_as<decltype(ranges::begin(forward<T>(t)))>;
+                    }) {
+                        return make_reverse_iterator(ranges::begin(forward<T>(t)));
+                    } else {
+                        __internal::always_illformed<T>();
+                    }
+                }
+            };
+        }
+
+        inline namespace __fn_objects {
+            inline constexpr __rend_internal::rend_fn rend;
+        }
+
+        struct __crbegin_fn {
+        private:
+            template<class T>
+            using CT = conditional_t<is_lvalue_reference_v<T>, const remove_reference_t<T>&, const T>;
+
+        public:
+            template<class T>
+            constexpr input_or_output_iterator auto operator()(T&& t) const noexcept(noexcept(ranges::rbegin(static_cast<CT<T>&&>(t)))) {
+                return ranges::rbegin(static_cast<CT<T>&&>(t));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __crbegin_fn crbegin;
+        }
+
+        struct __crend_fn {
+        private:
+            template<class T>
+            using CT = conditional_t<is_lvalue_reference_v<T>, const remove_reference_t<T>&, const T>;
+
+            template<class T>
+            using iterator_t = decltype(ranges::begin(declval<T&>()));
+
+        public:
+            template<class T>
+            constexpr sentinel_for<iterator_t<T>> auto operator()(T&& t) const noexcept(noexcept(ranges::rend(static_cast<CT<T>&&>(t)))) {
+                return ranges::rend(static_cast<CT<T>&&>(t));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __crend_fn crend;
+        }
+
+        template<class>
+        inline constexpr bool disable_sized_range = false;
+
+        namespace __size_internal {
+            void size(auto&) = delete;
+            void size(const auto&) = delete;
+
+            struct size_fn {
+            private:
+                template<class T>
+                static consteval bool is_noexcept() noexcept {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_unbounded_array_v<unqualified_t>) {
+                        return true;
+                    } else if constexpr (is_array_v<unqualified_t>) {
+                        return __internal::decay_copy(extent_v<T>);
+                    } else if constexpr (!disable_sized_range<unqualified_t> && requires (T&& t) { __internal::decay_copy(forward<T>(t).size()); }) {
+                        return __internal::decay_copy(declval<T>().size());
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>) && !disable_sized_range<unqualified_t> && requires (T&& t) {
+                        __internal::decay_copy(size(forward<T>(t)));
+                    }) {
+                        return __internal::decay_copy(size(declval<T>()));
+                    } else if constexpr (requires (T&& t) {
+                        make_unsigned_t<decltype(ranges::end(forward<T>(t)) - ranges::begin(forward<T>(t)))>(ranges::end(forward<T>(t)) - ranges::begin(forward<T>(t)));
+                        { ranges::begin(forward<T>(t)) } -> forward_iterator;
+                        { ranges::end(forward<T>(t)) } -> sized_sentinel_for<decltype(ranges::begin(forward<T>(t)))>;
+                    }) {
+                        using unsigned_t = make_unsigned_t<decltype(ranges::end(declval<T>()) - ranges::begin(declval<T>()))>;
+                        return unsigned_t(ranges::end(declval<T>()) - ranges::begin(declval<T>()));
+                    } else {
+                        return true;
+                    }
+                }
+            public:
+                template<class T>
+                constexpr auto operator()(T&& t) const noexcept(is_noexcept<T>()) {
+                    using unqualified_t = remove_cvref_t<T>;
+                    if constexpr (is_unbounded_array_v<unqualified_t>) {
+                        __internal::always_illformed<T>();
+                    } else if constexpr (is_array_v<unqualified_t>) {
+                        return __internal::decay_copy(extent_v<T>);
+                    } else if constexpr (!disable_sized_range<unqualified_t> && requires { __internal::decay_copy(forward<T>(t).size()); }) {
+                        return __internal::decay_copy(forward<T>(t).size());
+                    } else if constexpr ((is_class_v<unqualified_t> || is_enum_v<unqualified_t>) && !disable_sized_range<unqualified_t> && requires {
+                        __internal::decay_copy(size(forward<T>(t)));
+                    }) {
+                        return __internal::decay_copy(size(forward<T>(t)));
+                    } else if constexpr (requires {
+                        make_unsigned_t<decltype(ranges::end(forward<T>(t)) - ranges::begin(forward<T>(t)))>(ranges::end(forward<T>(t)) - ranges::begin(forward<T>(t)));
+                        { ranges::begin(forward<T>(t)) } -> forward_iterator;
+                        { ranges::end(forward<T>(t)) } -> sized_sentinel_for<decltype(ranges::begin(forward<T>(t)))>;
+                    }) {
+                        using unsigned_t = make_unsigned_t<decltype(ranges::end(forward<T>(t)) - ranges::begin(forward<T>(t)))>;
+                        return unsigned_t(ranges::end(forward<T>(t)) - ranges::begin(forward<T>(t)));
+                    } else {
+                        __internal::always_illformed<T>();
+                    }
+                }
+            };
+        }
+
+        inline namespace __fn_objects {
+            inline constexpr __size_internal::size_fn size;
+        }
+
+        struct __ssize_fn {
+        private:
+            template<class T>
+            using range_difference_t = iter_difference_t<decltype(ranges::begin(declval<T&>()))>;
+        public:
+            template<class T>
+            constexpr auto operator()(T&& t) const noexcept(noexcept(ranges::size(forward<T>(t)))) {
+                if constexpr (numeric_limits<range_difference_t<T>>::digits < numeric_limits<std::ptrdiff_t>::digits) {
+                    return static_cast<std::ptrdiff_t>(ranges::size(forward<T>(t)));
+                } else {
+                    return static_cast<range_difference_t<T>>(ranges::size(forward<T>(t)));
+                }
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __ssize_fn ssize;
+        }
+
+        struct __empty_fn {
+        private:
+            template<class T>
+            static consteval bool is_noexcept() noexcept {
+                using unqualified_t = remove_cvref_t<T>;
+                if constexpr (is_unbounded_array_v<unqualified_t>) {
+                    __internal::always_illformed<T>();
+                } else if constexpr (requires (T&& t) { bool(forward<T>(t).empty()); }) {
+                    return bool(declval<T>().empty());
+                } else if constexpr (requires (T&& t) { ranges::size(forward<T>(t)) == 0; }) {
+                    return ranges::size(declval<T>()) == 0;
+                } else if constexpr (requires (T&& t) {
+                    bool(ranges::begin(forward<T>(t)) == ranges::end(forward<T>(t)));
+                    { ranges::begin(forward<T>(t)) } -> forward_iterator;
+                }) {
+                    return bool(ranges::begin(declval<T>()) == ranges::end(declval<T>()));
+                } else {
+                    __internal::always_illformed<T>();
+                }
+            }
+        public:
+            template<class T>
+            constexpr bool operator()(T&& t) const noexcept(is_noexcept<T>()) {
+                using unqualified_t = remove_cvref_t<T>;
+                if constexpr (is_unbounded_array_v<unqualified_t>) {
+                    __internal::always_illformed<T>();
+                } else if constexpr (requires { bool(forward<T>(t).empty()); }) {
+                    return bool(forward<T>(t).empty());
+                } else if constexpr (requires { ranges::size(forward<T>(t)) == 0; }) {
+                    return ranges::size(forward<T>(t)) == 0;
+                } else if constexpr (requires {
+                    bool(ranges::begin(forward<T>(t)) == ranges::end(forward<T>(t)));
+                    { ranges::begin(forward<T>(t)) } -> forward_iterator;
+                }) {
+                    return bool(ranges::begin(forward<T>(t)) == ranges::end(forward<T>(t)));
+                } else {
+                    __internal::always_illformed<T>();
+                }
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __empty_fn empty;
+        }
+
+        struct __data_fn {
+        private:
+            template<class T>
+            static consteval bool is_noexcept() noexcept {
+                using unqualified_t = remove_cvref_t<T>;
+                if constexpr (is_array_v<unqualified_t> && !__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                    return true;
+                } else if constexpr (requires (T&& t) {
+                    __internal::decay_copy(forward<T>(t).data());
+                    requires is_pointer_v<decltype(__internal::decay_copy(forward<T>(t).data()))>;
+                }) {
+                    return noexcept(__internal::decay_copy(declval<T>().data()));
+                } else if constexpr (requires (T&& t) { { ranges::begin(forward<T>(t)) } -> contiguous_iterator; }) {
+                    return noexcept(to_address(ranges::begin(declval<T>())));
+                } else {
+                    return true;
+                }
+            }
+
+        public:
+            template<class T>
+            requires is_lvalue_reference_v<T> || enable_borrowed_range<remove_cvref_t<T>>
+            constexpr auto operator()(T&& t) const noexcept(is_noexcept<T>()) {
+                using unqualified_t = remove_cvref_t<T>;
+                if constexpr (is_array_v<unqualified_t> && !__internal::is_complete<remove_all_extents_t<unqualified_t>>::value) {
+                    __internal::always_illformed<T>();
+                } else if constexpr (requires {
+                    __internal::decay_copy(forward<T>(t).data());
+                    requires is_pointer_v<decltype(__internal::decay_copy(forward<T>(t).data()))>;
+                }) {
+                    return __internal::decay_copy(forward<T>(t).data());
+                } else if constexpr (requires { { ranges::begin(forward<T>(t)) } -> contiguous_iterator; }) {
+                    return to_address(ranges::begin(forward<T>(t)));
+                } else {
+                    __internal::always_illformed<T>();
+                }
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __data_fn data;
+        }
+
+        struct __cdata_fn {
+        private:
+            template<class T>
+            using CT = conditional_t<is_lvalue_reference_v<T>, const remove_reference_t<T>&, const T>;
+        public:
+            template<class T>
+            constexpr auto operator()(T&& t) const noexcept(noexcept(ranges::data(static_cast<CT<T>&&>(t)))) {
+                return ranges::data(static_cast<CT<T>&&>(t));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __cdata_fn cdata;
+        }
+
+        /* 23.4.4 Range iterator operations */
         struct __advance_fn {
             template<input_or_output_iterator I>
             constexpr void operator()(I& i, iter_difference_t<I> n) const {
@@ -768,8 +1233,12 @@ namespace std {
         }
 
         struct __distance_fn {
+        private:
+            template<class T>
+            using range_difference_t = iter_difference_t<decltype(ranges::begin(declval<T&>()))>;
+        public:
             template<input_or_output_iterator I, sentinel_for<I> S>
-            constexpr iter_difference_t<I> distance(I first, S last) const {
+            constexpr iter_difference_t<I> operator()(I first, S last) const {
                 if constexpr (sized_sentinel_for<S, I>) {
                     return last - first;
                 } else {
@@ -783,15 +1252,18 @@ namespace std {
                 }
             }
 
-            /* TODO: Uncomment after <ranges> is implemented.
-            template<range R>
-            constexpr range_difference_t<R> distance(R&& r) const {
-                if constexpr (sized_range<R>) {
+            template<class R>
+            requires requires (R& r) {
+                ranges::begin(r);
+                ranges::end(r);
+            }
+            constexpr range_difference_t<R> operator()(R&& r) const {
+                if constexpr (requires (R& r) { ranges::size(r); }) {
                     return static_cast<range_difference_t<R>>(ranges::size(r));
                 } else {
-                    return ranges::distance(ranges::begin(r), ranges::end(r));
+                    return this->operator()(ranges::begin(r), ranges::end(r));
                 }
-            } */
+            }
         };
 
         inline namespace __fn_objects {
@@ -800,25 +1272,25 @@ namespace std {
 
         struct __next_fn {
             template<input_or_output_iterator I>
-            constexpr I next(I x) const {
+            constexpr I operator()(I x) const {
                 ++x;
                 return x;
             }
 
             template<input_or_output_iterator I>
-            constexpr I next(I x, iter_difference_t<I> n) const {
+            constexpr I operator()(I x, iter_difference_t<I> n) const {
                 ranges::advance(x, n);
                 return x;
             }
 
             template<input_or_output_iterator I, sentinel_for<I> S>
-            constexpr I next(I x, S bound) const {
+            constexpr I operator()(I x, S bound) const {
                 ranges::advance(x, bound);
                 return x;
             }
 
             template<input_or_output_iterator I, sentinel_for<I> S>
-            constexpr I next(I x, iter_difference_t<I> n, S bound) const {
+            constexpr I operator()(I x, iter_difference_t<I> n, S bound) const {
                 ranges::advance(x, n, bound);
                 return x;
             }
@@ -830,19 +1302,19 @@ namespace std {
 
         struct prev_fn {
             template<input_or_output_iterator I>
-            constexpr I prev(I x) const {
+            constexpr I operator()(I x) const {
                 --x;
                 return x;
             }
 
             template<input_or_output_iterator I>
-            constexpr I prev(I x, iter_difference_t<I> n) const {
+            constexpr I operator()(I x, iter_difference_t<I> n) const {
                 ranges::advance(x, -n);
                 return x;
             }
 
             template<input_or_output_iterator I>
-            constexpr I prev(I x, iter_difference_t<I> n, I bound) const {
+            constexpr I operator()(I x, iter_difference_t<I> n, I bound) const {
                 ranges::advance(x, -n, bound);
                 return x;
             }
@@ -1125,9 +1597,12 @@ namespace std {
 
     template<class Container>
     class insert_iterator {
+    private:
+        using iterator_t = decltype(ranges::begin(declval<Container&>()));
+
     protected:
         Container* container = nullptr;
-        ranges::iterator_t<Container> iter = ranges::iterator_t<Container>();
+        iterator_t iter = iterator_t();
 
     public:
         using iterator_category = output_iterator_tag;
@@ -1138,7 +1613,7 @@ namespace std {
         using container_type = Container;
 
         insert_iterator() = default;
-        constexpr insert_iterator(Container& x, ranges::iterator_t<Container> i) : container(addressof(x)), iter(i) {}
+        constexpr insert_iterator(Container& x, iterator_t i) : container(addressof(x)), iter(i) {}
         constexpr insert_iterator& operator=(const typename Container::value_type& value) {
             iter = container->insert(iter, value);
             ++iter;
@@ -1165,7 +1640,7 @@ namespace std {
     };
 
     template<class Container>
-    constexpr insert_iterator<Container> inserter(Container& x, ranges::iterator_t<Container> i) {
+    constexpr insert_iterator<Container> inserter(Container& x, decltype(ranges::begin(declval<Container&>())) i) {
         return insert_iterator<Container>(x, i);
     }
 
