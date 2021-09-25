@@ -5,6 +5,7 @@
 #include "initializer_list.hpp"
 #include "exception.hpp"
 #include "memory/pointer_util.hpp"
+#include "memory/construct_destroy.hpp"
 #include "concepts.hpp"
 #include "compare.hpp"
 #include "functional.hpp"

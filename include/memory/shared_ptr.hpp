@@ -11,6 +11,7 @@
 #include "memory/unique_ptr.hpp"
 #include "memory/pointer_util.hpp"
 #include "memory/allocators.hpp"
+#include "memory/construct_destroy.hpp"
 
 namespace std {
     /* 20.11.2 Class bad_weak_ptr */

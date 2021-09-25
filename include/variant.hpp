@@ -7,7 +7,7 @@
 #include "compare.hpp"
 #include "functional.hpp"
 #include "array.hpp"
-#include "memory.hpp"
+#include "memory/construct_destroy.hpp"
 
 namespace std {
     /* 20.7.3 Class template variant */

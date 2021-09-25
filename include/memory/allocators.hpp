@@ -5,7 +5,7 @@
 #include "type_traits.hpp"
 #include "utility.hpp"
 #include "memory/pointer_util.hpp"
-#include "memory/specialized_algorithms.hpp"
+#include "memory/construct_destroy.hpp"
 #include "cstddef.hpp"
 
 namespace std {
