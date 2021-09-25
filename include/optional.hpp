@@ -4,8 +4,7 @@
 #include "utility.hpp"
 #include "initializer_list.hpp"
 #include "exception.hpp"
-#include "new.hpp"
-#include "memory.hpp"
+#include "memory/pointer_util.hpp"
 #include "concepts.hpp"
 #include "compare.hpp"
 #include "functional.hpp"
@@ -33,7 +32,7 @@ namespace std {
     private:
         struct storage {
             struct no_val_t {
-                explicit no_val_t() = default;
+                explicit constexpr no_val_t() = default;
             };
 
             static constexpr no_val_t no_val;
@@ -49,7 +48,7 @@ namespace std {
             template<class ...Args>
             explicit constexpr storage(Args&& ...args) : has_value(true), val(forward<Args>(args)...) {}
 
-            void reset() {
+            constexpr void reset() {
                 if (has_value) {
                     val.~T();
                 }
@@ -64,10 +63,10 @@ namespace std {
                 construct_at(addressof(val), forward<Args>(args)...);
             }
 
-            storage()
+            constexpr storage()
             requires is_trivially_default_constructible_v<T> = default;
 
-            storage()
+            constexpr storage()
             requires (!is_trivially_default_constructible_v<T>) : has_value(false), dummy() {}
 
             ~storage()
@@ -126,7 +125,7 @@ namespace std {
             && (!is_constructible_v<T, const optional<U>&&>) && (!is_convertible_v<optional<U>&, T>)
             && (!is_convertible_v<optional<U>&&, T>) && (!is_convertible_v<const optional<U>&, T>)
             && (!is_convertible_v<const optional<U>&&, T>)
-        explicit(!is_convertible_v<const U&, T>) optional(const optional<U>& rhs) {
+        constexpr explicit(!is_convertible_v<const U&, T>) optional(const optional<U>& rhs) {
             if (rhs) {
                 val.emplace(*rhs);
             }
@@ -138,15 +137,15 @@ namespace std {
             && (!is_constructible_v<T, const optional<U>&&>) && (!is_convertible_v<optional<U>&, T>)
             && (!is_convertible_v<optional<U>&&, T>) && (!is_convertible_v<const optional<U>&, T>)
             && (!is_convertible_v<const optional<U>&&, T>)
-        explicit(!is_convertible_v<U, T>) optional(optional<U>&& rhs) {
+        constexpr explicit(!is_convertible_v<U, T>) optional(optional<U>&& rhs) {
             if (rhs) {
                 val.emplace(move(*rhs));
             }
         }
 
-        ~optional() = default;
+        constexpr ~optional() = default;
 
-        optional<T>& operator=(nullopt_t) noexcept {
+        constexpr optional<T>& operator=(nullopt_t) noexcept {
             val.reset();
             return *this;
         }
@@ -186,7 +185,7 @@ namespace std {
         template<class U = T>
         requires (!is_same_v<remove_cvref_t<U>, optional>) && (!conjunction_v<is_scalar<T>, is_same<T, decay_t<U>>>)
             && is_constructible_v<T, U> && is_assignable_v<T&, U>
-        optional<T>& operator=(U&& v) {
+        constexpr optional<T>& operator=(U&& v) {
             if (*this) {
                 val.val = forward<U>(v);
             } else {
@@ -204,7 +203,7 @@ namespace std {
             && (!is_convertible_v<const optional<U>&, T>) && (!is_convertible_v<const optional<U>&&, T>)
             && (!is_assignable_v<T&, optional<U>&>) && (!is_assignable_v<T&, optional<U>&&>)
             && (!is_assignable_v<T&, const optional<U>&>) && (!is_assignable_v<T&, const optional<U>&&>)
-        optional<T>& operator=(const optional<U>& rhs) {
+        constexpr optional<T>& operator=(const optional<U>& rhs) {
             if (*this && rhs) {
                 val.val = move(*rhs);
             } else if (*this && !rhs) {
@@ -218,7 +217,7 @@ namespace std {
 
         template<class ...Args>
         requires is_constructible_v<T, Args...>
-        T& emplace(Args&& ...args) {
+        constexpr T& emplace(Args&& ...args) {
             *this = nullopt;
             val.emplace(forward<Args>(args)...);
             return val.val;
@@ -226,13 +225,13 @@ namespace std {
 
         template<class U, class ...Args>
         requires is_constructible_v<T, initializer_list<U>&, Args...>
-        T& emplace(initializer_list<U>, Args&& ...args) {
+        constexpr T& emplace(initializer_list<U>, Args&& ...args) {
             *this = nullopt;
             val.emplace(forward<Args>(args)...);
             return val.val;
         }
 
-        void swap(optional& rhs) noexcept(noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_swappable_v<T>))
+        constexpr void swap(optional& rhs) noexcept(noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_swappable_v<T>))
         requires is_swappable_v<T&> {
             if (*this && rhs) {
                 std::swap(*(*this), *rhs);
@@ -305,7 +304,7 @@ namespace std {
             return bool(*this) ? move(val.val) : static_cast<T>(forward<U>(v));
         }
 
-        void reset() noexcept {
+        constexpr void reset() noexcept {
             val.reset();
         }
     };
