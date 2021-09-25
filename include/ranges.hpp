@@ -2,10 +2,13 @@
 
 #include "type_traits.hpp"
 #include "iterator.hpp"
-#include "type_traits/is_type.hpp"
 #include "util/utility_traits.hpp"
 #include "limits.hpp"
-#include "memory.hpp"
+#include "memory/pointer_util.hpp"
+#include "optional.hpp"
+#include "utility.hpp"
+#include "istream.hpp"
+#include "concepts.hpp"
 
 namespace std::ranges {
     // NOTE: Range access functions are implemented in "iterator.hpp".
@@ -218,8 +221,8 @@ namespace std::ranges {
 
         static constexpr bool store_size = K == subrange_kind::sized && !sized_sentinel_for<S, I>;
 
-        I head = I();
-        S tail = S();
+        [[no_unique_address]] I head = I();
+        [[no_unique_address]] S tail = S();
     public:
         subrange() = default;
 
@@ -331,7 +334,7 @@ namespace std::ranges {
     subrange(P, make_unsigned_t<iter_difference_t<tuple_element_t<0, P>>>) -> subrange<tuple_element_t<0, P>, tuple_element_t<1, P>, subrange_kind::sized>;
 
     template<borrowed_range R>
-    subrange(R&&) -> subrange<iterator_t<R>, sentinel_t<R>, 
+    subrange(R&&) -> subrange<iterator_t<R>, sentinel_t<R>,
         (sized_range<R> || sized_sentinel_for<sentinel_t<R>, iterator_t<R>>) ? subrange_kind::sized : subrange_kind::unsized>;
 
     template<borrowed_range R>
@@ -379,4 +382,462 @@ namespace std::ranges {
 
     template<range R>
     using borrowed_subrange_t = conditional_t<borrowed_range<R>, subrange<iterator_t<R>>, dangling>;
+
+
+    /* 24.6.2 Empty view */
+    template<class T>
+    requires is_object_v<T>
+    class empty_view : public view_interface<empty_view<T>> {
+    public:
+        static constexpr T* begin() noexcept {
+            return nullptr;
+        }
+
+        static constexpr T* end() noexcept {
+            return nullptr;
+        }
+
+        static constexpr T* data() noexcept {
+            return nullptr;
+        }
+
+        static constexpr std::size_t size() noexcept {
+            return 0;
+        }
+
+        static constexpr bool empty() noexcept {
+            return true;
+        }
+    };
+
+    template<class T>
+    inline constexpr bool enable_borrowed_range<empty_view<T>> = true;
+
+    namespace views {
+        template<class T>
+        inline constexpr empty_view<T> empty;
+    }
+
+    namespace __internal {
+        template<class T>
+        requires copy_constructible<T> && is_object_v<T>
+        class semiregular_box : public optional<T> {
+        public:
+            using optional<T>::optional;
+            using optional<T>::operator=;
+
+            constexpr semiregular_box() noexcept(is_nothrow_default_constructible_v<T>)
+            requires default_initializable<T> : semiregular_box(in_place) {}
+
+            semiregular_box& operator=(const semiregular_box& that) noexcept(is_nothrow_copy_constructible_v<T>)
+            requires (!assignable_from<T&, const T&>) {
+                if (that) {
+                    this->emplace(*that);
+                } else {
+                    this->reset();
+                }
+
+                return *this;
+            }
+
+            semiregular_box& operator=(semiregular_box&& that) noexcept(is_nothrow_move_constructible_v<T>)
+            requires (!assignable_from<T&, T>) {
+                if (that) {
+                    this->emplace(move(*that));
+                } else {
+                    this->reset();
+                }
+
+                return *this;
+            }
+        };
+    }
+
+    /* 24.6.3 Single view */
+    template<copy_constructible T>
+    requires is_object_v<T>
+    class single_view : public view_interface<single_view<T>> {
+    private:
+        __internal::semiregular_box<T> value;
+    public:
+        single_view() = default;
+        constexpr explicit single_view(const T& t) : value(t) {}
+
+        constexpr explicit single_view(T&& t) : value(move(t)) {}
+
+        template<class ...Args>
+        requires constructible_from<T, Args...>
+        constexpr single_view(in_place_t, Args&& ...args) : value(in_place, forward<Args>(args)...) {}
+
+        constexpr T* begin() noexcept {
+            return data();
+        }
+
+        constexpr const T* begin() const noexcept {
+            return data();
+        }
+
+        constexpr T* end() noexcept {
+            return data() + 1;
+        }
+
+        constexpr const T* end() const noexcept {
+            return data() + 1;
+        }
+
+        static constexpr std::size_t size() noexcept {
+            return 1;
+        }
+
+        constexpr T* data() noexcept {
+            return value.operator->();
+        }
+
+        constexpr const T* data() const noexcept {
+            return value.operator->();
+        }
+    };
+
+    namespace views {
+        struct __single_fn {
+        public:
+            template<class E>
+            constexpr single_view<decay_t<E>> operator()(E&& e) const
+            noexcept(noexcept(single_view<decay_t<E>>(forward<E>(e)))) {
+                return single_view<decay_t<E>>(forward<E>(e));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __single_fn single;
+        }
+    }
+
+    /* 24.6.4 Iota view */
+    template<weakly_incrementable W, semiregular Bound = unreachable_sentinel_t>
+    requires ::std::__internal::weakly_equality_comparable_with<W, Bound> && semiregular<W>
+    class iota_view : public view_interface<iota_view<W, Bound>> {
+    private:
+        template<class I>
+        using diff_t = conditional_t<
+            !integral<I> || (sizeof(iter_difference_t<W>) > sizeof(I)),
+            iter_difference_t<I>,
+            typename ::std::__internal::find_first_with_size<sizeof(I), signed char, signed short, signed int, signed long, signed long long>::type
+        >;
+
+        template<class I>
+        static constexpr bool decrementable = incrementable<I> && requires (I i) {
+            { --i } -> same_as<I&>;
+            { i-- } -> same_as<I>;
+        };
+
+        template<class I>
+        static constexpr bool advanceable = decrementable<I> && totally_ordered<I> && requires (I i, const I j, const diff_t<I> n) {
+            { i += n } -> same_as<I&>;
+            { i -= n } -> same_as<I&>;
+            I(j + n);
+            I(n + j);
+            I(j - n);
+            { j - j } -> convertible_to<diff_t<I>>;
+        };
+
+        struct iterator {
+        private:
+            [[no_unique_address]] W value = W();
+        public:
+            using iterator_concept = conditional_t<
+                advanceable<W>, random_access_iterator_tag, conditional_t<
+                    decrementable<W>, bidirectional_iterator_tag, conditional_t<
+                        incrementable<W>, forward_iterator_tag, input_iterator_tag
+                    >
+                >
+            >;
+
+            using iterator_category = input_iterator_tag;
+            using value_type = W;
+            using difference_type = diff_t<W>;
+
+            iterator() = default;
+            constexpr explicit iterator(W value) : value(value) {}
+
+            constexpr W operator*() const noexcept(is_nothrow_copy_constructible_v<W>) {
+                return value;
+            }
+
+            constexpr iterator& operator++() {
+                ++value;
+                return *this;
+            }
+
+            constexpr void operator++(int) {
+                ++*this;
+            }
+
+            constexpr iterator operator++(int)
+            requires incrementable<W> {
+                iterator tmp = *this;
+                ++*this;
+                return tmp;
+            }
+
+            constexpr iterator& operator--()
+            requires decrementable<W> {
+                --value;
+                return *this;
+            }
+
+            constexpr iterator operator--(int)
+            requires decrementable<W> {
+                iterator tmp = *this;
+                --*this;
+                return tmp;
+            }
+
+            constexpr iterator& operator+=(difference_type n)
+            requires advanceable<W> {
+                if constexpr (integral<W> && !signed_integral<W>) {
+                    if (n >= difference_type(0)) {
+                        value += static_cast<W>(n);
+                    } else {
+                        value -= static_cast<W>(-n);
+                    }
+                } else {
+                    value += n;
+                }
+
+                return *this;
+            }
+
+            constexpr iterator& operator-=(difference_type n)
+            requires advanceable<W> {
+                if constexpr (integral<W> && !signed_integral<W>) {
+                    if (n >= difference_type(0)) {
+                        value -= static_cast<W>(n);
+                    } else {
+                        value += static_cast<W>(-n);
+                    }
+                } else {
+                    value -= n;
+                }
+
+                return *this;
+            }
+
+            constexpr W operator[](difference_type n) const
+            requires advanceable<W> {
+                return W(value + n);
+            }
+
+            friend constexpr bool operator==(const iterator& x, const iterator& y)
+            requires equality_comparable<W> {
+                return x.value == y.value;
+            }
+
+            friend constexpr bool operator<(const iterator& x, const iterator& y)
+            requires totally_ordered<W> {
+                return x.value < y.value;
+            }
+
+            friend constexpr bool operator>(const iterator& x, const iterator& y)
+            requires totally_ordered<W> {
+                return y < x;
+            }
+
+            friend constexpr bool operator<=(const iterator& x, const iterator& y)
+            requires totally_ordered<W> {
+                return !(y > x);
+            }
+
+            friend constexpr bool operator<=(const iterator& x, const iterator& y)
+            requires totally_ordered<W> {
+                return !(x < y);
+            }
+
+            friend constexpr auto operator<=>(const iterator& x, const iterator& y)
+            requires totally_ordered<W> && three_way_comparable<W> {
+                return x.value <=> y.value;
+            }
+
+            friend constexpr iterator operator+(iterator i, difference_type n)
+            requires advanceable<W> {
+                return i += n;
+            }
+
+            friend constexpr iterator operator+(difference_type n, iterator i)
+            requires advanceable<W> {
+                return i + n;
+            }
+
+            friend constexpr iterator operator-(iterator i, difference_type n)
+            requires advanceable<W> {
+                return i -= n;
+            }
+
+            friend constexpr difference_type operator-(const iterator& x, const iterator& y)
+            requires advanceable<W> {
+                if constexpr (integral<W>) {
+                    if constexpr (signed_integral<W>) {
+                        return difference_type(difference_type(x.value) - difference_type(y.value));
+                    } else {
+                        return y.value > x.value ? difference_type(-difference_type(y.value - x.value)) : difference_type(x.value - y.value);
+                    }
+                } else {
+                    return x.value - y.value;
+                }
+            }
+        };
+
+        struct sentinel {
+        private:
+            [[no_unique_address]] Bound bound = Bound();
+        public:
+            sentinel() = default;
+            constexpr explicit sentinel(Bound bound) : bound(bound) {}
+
+            friend constexpr bool operator==(const iterator& x, const sentinel& y) {
+                return x.value == y.bound;
+            }
+
+            friend constexpr iter_difference_t<W> operator-(const iterator& x, const sentinel& y)
+            requires sized_sentinel_for<Bound, W> {
+                return x.value - y.bound;
+            }
+
+            friend constexpr iter_difference_t<W> operator-(const sentinel& x, const iterator& y)
+            requires sized_sentinel_for<Bound, W> {
+                return -(y - x);
+            }
+        };
+
+        [[no_unique_address]] W value = W();
+        [[no_unique_address]] Bound bound = Bound();
+
+    public:
+        iota_view() = default;
+        constexpr explicit iota_view(W value) : value(value) {}
+
+        constexpr iota_view(type_identity_t<W> value, type_identity_t<Bound> bound) : value(value), bound(bound) {}
+
+        constexpr iota_view(iterator first, sentinel last) : iota_view(*first, last.bound) {}
+
+        constexpr iterator begin() const {
+            return iterator(value);
+        }
+
+        constexpr conditional_t<same_as<Bound, unreachable_sentinel_t>, unreachable_sentinel_t, sentinel> end() const {
+            if constexpr (same_as<Bound, unreachable_sentinel_t>) {
+                return unreachable_sentinel;
+            } else {
+                return sentinel(bound);
+            }
+        }
+
+        constexpr iterator end() const
+        requires same_as<W, Bound> {
+            return iterator(bound);
+        }
+
+        constexpr auto size() const {
+            if constexpr (integral<W> && integral<Bound>) {
+                return (value < 0)
+                    ? ((bound < 0) ? make_unsigned_t<W>(-value) - make_unsigned_t<Bound>(-bound) : make_unsigned_t<Bound>(bound) + make_unsigned_t<W>(-value))
+                    : make_unsigned_t<Bound>(bound) - make_unsigned_t<W>(value);
+            } else {
+                return make_unsigned_t<decltype(bound - value)>(bound - value);
+            }
+        }
+    };
+
+    template<class W, class Bound>
+    requires (!integral<W>) || (!integral<Bound>) || (signed_integral<W> == signed_integral<Bound>)
+    iota_view(W, Bound) -> iota_view<W, Bound>;
+
+    template<weakly_incrementable W, semiregular Bound>
+    inline constexpr bool enable_borrowed_range<iota_view<W, Bound>> = true;
+
+    namespace views {
+        struct __iota_fn {
+        public:
+            template<class W>
+            constexpr iota_view<W> operator()(W&& w) const noexcept(noexcept(iota_view<W>(forward<W>(w)))) {
+                return iota_view<W>(forward<W>(w));
+            }
+
+            template<class W, class Bound>
+            constexpr iota_view<W, Bound> operator()(W&& w, Bound&& b) const
+            noexcept(noexcept(iota_view<W, Bound>(forward<W>(w), forward<Bound>(b)))) {
+                return iota_view<W, Bound>(forward<W>(w), forward<Bound>(b));
+            }
+        };
+
+        inline namespace __fn_objects {
+            inline constexpr __iota_fn iota;
+        }
+    }
+
+    /* 24.6.5 istream view */
+    template<movable Val, class CharT, class Traits>
+    requires default_initializable<Val> && requires (basic_istream<CharT, Traits>& is, Val& t) {
+        is >> t;
+    }
+    class basic_istream_view : public view_interface<basic_istream_view<Val, CharT, Traits>> {
+    public:
+        basic_istream_view() = default;
+        constexpr explicit basic_istream_view(basic_istream<CharT, Traits>& stream) : stream(&stream) {}
+
+        constexpr auto begin() {
+            if (stream) {
+                *stream >> object;
+            }
+            return iterator(*this);
+        }
+
+        constexpr default_sentinel_t end() const noexcept {
+            return default_sentinel;
+        }
+
+    private:
+        struct iterator {
+            using iterator_concept = input_iterator_tag;
+            using difference_type = std::ptrdiff_t;
+            using value_type = Val;
+
+            iterator() = default;
+            constexpr explicit iterator(basic_istream_view& parent) noexcept : parent(&parent) {}
+
+            iterator(const iterator&) = delete;
+            iterator(iterator&&) = default;
+
+            iterator& operator=(const iterator&) = delete;
+            iterator& operator=(iterator&&) = default;
+
+            iterator& operator++() {
+                *parent->stream >> parent->object;
+                return *this;
+            }
+
+            void operator++(int) {
+                ++*this;
+            }
+
+            Val& operator*() const {
+                return parent->object;
+            }
+
+            friend bool operator==(const iterator& x, default_sentinel_t) {
+                return x.parent == nullptr || !*x.parent->stream;
+            }
+
+        private:
+            basic_istream_view* parent = nullptr;
+        };
+
+        basic_istream<CharT, Traits>* stream = nullptr;
+        [[no_unique_address]] Val object = Val();
+    };
+
+    template<class Val, class CharT, class Traits>
+    basic_istream_view<Val, CharT, Traits> istream_view(basic_istream<CharT, Traits>& s) {
+        return basic_istream_view<Val, CharT, Traits>(s);
+    }
 }

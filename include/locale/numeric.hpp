@@ -3,7 +3,7 @@
 #include "ios.hpp"
 #include "type_traits.hpp"
 #include "cstddef.hpp"
-#include "memory.hpp"
+#include "memory/unique_ptr.hpp"
 #include "concepts.hpp"
 #include "cstring.hpp"
 #include "utility.hpp"

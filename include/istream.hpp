@@ -2,8 +2,9 @@
 
 #include "iosfwd.hpp"
 #include "ios.hpp"
-#include "locale.hpp"
+#include "locale/numeric.hpp"
 #include "streambuf.hpp"
+#include "algorithm.hpp"
 
 namespace std {
     template<class charT, class traits>

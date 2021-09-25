@@ -4,7 +4,6 @@
 #include "iosfwd.hpp"
 #include "cstddef.hpp"
 #include "iterator.hpp"
-#include "memory.hpp"
 #include "limits.hpp"
 #include "stdexcept.hpp"
 #include "functional.hpp"

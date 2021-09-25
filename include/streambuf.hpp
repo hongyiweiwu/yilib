@@ -1,7 +1,6 @@
 #pragma once
 
 #include "iosfwd.hpp"
-#include "locale.hpp"
 #include "ios.hpp"
 #include "utility.hpp"
 

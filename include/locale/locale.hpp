@@ -4,7 +4,7 @@
 #include "cstring.hpp"
 #include "typeinfo.hpp"
 #include "stdexcept.hpp"
-#include "memory.hpp"
+#include "memory/unique_ptr.hpp"
 
 namespace std {
     /* 28.3.1 locale */

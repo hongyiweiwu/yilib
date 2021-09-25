@@ -3,7 +3,6 @@
 #include "iosfwd.hpp"
 #include "type_traits.hpp"
 #include "system_error.hpp"
-#include "memory.hpp"
 #include "utility.hpp"
 #include "bit.hpp"
 #include "cstring.hpp"

@@ -2,7 +2,7 @@
 
 #include "iosfwd.hpp"
 #include "exception.hpp"
-#include "memory.hpp"
+#include "memory/unique_ptr.hpp"
 
 namespace std {
     class logic_error : public exception {
