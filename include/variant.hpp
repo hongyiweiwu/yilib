@@ -131,11 +131,11 @@ namespace std {
             construct_at(__get_storage<T>(), il, forward<Args>(args)...);
         }
 
-        ~variant()
+        constexpr ~variant()
         requires (is_trivially_destructible_v<Types> && ...) = default;
 
     public:
-        ~variant()
+        constexpr ~variant()
         requires (!is_trivially_destructible_v<Types> || ...) {
             if (!valueless_by_exception()) {
                 constexpr auto helper = [&]<class T, class ...Tn>(std::size_t idx, __internal::type_list<Tn...>, const auto& helper) {
@@ -219,7 +219,7 @@ namespace std {
         template<class T>
         requires (!is_same_v<remove_cvref_t<T>, variant>) && requires (T&& t) { closest_alternative::template test<T>()(forward<T>(t)); }
             && is_assignable_v<typename closest_alternative::template type<T>&, T> && is_constructible_v<typename closest_alternative::template type<T>, T>
-        variant& operator=(T&& t)
+        constexpr variant& operator=(T&& t)
         noexcept(noexcept(is_nothrow_assignable_v<typename closest_alternative::template type<T>&, T>
             && is_nothrow_constructible_v<typename closest_alternative::template type<T>, T>)) {
             using Tj = typename closest_alternative::template type<T>;
@@ -236,7 +236,7 @@ namespace std {
 
         template<class T, class ...Args>
         requires __internal::appears_exactly_i_times<1, T, Types...>::value && is_constructible_v<T, Args...>
-        T& emplace(Args&&... args) {
+        constexpr T& emplace(Args&&... args) {
             ~variant();
             T* const storage = this->__get_storage<T>();
             construct_at(storage, forward<Args>(args)...);
@@ -246,7 +246,7 @@ namespace std {
 
         template<class T, class U, class ...Args>
         requires __internal::appears_exactly_i_times<1, T, Types...>::value && is_constructible_v<T, initializer_list<U>, Args...>
-        T& emplace(initializer_list<U> il, Args&&... args) {
+        constexpr T& emplace(initializer_list<U> il, Args&&... args) {
             ~variant();
             T* const storage = this->__get_storage<T>();
             construct_at(storage, il, forward<Args>(args)...);
@@ -256,13 +256,13 @@ namespace std {
 
         template<std::size_t I, class ...Args>
         requires (I < sizeof...(Types)) && is_constructible_v<typename __internal::pick_ith_type<I, Args...>::type, Args...>
-        typename __internal::pick_ith_type<I, Args...>::type& emplace(Args&&... args) {
+        constexpr typename __internal::pick_ith_type<I, Args...>::type& emplace(Args&&... args) {
             return emplace<typename __internal::pick_ith_type<I, Args...>::type>(forward<Args>(args)...);
         }
 
         template<std::size_t I, class U, class ...Args>
         requires (I < sizeof...(Types)) && is_constructible_v<typename __internal::pick_ith_type<I, Args...>::type, initializer_list<U>&, Args...>
-        typename __internal::pick_ith_type<I, Args...>::type& emplace(initializer_list<U> il, Args&&... args) {
+        constexpr typename __internal::pick_ith_type<I, Args...>::type& emplace(initializer_list<U> il, Args&&... args) {
             return emplace<typename __internal::pick_ith_type<I, Args...>::type>(il, forward<Args>(args)...);
         }
 
@@ -274,7 +274,7 @@ namespace std {
             return curr;
         }
 
-        void swap(variant& other) noexcept(noexcept(((is_nothrow_move_constructible_v<Types> && is_nothrow_swappable_v<Types>) && ...)))
+        constexpr void swap(variant& other) noexcept(noexcept(((is_nothrow_move_constructible_v<Types> && is_nothrow_swappable_v<Types>) && ...)))
         requires (is_move_constructible_v<Types> && ...) {
             if (valueless_by_exception() && other.valueless_by_exception()) {
                 return;
@@ -296,7 +296,7 @@ namespace std {
 
         /* Returns a pointer to the storage object cast to the desired type. */
         template<class T>
-        T* __get_storage() const noexcept {
+        constexpr T* __get_storage() const noexcept {
             return static_cast<T*>(static_cast<void*>(const_cast<aligned_union_t<0, Types...>*>(&storage)));
         }
     };
@@ -701,7 +701,7 @@ namespace std {
             static constexpr array<fmatrix_method_t, (variant_size_v<remove_cvref_t<Variants>> * ...)> fmatrix = make_fmatrix(index_pack_t());
 
         public:
-            constexpr decltype(auto) operator()(Visitor&& vis, Variants&& ...vars) {
+            constexpr decltype(auto) operator()(Visitor&& vis, Variants&& ...vars) const {
                 if ((vars.valueless_by_exception() || ...)) {
                     throw bad_variant_access();
                 } else if constexpr (sizeof...(Variants) == 0) {
@@ -712,7 +712,7 @@ namespace std {
             }
 
             template<class R>
-            constexpr R operator()(Visitor&& vis, Variants&& ...vars) {
+            constexpr R operator()(Visitor&& vis, Variants&& ...vars) const {
                 if constexpr (is_void_v<return_t>) {
                     operator()(forward<Visitor>(vis), forward<Variants>(vars)...);
                 } else {
@@ -756,7 +756,7 @@ namespace std {
     /* 20.7.10 Specialized algorithms */
     template<class ...Types>
     requires ((is_move_constructible_v<Types> && is_swappable_v<Types>) && ...)
-    void swap(variant<Types...>& v, variant<Types...>& w) noexcept(noexcept(v.swap(w))) {
+    constexpr void swap(variant<Types...>& v, variant<Types...>& w) noexcept(noexcept(v.swap(w))) {
         v.swap(w);
     }
 
