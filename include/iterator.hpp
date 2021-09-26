@@ -499,11 +499,11 @@ namespace std {
         && common_reference_with<invoke_result_t<F&, iter_value_t<I>&>, invoke_result_t<F&, iter_reference_t<I>>>;
 
     template<class F, class I>
-    concept indirectly_unary_predicate = indirectly_readable<I> && copy_constructible<F> && predicate<F&, iter_value_t<I>&>
+    concept indirect_unary_predicate = indirectly_readable<I> && copy_constructible<F> && predicate<F&, iter_value_t<I>&>
         && predicate<F&, iter_reference_t<I>> && predicate<F&, iter_common_reference_t<I>>;
 
     template<class F, class I1, class I2 = I1>
-    concept indirectly_binary_predicate = indirectly_readable<I1> && indirectly_readable<I2> && copy_constructible<F>
+    concept indirect_binary_predicate = indirectly_readable<I1> && indirectly_readable<I2> && copy_constructible<F>
         && predicate<F&, iter_value_t<I1>&, iter_value_t<I2>&>
         && predicate<F&, iter_value_t<I1>&, iter_reference_t<I2>>
         && predicate<F&, iter_reference_t<I1>, iter_value_t<I2>&>
@@ -511,7 +511,7 @@ namespace std {
         && predicate<F&, iter_common_reference_t<I1>, iter_common_reference_t<I2>>;
 
     template<class F, class I1, class I2 = I1>
-    concept indirectly_equivalence_relation = indirectly_readable<I1> && indirectly_readable<I2> && copy_constructible<F>
+    concept indirect_equivalence_relation = indirectly_readable<I1> && indirectly_readable<I2> && copy_constructible<F>
         && equivalence_relation<F&, iter_value_t<I1>&, iter_value_t<I2>&>
         && equivalence_relation<F&, iter_value_t<I1>&, iter_reference_t<I2>>
         && equivalence_relation<F&, iter_reference_t<I1>, iter_value_t<I2>&>
@@ -519,7 +519,7 @@ namespace std {
         && equivalence_relation<F&, iter_common_reference_t<I1>, iter_common_reference_t<I2>>;
 
     template<class F, class I1, class I2 = I1>
-    concept indirectly_strict_weak_order = indirectly_readable<I1> && indirectly_readable<I2> && copy_constructible<F>
+    concept indirect_strict_weak_order = indirectly_readable<I1> && indirectly_readable<I2> && copy_constructible<F>
         && strict_weak_order<F&, iter_value_t<I1>&, iter_value_t<I2>&>
         && strict_weak_order<F&, iter_value_t<I1>&, iter_reference_t<I2>>
         && strict_weak_order<F&, iter_reference_t<I1>, iter_value_t<I2>&>
@@ -569,17 +569,17 @@ namespace std {
         };
 
     template<class I1, class I2, class R, class P1 = identity, class P2 = identity>
-    concept indirectly_comparable = indirectly_binary_predicate<R, projected<I1, P1>, projected<I2, P2>>;
+    concept indirectly_comparable = indirect_binary_predicate<R, projected<I1, P1>, projected<I2, P2>>;
 
     template<class I>
     concept permutable = forward_iterator<I> && indirectly_movable_storable<I, I> && indirectly_swappable<I, I>;
 
     template<class I1, class I2, class Out, class R = ranges::less, class P1 = identity, class P2 = identity>
     concept mergeable = input_iterator<I1> && input_iterator<I2> && weakly_incrementable<Out>
-        && indirectly_copyable<I1, Out> && indirectly_copyable<I2, Out> && indirectly_strict_weak_order<R, projected<I1, P1>, projected<I2, P2>>;
+        && indirectly_copyable<I1, Out> && indirectly_copyable<I2, Out> && indirect_strict_weak_order<R, projected<I1, P1>, projected<I2, P2>>;
 
     template<class I, class R = ranges::less, class P = identity>
-    concept sortable = permutable<I> && indirectly_strict_weak_order<R, projected<I, P>>;
+    concept sortable = permutable<I> && indirect_strict_weak_order<R, projected<I, P>>;
 
     /* 23.4.2 Standard iterator tags */
     struct input_iterator_tag {};
