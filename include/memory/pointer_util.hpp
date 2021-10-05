@@ -7,7 +7,7 @@ namespace std {
     /* 20.10.11 addressof */
     template<class T>
     constexpr T* addressof(T& r) noexcept {
-        return __builin_addressof(r);
+        return __builtin_addressof(r);
     }
 
     template<class T>

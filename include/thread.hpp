@@ -20,13 +20,9 @@ namespace std {
          * a Callable and its arguments. This function will simply call the Callable with the supplied arguments. */
         template<class ...T>
         static void execute_thread(void* ptr) {
-            static constexpr auto helper = []<std::size_t ...I>(tuple<T...>* tp, index_sequence<I...>) {
-                invoke(get<I>(move(*tp))...);
-            };
-
             const unique_ptr<tuple<T...>> wrapped_ptr(static_cast<tuple<T...>*>(ptr));
             try {
-                helper(wrapped_ptr.get(), index_sequence_for<T...>());
+                apply(invoke<T...>, move(*wrapped_ptr));
             } catch (...) {
                 terminate();
             }

@@ -103,7 +103,7 @@ The library started out as an C++20 standard library. This table tracks the prog
 | `stop_token` | | &check; | | | Blocked due to possibly buggy `request_stop` implementation. |
 | `mutex` | | &check; | | | Blocked due to the unimplemented `lock` algorithm. |
 | `shared_mutex` | &check; | | | | |
-| `future` | | | | &check; | |
+| `future` | &check; | | | | |
 | `condition_variable` | &check; | | | | |
 | `semaphore` | &check; | | | | |
 | `latch` | &check; | | | | |
